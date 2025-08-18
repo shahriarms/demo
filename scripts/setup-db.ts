@@ -23,6 +23,10 @@ async function setupDatabase() {
   console.log('✅ Connected to the database.');
 
   try {
+    // Drop the table if it exists to ensure a fresh start with the correct schema
+    await client.query('DROP TABLE IF EXISTS products;');
+    console.log("✅ Table 'products' dropped if it existed.");
+
     // Create the products table
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS products (
@@ -39,7 +43,7 @@ async function setupDatabase() {
       );
     `;
     await client.query(createTableQuery);
-    console.log("✅ Table 'products' created or already exists.");
+    console.log("✅ Table 'products' created successfully.");
 
     // You can add more table creation queries here in the future
     // For example:
@@ -61,5 +65,3 @@ async function setupDatabase() {
 }
 
 setupDatabase();
-
-    
