@@ -135,10 +135,10 @@ export default function EmployeesPage() {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <h1 className="text-2xl font-semibold flex items-center gap-2"><Users className="w-6 h-6"/>{t('attendance_page_title')}</h1>
                 <div className="flex gap-2">
-                    <Button onClick={handleAddNew} disabled={user?.role !== 'admin'}>
+                    <Button onClick={handleAddNew} disabled={user?.role !== 'admin'} className="w-full sm:w-auto">
                         <PlusCircle className="mr-2 h-4 w-4" /> {t('add_employee_button')}
                     </Button>
                 </div>
@@ -158,7 +158,7 @@ export default function EmployeesPage() {
                                 <Button
                                     variant={"outline"}
                                     className={cn(
-                                    "w-[280px] justify-start text-left font-normal",
+                                    "w-full sm:w-[280px] justify-start text-left font-normal",
                                     !selectedDate && "text-muted-foreground"
                                     )}
                                 >
@@ -176,7 +176,7 @@ export default function EmployeesPage() {
                                 </PopoverContent>
                             </Popover>
                         </div>
-                         <div className="flex gap-4 text-sm">
+                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm w-full">
                             <div className="flex items-center gap-2 p-2 rounded-md bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"><UserCheck className="w-5 h-5"/> {t('present_label')}: <span className="font-bold">{attendanceSummary.present}</span></div>
                             <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300"><UserX className="w-5 h-5"/> {t('absent_label')}: <span className="font-bold">{attendanceSummary.absent}</span></div>
                             <div className="flex items-center gap-2 p-2 rounded-md bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300"><NotebookText className="w-5 h-5"/> {t('on_leave_label')}: <span className="font-bold">{attendanceSummary.leave}</span></div>
@@ -188,7 +188,7 @@ export default function EmployeesPage() {
                              <TableHeader>
                                 <TableRow>
                                     <TableHead>{t('employee_name_header')}</TableHead>
-                                    <TableHead>{t('role_header')}</TableHead>
+                                    <TableHead className="hidden sm:table-cell">{t('role_header')}</TableHead>
                                     <TableHead className="text-right">{t('attendance_status_header')}</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -197,8 +197,11 @@ export default function EmployeesPage() {
                                     const status = getStatusForEmployee(employee.id);
                                     return (
                                         <TableRow key={employee.id}>
-                                            <TableCell className="font-medium">{employee.name}</TableCell>
-                                            <TableCell>{employee.role}</TableCell>
+                                            <TableCell className="font-medium">
+                                                {employee.name}
+                                                <div className="text-muted-foreground text-xs sm:hidden">{employee.role}</div>
+                                            </TableCell>
+                                            <TableCell className="hidden sm:table-cell">{employee.role}</TableCell>
                                             <TableCell className="text-right">
                                                 <Select
                                                     value={status}
@@ -240,9 +243,9 @@ export default function EmployeesPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>{t('name_header')}</TableHead>
-                                    <TableHead>{t('role_header')}</TableHead>
-                                    <TableHead>{t('phone_header')}</TableHead>
-                                    <TableHead>{t('joining_date_header')}</TableHead>
+                                    <TableHead className="hidden md:table-cell">{t('role_header')}</TableHead>
+                                    <TableHead className="hidden lg:table-cell">{t('phone_header')}</TableHead>
+                                    <TableHead className="hidden lg:table-cell">{t('joining_date_header')}</TableHead>
                                     <TableHead className="text-right">{t('salary_header')}</TableHead>
                                     <TableHead className="w-12"></TableHead>
                                 </TableRow>
@@ -250,10 +253,13 @@ export default function EmployeesPage() {
                             <TableBody>
                                 {filteredEmployees.map(employee => (
                                     <TableRow key={employee.id}>
-                                        <TableCell className="font-medium">{employee.name}</TableCell>
-                                        <TableCell>{employee.role}</TableCell>
-                                        <TableCell>{employee.phone}</TableCell>
-                                        <TableCell>{format(new Date(employee.joiningDate), 'PP')}</TableCell>
+                                        <TableCell className="font-medium">
+                                            {employee.name}
+                                            <div className="text-muted-foreground text-xs md:hidden">{employee.role}</div>
+                                        </TableCell>
+                                        <TableCell className="hidden md:table-cell">{employee.role}</TableCell>
+                                        <TableCell className="hidden lg:table-cell">{employee.phone}</TableCell>
+                                        <TableCell className="hidden lg:table-cell">{format(new Date(employee.joiningDate), 'PP')}</TableCell>
                                         <TableCell className="text-right font-mono">${employee.salary.toFixed(2)}</TableCell>
                                         <TableCell>
                                             <DropdownMenu>

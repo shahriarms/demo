@@ -162,7 +162,7 @@ export default function BuyersDuePage() {
       </h1>
       <div className="grid md:grid-cols-5 gap-6 flex-1">
         {/* Buyers with Due List */}
-        <Card className="md:col-span-1 flex flex-col">
+        <Card className="md:col-span-2 lg:col-span-1 flex flex-col">
           <CardHeader className="flex-shrink-0">
             <CardTitle>{t('buyers_with_due_title')}</CardTitle>
             <div className="relative pt-2">
@@ -204,7 +204,7 @@ export default function BuyersDuePage() {
         </Card>
 
         {/* Due Invoices List */}
-        <Card className="md:col-span-1 flex flex-col">
+        <Card className="md:col-span-3 lg:col-span-1 flex flex-col">
           <CardHeader className="flex-shrink-0">
             <CardTitle className="truncate">{selectedBuyer ? t('due_invoices_title') : t('select_buyer_title')}</CardTitle>
             <CardDescription>{selectedBuyer ? t('for_buyer_subtitle', { name: selectedBuyer.name }) : t('outstanding_balances_subtitle')}</CardDescription>
@@ -252,7 +252,7 @@ export default function BuyersDuePage() {
         </Card>
         
         {/* Payment Section */}
-        <Card className="md:col-span-3 flex flex-col">
+        <Card className="md:col-span-5 lg:col-span-3 flex flex-col">
             <CardHeader>
                 <CardTitle>{t('receive_payment_title')}</CardTitle>
                 <CardDescription>{t('receive_payment_description')}</CardDescription>
@@ -266,8 +266,8 @@ export default function BuyersDuePage() {
                               <p>{t('due_amount_label')}: <span className="font-bold text-destructive">${selectedInvoice.dueAmount.toFixed(2)}</span></p>
                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="relative flex-1">
+                        <div className="flex flex-col sm:flex-row items-center gap-2">
+                            <div className="relative flex-1 w-full">
                                 <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input 
                                     type="number" 
@@ -277,7 +277,7 @@ export default function BuyersDuePage() {
                                     onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
                                 />
                             </div>
-                            <Button onClick={handleAddPaymentAndPrint}><Printer className="mr-2 h-4 w-4"/>{t('receive_and_print_button')}</Button>
+                            <Button onClick={handleAddPaymentAndPrint} className="w-full sm:w-auto"><Printer className="mr-2 h-4 w-4"/>{t('receive_and_print_button')}</Button>
                         </div>
                     </>
                 ) : (

@@ -182,7 +182,7 @@ export default function ProductsPage() {
 
   return (
     <div className="flex flex-col gap-4 h-full">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-semibold">{t('products_page_title')}</h1>
         <div className="flex gap-2">
           <input
@@ -194,15 +194,15 @@ export default function ProductsPage() {
           />
           <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading || user?.role !== 'admin'}>
             <Upload className="mr-2 h-4 w-4" />
-            {t('upload_button')}
+            <span className="hidden sm:inline">{t('upload_button')}</span>
           </Button>
           <Button variant="outline" onClick={handleDownload} disabled={isLoading || filteredProducts.length === 0}>
             <Download className="mr-2 h-4 w-4" />
-            {t('download_report_button')}
+            <span className="hidden sm:inline">{t('download_report_button')}</span>
           </Button>
           <Button onClick={() => setAddDialogOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            {t('add_product_button')}
+            <span className="hidden sm:inline">{t('add_product_button')}</span>
           </Button>
         </div>
       </div>
@@ -259,10 +259,8 @@ export default function ProductsPage() {
                     <TableHeader className="sticky top-0 bg-card z-10">
                     <TableRow>
                         <TableHead>{t('name_header')}</TableHead>
-                        <TableHead>{t('category_header')}</TableHead>
-                        <TableHead className="text-right">{t('buying_price_header')}</TableHead>
-                        <TableHead className="text-right">{t('profit_margin_header')}</TableHead>
-                        <TableHead className="text-right">{t('selling_price_header')}</TableHead>
+                        <TableHead className="hidden md:table-cell">{t('category_header')}</TableHead>
+                        <TableHead className="text-right hidden sm:table-cell">{t('selling_price_header')}</TableHead>
                         <TableHead className="text-right">{t('stock_header')}</TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
@@ -270,16 +268,13 @@ export default function ProductsPage() {
                     <TableBody>
                     {filteredProducts.map((product) => (
                         <TableRow key={product.id}>
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{product.category} / {product.subCategory}</TableCell>
-                        <TableCell className="text-right">
-                            ${parseFloat(product.buyingPrice as any).toFixed(2)}
+                        <TableCell className="font-medium">
+                            {product.name}
+                            <div className="text-xs text-muted-foreground md:hidden">{product.category} / {product.subCategory}</div>
                         </TableCell>
-                        <TableCell className="text-right">
-                            {parseFloat(product.profitMargin as any).toFixed(2)}%
-                        </TableCell>
-                        <TableCell className="text-right font-semibold">
-                            ${parseFloat(product.sellingPrice as any).toFixed(2)}
+                        <TableCell className="hidden md:table-cell">{product.category} / {product.subCategory}</TableCell>
+                        <TableCell className="text-right font-semibold hidden sm:table-cell">
+                            ${product.sellingPrice.toFixed(2)}
                         </TableCell>
                         <TableCell className={`text-right font-medium ${product.stock === 0 ? 'text-destructive' : ''}`}>
                             {product.stock} <span className="text-xs text-muted-foreground">{product.mainCategory === 'Material' ? 'kg' : 'pcs'}</span>
@@ -379,5 +374,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-
-    

@@ -141,7 +141,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // This prevents content flashing on initial load or after logout.
   if (isLoading && pathname !== '/login' && pathname !== '/signup') {
     return (
-        <div className="flex h-screen w-full items-center justify-center">
+        <div className="flex h-screen w-full items-center justify-center bg-background">
             <Loader2 className="h-8 w-8 animate-spin" />
         </div>
     );
@@ -159,7 +159,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // Prevent dashboard rendering for unauthenticated users, even for a flash
   if (!user && pathname !== '/login' && pathname !== '/signup') {
     return (
-        <div className="flex h-screen w-full items-center justify-center">
+        <div className="flex h-screen w-full items-center justify-center bg-background">
             <Loader2 className="h-8 w-8 animate-spin" />
         </div>
     );

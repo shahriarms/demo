@@ -197,12 +197,12 @@ export default function ExpensesPage() {
 
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-2xl font-semibold flex items-center gap-2"><Receipt className="w-6 h-6"/> {t('expenses_page_title')}</h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline"><Download className="mr-2 h-4 w-4"/> {t('export_button')}</Button>
+                <Button variant="outline" className="flex-1 sm:flex-none"><Download className="mr-2 h-4 w-4"/> {t('export_button')}</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => handleExport('csv')}>{t('export_as_csv')}</DropdownMenuItem>
@@ -210,7 +210,7 @@ export default function ExpensesPage() {
                 <DropdownMenuItem onClick={() => handleExport('pdf')}>{t('export_as_pdf')}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button onClick={handleAddNew}>
+            <Button onClick={handleAddNew} className="flex-1 sm:flex-none">
               <PlusCircle className="mr-2 h-4 w-4" /> {t('add_expense_button')}
             </Button>
           </div>
@@ -220,7 +220,7 @@ export default function ExpensesPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>{t('todays_expenses_title')}</CardTitle>
+                    <CardTitle>{t('todays_expenses_card_title')}</CardTitle>
                     <CardDescription>{t('todays_expenses_description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -297,11 +297,10 @@ export default function ExpensesPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>{t('date_header')}</TableHead>
-                                <TableHead>{t('category_header')}</TableHead>
                                 <TableHead>{t('description_header')}</TableHead>
+                                <TableHead className="hidden sm:table-cell">{t('category_header')}</TableHead>
+                                <TableHead className="hidden md:table-cell">{t('date_header')}</TableHead>
                                 <TableHead className="text-right">{t('amount_header')}</TableHead>
-                                <TableHead>{t('method_header')}</TableHead>
                                 <TableHead className="w-12"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -315,11 +314,13 @@ export default function ExpensesPage() {
                             ) : filteredAndSortedExpenses.length > 0 ? (
                                 filteredAndSortedExpenses.map(expense => (
                                     <TableRow key={expense.id}>
-                                        <TableCell>{format(new Date(expense.date), 'PP')}</TableCell>
-                                        <TableCell><span className="font-medium">{t(`expense_category_${expense.category.toLowerCase()}` as any)}</span></TableCell>
-                                        <TableCell>{expense.description}</TableCell>
+                                        <TableCell>
+                                            <p className="font-medium">{expense.description}</p>
+                                            <p className="text-sm text-muted-foreground sm:hidden">{t(`expense_category_${expense.category.toLowerCase()}` as any)} - {format(new Date(expense.date), 'PP')}</p>
+                                        </TableCell>
+                                        <TableCell className="hidden sm:table-cell"><span className="font-medium">{t(`expense_category_${expense.category.toLowerCase()}` as any)}</span></TableCell>
+                                        <TableCell className="hidden md:table-cell">{format(new Date(expense.date), 'PP')}</TableCell>
                                         <TableCell className="text-right font-mono">${expense.amount.toFixed(2)}</TableCell>
-                                        <TableCell>{expense.paymentMethod}</TableCell>
                                         <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

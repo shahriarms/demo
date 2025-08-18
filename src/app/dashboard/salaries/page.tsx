@@ -118,7 +118,7 @@ export default function SalariesPage() {
             <CardDescription>{t('salaries_employee_list_description')}</CardDescription>
           </CardHeader>
           <CardContent className="p-0 flex-1">
-            <ScrollArea className="h-full">
+            <ScrollArea className="h-full max-h-[calc(100vh-250px)]">
               <div className="divide-y">
                 {employees.map((employee) => (
                   <button
@@ -157,7 +157,7 @@ export default function SalariesPage() {
                     <p className="mt-4">{t('please_select_employee')}</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Payment Input Section */}
                     <div className="space-y-4">
                         <h3 className="font-semibold text-lg">{t('payment_details_title')}</h3>

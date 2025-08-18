@@ -250,7 +250,7 @@ export default function InvoicePage() {
                         </RadioGroup>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
-                         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-hidden">
+                         <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-hidden">
                             {/* Category List */}
                             <div className="flex flex-col gap-2 min-h-0">
                                <Label>{t('category_header')}</Label>
@@ -310,7 +310,7 @@ export default function InvoicePage() {
                                     <TableRow>
                                         <TableHead>Item</TableHead>
                                         <TableHead className="w-24">Qty</TableHead>
-                                        <TableHead className="w-32">Price</TableHead>
+                                        <TableHead className="w-32 hidden sm:table-cell">Price</TableHead>
                                         <TableHead className="text-right w-32">Total</TableHead>
                                         <TableHead className="w-12"></TableHead>
                                     </TableRow>
@@ -325,7 +325,7 @@ export default function InvoicePage() {
                                             <TableCell>
                                                 <Input type="number" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="hidden sm:table-cell">
                                                  <div className="relative flex items-center">
                                                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
                                                      <Input type="number" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium h-9" />
