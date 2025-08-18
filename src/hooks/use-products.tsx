@@ -42,9 +42,20 @@ export function ProductProvider({ children }: { children: ReactNode }) {
             setProducts(allProducts);
             setIsUsingDB(true);
         } else {
-            const savedProducts = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+            const savedProductsJSON = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+            let savedProducts = savedProductsJSON ? JSON.parse(savedProductsJSON) : null;
+            
             if (savedProducts) {
-                setProducts(JSON.parse(savedProducts));
+                // Data migration for older versions that might not have sellingPrice
+                const migratedProducts = savedProducts.map((p: any) => {
+                    if (typeof p.sellingPrice !== 'number') {
+                        const buyingPrice = p.buyingPrice || 0;
+                        const profitMargin = p.profitMargin || 0;
+                        p.sellingPrice = buyingPrice + (buyingPrice * profitMargin / 100);
+                    }
+                    return p;
+                });
+                setProducts(migratedProducts);
             } else {
                 setProducts(initialProducts);
                 localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(initialProducts));
@@ -53,8 +64,9 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         }
     } catch (error) {
         console.error("Failed to load products from server, falling back to localStorage", error);
-        const savedProducts = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-        if (savedProducts) setProducts(JSON.parse(savedProducts));
+        const savedProductsJSON = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+        let savedProducts = savedProductsJSON ? JSON.parse(savedProductsJSON) : null;
+        if (savedProducts) setProducts(savedProducts);
         else {
             setProducts(initialProducts);
             localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(initialProducts));
