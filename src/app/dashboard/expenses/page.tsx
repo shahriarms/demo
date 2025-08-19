@@ -217,8 +217,8 @@ export default function ExpensesPage() {
         </div>
 
         {/* Summary Cards & Charts */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-1">
                 <CardHeader>
                     <CardTitle>{t('todays_expenses_card_title')}</CardTitle>
                     <CardDescription>{t('todays_expenses_description')}</CardDescription>
@@ -375,3 +375,5 @@ export default function ExpensesPage() {
       </div>
     )
 }
+
+    

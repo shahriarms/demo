@@ -380,9 +380,9 @@ export default function InvoicePage() {
                             {isPrinting ? 'Printing...' : t('save_and_print_button')}
                         </Button>
                    </CardHeader>
-                   <CardContent className="flex-1 min-h-0">
-                       <ScrollArea className="border rounded-lg h-full">
-                            <div className="bg-muted/50 p-4">
+                   <CardContent className="flex-1 min-h-0 p-4">
+                       <div className="border rounded-lg overflow-hidden h-full">
+                            <div className="bg-muted/50 p-4 h-full">
                                 <div ref={componentToPrintRef}>
                                     <div className={cn("bg-white mx-auto print-source", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
                                         <InvoicePrintLayout 
@@ -401,7 +401,7 @@ export default function InvoicePage() {
                                     </div>
                                 </div>
                             </div>
-                        </ScrollArea>
+                        </div>
                    </CardContent>
                 </Card>
             </div>
@@ -423,3 +423,5 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
