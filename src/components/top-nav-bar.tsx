@@ -38,7 +38,7 @@ export function TopNavBar() {
 
   return (
     <nav className="sticky top-16 z-10 bg-card border-b shadow-sm">
-      <div className="flex justify-center items-center gap-1 sm:gap-2 px-4 overflow-x-auto no-scrollbar">
+      <div className="flex justify-center items-center gap-1 sm:gap-2 px-2 overflow-x-auto no-scrollbar">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -48,19 +48,19 @@ export function TopNavBar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center transition-all duration-200 ease-in-out transform hover:bg-muted/50 hover:scale-105",
+                    "relative flex flex-col items-center justify-center gap-1 rounded-md p-2 text-center transition-all duration-200 ease-in-out transform hover:bg-muted/50 sm:hover:scale-105",
                      isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
                      isMobile ? 'w-16 h-16' : 'w-24 h-20'
                   )}
                 >
-                    <Icon className={cn("h-7 w-7 transition-colors", isActive && 'text-primary')} />
+                    <Icon className={cn("h-6 w-6 sm:h-7 sm:w-7 transition-colors", isActive && 'text-primary')} />
                     {!isMobile && (
                         <span className={cn("text-xs font-medium truncate transition-colors", isActive ? 'text-primary' : 'text-muted-foreground')}>
                             {t(item.labelKey)}
                         </span>
                     )}
                     {isActive && (
-                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-1 bg-primary rounded-t-full" />
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 sm:w-10 h-1 bg-primary rounded-t-full" />
                     )}
                 </Link>
               </TooltipTrigger>

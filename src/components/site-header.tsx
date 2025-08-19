@@ -75,8 +75,8 @@ export function SiteHeader() {
         {/* Center Section */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <Link href="/dashboard" className="flex items-center gap-2">
-                <StockPilotLogo className="w-10 h-10" />
-                <h1 className="text-xl font-semibold hidden md:block">
+                <StockPilotLogo className="w-8 h-8" />
+                <h1 className="text-xl font-semibold">
                   <span className="text-foreground">Stock</span>
                   <span className="text-primary">Pilot</span>
                 </h1>
