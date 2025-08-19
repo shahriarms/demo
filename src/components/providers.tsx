@@ -5,8 +5,8 @@ import Link from 'next/link';
 import {
   SidebarProvider,
   Sidebar,
-  SidebarHeader,
   SidebarContent,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -51,7 +51,7 @@ export function Providers({
                   isActive={pathname === '/dashboard'}
                   tooltip={{ children: t('dashboard_sidebar') }}
                 >
-                  <LayoutDashboard className="h-6 w-6" />
+                  <LayoutDashboard />
                   <span>{t('dashboard_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
@@ -62,7 +62,7 @@ export function Providers({
                   isActive={pathname.startsWith('/dashboard/products')}
                   tooltip={{ children: t('products_sidebar') }}
                 >
-                   <Package className="h-6 w-6" />
+                   <Package />
                   <span>{t('products_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
@@ -73,7 +73,7 @@ export function Providers({
                   isActive={pathname.startsWith('/dashboard/invoice')}
                   tooltip={{ children: t('invoice_sidebar') }}
                 >
-                   <FileText className="h-6 w-6" />
+                   <FileText />
                   <span>{t('invoice_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
@@ -84,7 +84,7 @@ export function Providers({
                   isActive={pathname === '/dashboard/buyers'}
                   tooltip={{ children: t('buyer_purchases_sidebar') }}
                 >
-                   <Users className="h-6 w-6" />
+                   <Users />
                   <span>{t('buyer_purchases_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
@@ -95,7 +95,7 @@ export function Providers({
                   isActive={pathname.startsWith('/dashboard/buyers-due')}
                   tooltip={{ children: t('buyers_due_sidebar') }}
                 >
-                   <HandCoins className="h-6 w-6" />
+                   <HandCoins />
                   <span>{t('buyers_due_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
@@ -106,7 +106,7 @@ export function Providers({
                   isActive={pathname.startsWith('/dashboard/expenses')}
                   tooltip={{ children: t('expenses_sidebar') }}
                 >
-                   <Receipt className="h-6 w-6" />
+                   <Receipt />
                   <span>{t('expenses_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
@@ -117,7 +117,7 @@ export function Providers({
                   isActive={pathname.startsWith('/dashboard/employees')}
                   tooltip={{ children: t('employee_attendance_sidebar') }}
                 >
-                   <UserCog className="h-6 w-6" />
+                   <UserCog />
                   <span>{t('employee_attendance_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
@@ -128,7 +128,7 @@ export function Providers({
                   isActive={pathname.startsWith('/dashboard/salaries')}
                   tooltip={{ children: t('salaries_sidebar') }}
                 >
-                   <Wallet className="h-6 w-6" />
+                   <Wallet />
                   <span>{t('salaries_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
@@ -143,7 +143,7 @@ export function Providers({
                         isActive={pathname.startsWith('/dashboard/settings')}
                         tooltip={{ children: t('settings_sidebar') }}
                         >
-                        <Settings className="h-6 w-6" />
+                        <Settings />
                         <span>{t('settings_sidebar')}</span>
                         </SidebarMenuButton>
                     </Link>

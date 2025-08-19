@@ -18,7 +18,7 @@ import {
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/hooks/use-user';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { RedeemAdminCodeDialog } from './redeem-admin-code-dialog';
 import { ShowAdminCodeDialog } from './show-admin-code-dialog';
 import dynamic from 'next/dynamic';
@@ -53,7 +53,7 @@ export function SiteHeader() {
   if (!user) {
     return (
        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-4 sm:px-6">
-        <div>
+        <div className="md:hidden">
           <SidebarTrigger />
         </div>
          <div className="flex-1 flex justify-center items-center">
@@ -66,11 +66,11 @@ export function SiteHeader() {
   return (
     <>
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-4 sm:px-6">
-        <div>
+        <div className="md:hidden">
           <SidebarTrigger />
         </div>
-        <div className="flex-1 flex justify-center items-center gap-2">
-          <h1 className="text-xl font-bold text-foreground">Mahmud Engineering Shop</h1>
+        <div className="flex-1 flex justify-center md:justify-start items-center gap-2">
+          <h1 className="text-xl font-bold text-foreground hidden md:block">Mahmud Engineering Shop</h1>
         </div>
         <div className="flex items-center gap-4">
             <LiveClock />
