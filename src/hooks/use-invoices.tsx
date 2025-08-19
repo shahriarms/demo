@@ -1,12 +1,13 @@
 
 'use client';
 
-import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import type { Invoice, Buyer, AppSettings } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import type { DraftInvoice } from './use-invoice-form';
 import { useSettings } from './use-settings';
 import { isWithinInterval, isSameDay } from 'date-fns';
+import { useAppData } from './use-app-data';
 
 interface InvoiceContextType {
   invoices: Invoice[];
@@ -20,6 +21,7 @@ interface InvoiceContextType {
 }
 
 const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
+
 
 async function printPosReceipt(settings: AppSettings, orderData: any) {
     const printerConfig = {
@@ -103,35 +105,10 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>, invoiceId
 }
 
 
-export function InvoiceProvider({ children }: { children: ReactNode }) {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [buyers, setBuyers] = useState<Buyer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+const useInvoicesData = (): InvoiceContextType => {
+  const { invoices, setInvoices, buyers, setBuyers, isAppDataLoading } = useAppData();
   const { toast } = useToast();
   const { settings } = useSettings();
-
-  useEffect(() => {
-    try {
-      const savedInvoices = localStorage.getItem('stockpilot-invoices');
-      if (savedInvoices) {
-        setInvoices(JSON.parse(savedInvoices));
-      }
-      const savedBuyers = localStorage.getItem('stockpilot-buyers');
-      if (savedBuyers) {
-        setBuyers(JSON.parse(savedBuyers));
-      }
-    } catch (error) {
-      console.error("Failed to load data from localStorage", error);
-    }
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem('stockpilot-invoices', JSON.stringify(invoices));
-      localStorage.setItem('stockpilot-buyers', JSON.stringify(buyers));
-    }
-  }, [invoices, buyers, isLoading]);
 
   const saveInvoiceData = (draftInvoice: DraftInvoice, newId: string) => {
     const invoiceToSave: Invoice = {
@@ -180,12 +157,10 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         tax: 0,
         total: draftInvoice.subtotal,
       };
-      // For POS, we assume success and save immediately. The error will be caught and shown to the user.
       saveInvoiceData(draftInvoice, newId);
       await printPosReceipt(settings, orderData);
       return true; 
     } else {
-      // For Normal print, we wait for confirmation from the print dialog.
       const printed = await printNormalReceipt(printRef, newId);
       if (printed) {
         saveInvoiceData(draftInvoice, newId);
@@ -215,7 +190,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
             return inv;
         })
     );
-  }, []);
+  }, [setInvoices]);
 
   const getInvoicesForBuyer = useCallback((buyerId: string) => {
     const buyer = buyers.find(b => b.id === buyerId);
@@ -238,19 +213,10 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     return invoices.filter(inv => isSameDay(new Date(inv.date), date));
   }, [invoices]);
 
-  const value = useMemo(() => ({ invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, getInvoicesForDateRange, getInvoicesForDay, updateInvoiceDue, isLoading }), [invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, getInvoicesForDateRange, getInvoicesForDay, updateInvoiceDue, isLoading]);
-
-  return (
-    <InvoiceContext.Provider value={value}>
-      {children}
-    </InvoiceContext.Provider>
-  );
+  return useMemo(() => ({ invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, getInvoicesForDateRange, getInvoicesForDay, updateInvoiceDue, isLoading: isAppDataLoading }), [invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, getInvoicesForDateRange, getInvoicesForDay, updateInvoiceDue, isAppDataLoading]);
 }
 
+
 export function useInvoices() {
-  const context = useContext(InvoiceContext);
-  if (context === undefined) {
-    throw new Error('useInvoices must be used within an InvoiceProvider');
-  }
-  return context;
+  return useInvoicesData();
 }

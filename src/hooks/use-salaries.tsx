@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import type { SalaryPayment, Employee } from '@/lib/types';
-import { useToast } from "@/hooks/use-toast";
 import { useEmployees } from './use-employees';
 import { startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { useAppData } from './use-app-data';
 
 interface SalaryContextType {
   payments: SalaryPayment[];
@@ -16,44 +16,25 @@ interface SalaryContextType {
 
 const SalaryContext = createContext<SalaryContextType | undefined>(undefined);
 
-export function SalaryProvider({ children }: { children: ReactNode }) {
-  const [payments, setPayments] = useState<SalaryPayment[]>([]);
-  const { toast } = useToast();
-  const { employees } = useEmployees();
-
-  useEffect(() => {
-    try {
-      const savedPayments = localStorage.getItem('stockpilot-salary-payments');
-      if (savedPayments) {
-        setPayments(JSON.parse(savedPayments));
-      }
-    } catch (error) {
-      console.error("Failed to load salary payments from localStorage", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (payments.length > 0) {
-      localStorage.setItem('stockpilot-salary-payments', JSON.stringify(payments));
-    }
-  }, [payments]);
-
+const useSalariesData = (): SalaryContextType => {
+  const { salaryPayments, setSalaryPayments } = useAppData();
+  
   const addSalaryPayment = useCallback((paymentData: Omit<SalaryPayment, 'id'>) => {
     const newPayment: SalaryPayment = {
       ...paymentData,
       id: `sal-${Date.now()}`,
     };
-    setPayments(prev => [newPayment, ...prev]);
-  }, []);
+    setSalaryPayments(prev => [newPayment, ...prev]);
+  }, [setSalaryPayments]);
 
   const getPaymentsForMonth = useCallback((employeeId: string, date: Date): SalaryPayment[] => {
     const monthStart = startOfMonth(date);
     const monthEnd = endOfMonth(date);
     
-    return payments
+    return salaryPayments
         .filter(p => p.employeeId === employeeId && isWithinInterval(new Date(p.date), { start: monthStart, end: monthEnd }))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [payments]);
+  }, [salaryPayments]);
 
   const getDueSalaryForMonth = useCallback((employee: Employee, date: Date): number => {
       if (!employee) return 0;
@@ -63,24 +44,15 @@ export function SalaryProvider({ children }: { children: ReactNode }) {
   }, [getPaymentsForMonth]);
 
 
-  const value = useMemo(() => ({
-    payments,
+  return useMemo(() => ({
+    payments: salaryPayments,
     addSalaryPayment,
     getPaymentsForMonth,
     getDueSalaryForMonth,
-  }), [payments, addSalaryPayment, getPaymentsForMonth, getDueSalaryForMonth]);
-
-  return (
-    <SalaryContext.Provider value={value}>
-      {children}
-    </SalaryContext.Provider>
-  );
+  }), [salaryPayments, addSalaryPayment, getPaymentsForMonth, getDueSalaryForMonth]);
 }
 
+
 export function useSalaries() {
-  const context = useContext(SalaryContext);
-  if (context === undefined) {
-    throw new Error('useSalaries must be used within a SalaryProvider');
-  }
-  return context;
+  return useSalariesData();
 }

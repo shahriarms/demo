@@ -1,9 +1,10 @@
 
 'use client';
 
-import { useState, createContext, useContext, ReactNode, useMemo, useCallback, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import type { InvoiceItem, Product } from '@/lib/types';
 import { useToast } from './use-toast';
+import { useAppData } from './use-app-data';
 
 export interface DraftInvoiceItem extends InvoiceItem {
     originalPrice: number;
@@ -37,8 +38,6 @@ interface InvoiceFormContextType {
 
 const InvoiceFormContext = createContext<InvoiceFormContextType | undefined>(undefined);
 
-const INVOICE_DRAFTS_KEY = 'stockpilot-invoice-drafts';
-
 const createNewDraft = (): DraftInvoice => ({
     id: `draft-${Date.now()}`,
     items: [],
@@ -52,48 +51,21 @@ const createNewDraft = (): DraftInvoice => ({
 
 const calculateTotals = (items: DraftInvoiceItem[], paidAmount: number) => {
     const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    // If a valid payment is made (greater than 0), calculate due. Otherwise, due is 0.
-    const dueAmount = paidAmount > 0 ? subtotal - paidAmount : 0;
+    const dueAmount = subtotal - paidAmount;
     return { subtotal, dueAmount };
 }
 
-export function InvoiceFormProvider({ children }: { children: ReactNode }) {
-    const [drafts, setDrafts] = useState<DraftInvoice[]>([]);
-    const [activeDraftIndex, setActiveDraftIndex] = useState(0);
-    const [isFormLoading, setFormLoading] = useState(true);
+const useInvoiceFormData = (): InvoiceFormContextType => {
+    const { invoiceDrafts, setInvoiceDrafts, isAppDataLoading } = useAppData();
     const { toast } = useToast();
+    
+    // For simplicity, we manage the active index locally in the hook
+    const [activeDraftIndex, setActiveDraftIndex] = React.useState(0);
 
-    useEffect(() => {
-        try {
-            const savedDrafts = localStorage.getItem(INVOICE_DRAFTS_KEY);
-            if (savedDrafts) {
-                const parsedDrafts = JSON.parse(savedDrafts);
-                if (Array.isArray(parsedDrafts) && parsedDrafts.length > 0) {
-                    setDrafts(parsedDrafts);
-                    setActiveDraftIndex(0);
-                } else {
-                     setDrafts([createNewDraft()]);
-                }
-            } else {
-                setDrafts([createNewDraft()]);
-            }
-        } catch (error) {
-            console.error("Failed to load invoice drafts from localStorage", error);
-            setDrafts([createNewDraft()]);
-        }
-        setFormLoading(false);
-    }, []);
-    
-    useEffect(() => {
-        if (!isFormLoading) {
-            localStorage.setItem(INVOICE_DRAFTS_KEY, JSON.stringify(drafts));
-        }
-    }, [drafts, isFormLoading]);
-    
-    const activeDraft = useMemo(() => drafts[activeDraftIndex] || null, [drafts, activeDraftIndex]);
+    const activeDraft = useMemo(() => invoiceDrafts[activeDraftIndex] || null, [invoiceDrafts, activeDraftIndex]);
     
     const addNewDraft = useCallback(() => {
-        if (drafts.length >= 10) {
+        if (invoiceDrafts.length >= 10) {
             toast({
                 variant: 'destructive',
                 title: "Memo Limit Reached",
@@ -102,12 +74,12 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
             return;
         }
         const newDraft = createNewDraft();
-        setDrafts(prev => [...prev, newDraft]);
-        setActiveDraftIndex(drafts.length);
-    }, [drafts.length, toast]);
+        setInvoiceDrafts(prev => [...prev, newDraft]);
+        setActiveDraftIndex(invoiceDrafts.length);
+    }, [invoiceDrafts.length, toast, setInvoiceDrafts]);
     
     const removeDraft = useCallback((draftId: string) => {
-        setDrafts(prev => {
+        setInvoiceDrafts(prev => {
             const newDrafts = prev.filter(d => d.id !== draftId);
             if (newDrafts.length === 0) {
                 setActiveDraftIndex(0);
@@ -118,10 +90,10 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
             }
             return newDrafts;
         });
-    }, [activeDraftIndex]);
+    }, [activeDraftIndex, setInvoiceDrafts]);
 
     const updateActiveDraft = useCallback((update: Partial<Omit<DraftInvoice, 'id' | 'subtotal' | 'dueAmount'>>) => {
-        setDrafts(prev => prev.map((draft, index) => {
+        setInvoiceDrafts(prev => prev.map((draft, index) => {
             if (index === activeDraftIndex) {
                 const updatedDraft = { ...draft, ...update };
                 const { subtotal, dueAmount } = calculateTotals(updatedDraft.items, updatedDraft.paidAmount);
@@ -131,10 +103,10 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
             }
             return draft;
         }));
-    }, [activeDraftIndex]);
+    }, [activeDraftIndex, setInvoiceDrafts]);
 
     const addInvoiceItem = useCallback((product: Product) => {
-        setDrafts(prev => prev.map((draft, index) => {
+        setInvoiceDrafts(prev => prev.map((draft, index) => {
             if (index !== activeDraftIndex) return draft;
 
             const existingItem = draft.items.find(item => item.id === product.id);
@@ -154,38 +126,38 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
             const { subtotal, dueAmount } = calculateTotals(newItems, draft.paidAmount);
             return { ...draft, items: newItems, subtotal, dueAmount };
         }));
-    }, [activeDraftIndex]);
+    }, [activeDraftIndex, setInvoiceDrafts]);
     
     const updateInvoiceItem = useCallback((itemId: string, itemUpdate: Partial<DraftInvoiceItem>) => {
-        setDrafts(prev => prev.map((draft, index) => {
+        setInvoiceDrafts(prev => prev.map((draft, index) => {
             if (index !== activeDraftIndex) return draft;
             const newItems = draft.items.map(item => item.id === itemId ? { ...item, ...itemUpdate } : item);
             const { subtotal, dueAmount } = calculateTotals(newItems, draft.paidAmount);
             return { ...draft, items: newItems, subtotal, dueAmount };
         }));
-    }, [activeDraftIndex]);
+    }, [activeDraftIndex, setInvoiceDrafts]);
 
     const removeInvoiceItem = useCallback((itemId: string) => {
-        setDrafts(prev => prev.map((draft, index) => {
+        setInvoiceDrafts(prev => prev.map((draft, index) => {
             if (index !== activeDraftIndex) return draft;
             const newItems = draft.items.filter(item => item.id !== itemId);
             const { subtotal, dueAmount } = calculateTotals(newItems, draft.paidAmount);
             return { ...draft, items: newItems, subtotal, dueAmount };
         }));
-    }, [activeDraftIndex]);
+    }, [activeDraftIndex, setInvoiceDrafts]);
 
     const resetActiveDraft = useCallback(() => {
-        setDrafts(prev => prev.map((draft, index) => {
+        setInvoiceDrafts(prev => prev.map((draft, index) => {
             if (index === activeDraftIndex) {
                 return createNewDraft();
             }
             return draft;
         }));
-    }, [activeDraftIndex]);
+    }, [activeDraftIndex, setInvoiceDrafts]);
 
 
-    const value = useMemo(() => ({
-        drafts,
+    return useMemo(() => ({
+        drafts: invoiceDrafts,
         activeDraftIndex,
         activeDraft,
         addNewDraft,
@@ -196,9 +168,12 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
         updateInvoiceItem,
         removeInvoiceItem,
         resetActiveDraft,
-        isFormLoading,
-    }), [drafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, resetActiveDraft, isFormLoading]);
+        isFormLoading: isAppDataLoading,
+    }), [invoiceDrafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, resetActiveDraft, isAppDataLoading]);
+}
 
+export function InvoiceFormProvider({ children }: { children: ReactNode }) {
+    const value = useInvoiceFormData();
     return (
         <InvoiceFormContext.Provider value={value}>
             {children}
