@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useCallback, useState } from 'react';
 import type { InvoiceItem, Product } from '@/lib/types';
 import { useToast } from './use-toast';
 import { useAppData } from './use-app-data';
@@ -60,7 +60,7 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
     const { toast } = useToast();
     
     // For simplicity, we manage the active index locally in the hook
-    const [activeDraftIndex, setActiveDraftIndex] = React.useState(0);
+    const [activeDraftIndex, setActiveDraftIndex] = useState(0);
 
     const activeDraft = useMemo(() => invoiceDrafts[activeDraftIndex] || null, [invoiceDrafts, activeDraftIndex]);
     
