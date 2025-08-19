@@ -1,6 +1,5 @@
 
 'use client';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { UserCircle, LogOut, Settings, LifeBuoy, KeyRound, Languages } from 'lucide-react';
 import {
@@ -9,7 +8,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -26,6 +24,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import { useSettings } from '@/hooks/use-settings';
 import type { Locale } from '@/lib/types';
 import Link from 'next/link';
+import { StockPilotLogo } from './stock-pilot-logo';
 
 const LiveClock = dynamic(() => import('./live-clock').then(mod => mod.LiveClock), {
   ssr: false,
@@ -52,25 +51,27 @@ export function SiteHeader() {
 
   if (!user) {
     return (
-       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-4 sm:px-6">
-        <div className="md:hidden">
-          <SidebarTrigger />
-        </div>
-         <div className="flex-1 flex justify-center items-center">
-          <h1 className="text-xl font-bold text-foreground">Mahmud Engineering Shop</h1>
-        </div>
+       <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-4 sm:px-6">
+        <div className="flex items-center gap-2">
+            <StockPilotLogo className="w-10 h-10" />
+            <h1 className="text-xl font-semibold">
+              <span className="text-foreground">Stock</span>
+              <span className="text-primary">Pilot</span>
+            </h1>
+          </div>
       </header>
     );
   }
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-4 sm:px-6">
-        <div className="md:hidden">
-          <SidebarTrigger />
-        </div>
-        <div className="flex-1 flex justify-center md:justify-start items-center gap-2">
-          <h1 className="text-xl font-bold text-foreground hidden md:block">Mahmud Engineering Shop</h1>
+      <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-card px-4 sm:px-6">
+        <div className="flex items-center gap-2">
+           <StockPilotLogo className="w-10 h-10" />
+            <h1 className="text-xl font-semibold hidden md:block">
+              <span className="text-foreground">Stock</span>
+              <span className="text-primary">Pilot</span>
+            </h1>
         </div>
         <div className="flex items-center gap-4">
             <LiveClock />
@@ -89,7 +90,7 @@ export function SiteHeader() {
                 <DropdownMenuSeparator />
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
-                    <Languages className="mr-2" />
+                    <Languages className="mr-2 h-4 w-4" />
                     <span>{t('language_label')}</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
@@ -104,29 +105,29 @@ export function SiteHeader() {
                 <DropdownMenuSeparator />
                 {user.role === 'admin' ? (
                   <DropdownMenuItem onClick={handleShowCode}>
-                    <KeyRound className="mr-2" />
+                    <KeyRound className="mr-2 h-4 w-4" />
                     {t('generate_admin_code_button')}
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem onClick={() => setRedeemDialogOpen(true)}>
-                     <KeyRound className="mr-2" />
+                     <KeyRound className="mr-2 h-4 w-4" />
                     {t('redeem_admin_code_button')}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <Link href="/dashboard/settings">
                   <DropdownMenuItem>
-                    <Settings className="mr-2" />
+                    <Settings className="mr-2 h-4 w-4" />
                     {t('settings_label')}
                   </DropdownMenuItem>
                 </Link>
                 <DropdownMenuItem>
-                  <LifeBuoy className="mr-2" />
+                  <LifeBuoy className="mr-2 h-4 w-4" />
                   {t('support_label')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
-                  <LogOut className="mr-2" />
+                  <LogOut className="mr-2 h-4 w-4" />
                   {t('logout_button')}
                 </DropdownMenuItem>
               </DropdownMenuContent>

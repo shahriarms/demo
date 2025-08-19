@@ -1,6 +1,11 @@
 
 "use client"
 
+// This entire component is now obsolete as the sidebar navigation
+// has been replaced by a top navigation bar. The code is kept here
+// for historical purposes or if the design decision is reverted in the future,
+// but it is no longer actively used in the application.
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
