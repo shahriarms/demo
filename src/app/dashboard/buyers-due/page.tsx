@@ -125,20 +125,15 @@ export default function BuyersDuePage() {
         });
         return;
     }
+    
+    // The print-source class will be handled by CSS media queries.
+    // The transaction is completed first, then we print the new state.
+    completePaymentTransaction();
 
-    // NOTE: This uses browser printing. For direct POS, use the POS Terminal page.
-    const printContents = (componentToPrintRef.current as any)?.innerHTML;
-    if (printContents) {
-        const originalContents = document.body.innerHTML;
-        document.body.innerHTML = printContents;
-        window.print();
-        document.body.innerHTML = originalContents;
-        completePaymentTransaction(); // Complete after printing
-        window.location.reload();
-    } else {
-        // If printing fails, still process payment
-        completePaymentTransaction();
-    }
+    // We need to wait for the state to update before printing
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
 
   const receiptPaymentHistory = useMemo(() => {
@@ -155,7 +150,7 @@ export default function BuyersDuePage() {
 
 
   return (
-    <div className="flex flex-col h-full gap-4">
+    <div className="flex flex-col h-full gap-4 no-print">
       <h1 className="text-2xl font-semibold flex items-center gap-2">
         <HandCoins className="w-6 h-6" />
         {t('buyers_due_page_title')}
@@ -290,9 +285,9 @@ export default function BuyersDuePage() {
                     <h3 className="text-lg font-semibold">{t('live_receipt_preview_title')}</h3>
                 </div>
                 <div className="p-6 pt-2 flex-1">
-                     <div className="border rounded-lg overflow-auto">
+                     <div className="bg-background">
                         {selectedBuyer && selectedInvoice ? (
-                           <div ref={componentToPrintRef}>
+                           <div ref={componentToPrintRef} className="print-source">
                                 <PaymentReceipt
                                     buyer={selectedBuyer}
                                     invoice={selectedInvoice}
@@ -301,7 +296,7 @@ export default function BuyersDuePage() {
                                 />
                             </div>
                         ) : (
-                            <div className="text-center text-muted-foreground p-8 flex flex-col justify-center items-center h-full">
+                            <div className="text-center text-muted-foreground p-8 flex flex-col justify-center items-center h-full border rounded-lg">
                                 <FileText className="w-12 h-12 mb-4 text-muted-foreground/50"/>
                                 <p>{t('select_invoice_for_preview')}</p>
                            </div>

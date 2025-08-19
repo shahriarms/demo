@@ -213,7 +213,7 @@ export default function InvoicePage() {
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 py-4 min-h-0">
 
             {/* Column 1: Customer Info & Product Search */}
-            <div className="flex flex-col gap-4 lg:col-span-1">
+            <div className="flex flex-col gap-4 lg:col-span-1 no-print">
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
@@ -299,7 +299,7 @@ export default function InvoicePage() {
 
             {/* Column 2: Invoice Items & Live Preview */}
             <div className="lg:col-span-2 flex flex-col gap-4">
-                <Card className="flex-1 flex flex-col min-h-0">
+                <Card className="flex-1 flex flex-col min-h-0 no-print">
                     <CardHeader>
                         <CardTitle>Invoice Items</CardTitle>
                     </CardHeader>
@@ -320,7 +320,7 @@ export default function InvoicePage() {
                                         <TableRow key={item.id}>
                                             <TableCell>
                                                 <p className="font-medium">{item.name}</p>
-                                                <p className='text-xs text-muted-foreground'>Suggested: ${(item.originalPrice || item.price).toFixed(2)}</p>
+                                                <p className='text-xs text-muted-foreground'>Suggested: ${item.originalPrice.toFixed(2)}</p>
                                             </TableCell>
                                             <TableCell>
                                                 <Input type="number" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
@@ -380,27 +380,21 @@ export default function InvoicePage() {
                             {isPrinting ? 'Printing...' : t('save_and_print_button')}
                         </Button>
                    </CardHeader>
-                   <CardContent className="flex-1 min-h-0 p-4">
-                       <div className="border rounded-lg overflow-hidden h-full">
-                            <div className="bg-muted/50 p-4 h-full">
-                                <div ref={componentToPrintRef}>
-                                    <div className={cn("bg-white mx-auto print-source", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
-                                        <InvoicePrintLayout 
-                                            invoiceId={draftId}
-                                            currentDate={new Date().toLocaleDateString()}
-                                            customerName={customerName}
-                                            customerAddress={customerAddress}
-                                            customerPhone={customerPhone}
-                                            invoiceItems={items}
-                                            subtotal={subtotal}
-                                            paidAmount={paidAmount}
-                                            dueAmount={dueAmount}
-                                            printFormat={settings.printFormat}
-                                            locale={settings.locale}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                   <CardContent className="flex-1 min-h-0 p-4 bg-muted/50">
+                        <div ref={componentToPrintRef} className={cn("bg-white mx-auto print-source", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
+                            <InvoicePrintLayout 
+                                invoiceId={draftId}
+                                currentDate={new Date().toLocaleDateString()}
+                                customerName={customerName}
+                                customerAddress={customerAddress}
+                                customerPhone={customerPhone}
+                                invoiceItems={items}
+                                subtotal={subtotal}
+                                paidAmount={paidAmount}
+                                dueAmount={dueAmount}
+                                printFormat={settings.printFormat}
+                                locale={settings.locale}
+                            />
                         </div>
                    </CardContent>
                 </Card>

@@ -36,16 +36,7 @@ export default function BuyersPage() {
   const componentToPrintRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
-    // This uses the browser's print functionality as it's for viewing past invoices,
-    // which are typically printed on A4. The main invoice creation uses the universal print system.
-    const printContents = componentToPrintRef.current?.innerHTML;
-    if (printContents) {
-      const originalContents = document.body.innerHTML;
-      document.body.innerHTML = printContents;
-      window.print();
-      document.body.innerHTML = originalContents;
-      window.location.reload(); // To restore event listeners
-    }
+    window.print();
   };
 
 
@@ -78,7 +69,7 @@ export default function BuyersPage() {
   }, [buyers, buyerSearchTerm]);
 
   return (
-    <div className="flex flex-col h-full gap-4">
+    <div className="flex flex-col h-full gap-4 no-print">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Users className="w-6 h-6" />
@@ -189,34 +180,32 @@ export default function BuyersPage() {
                   </Button>
               )}
           </div>
-          <ScrollArea className="flex-1 rounded-lg border">
-            <div className="p-4 space-y-4 bg-background">
-              {selectedInvoice ? (
-                   <div ref={componentToPrintRef} className="print-container">
-                     <InvoicePrintLayout
-                        invoiceId={selectedInvoice.id}
-                        currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                        customerName={selectedInvoice.customerName}
-                        customerAddress={selectedInvoice.customerAddress}
-                        customerPhone={selectedInvoice.customerPhone}
-                        invoiceItems={selectedInvoice.items}
-                        subtotal={selectedInvoice.subtotal}
-                        paidAmount={selectedInvoice.paidAmount}
-                        dueAmount={selectedInvoice.dueAmount}
-                        // Always use normal print for past invoices from this page
-                        printFormat={'normal'} 
-                        locale={settings.locale}
-                     />
-                   </div>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground h-full flex flex-col justify-center items-center">
-                    <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
-                    <p className="font-semibold">{t('no_invoice_selected_title')}</p>
-                    <p className="text-sm">{t('no_invoice_selected_description')}</p>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+          <div className="bg-background">
+            {selectedInvoice ? (
+                 <div ref={componentToPrintRef} className="print-source">
+                   <InvoicePrintLayout
+                      invoiceId={selectedInvoice.id}
+                      currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                      customerName={selectedInvoice.customerName}
+                      customerAddress={selectedInvoice.customerAddress}
+                      customerPhone={selectedInvoice.customerPhone}
+                      invoiceItems={selectedInvoice.items}
+                      subtotal={selectedInvoice.subtotal}
+                      paidAmount={selectedInvoice.paidAmount}
+                      dueAmount={selectedInvoice.dueAmount}
+                      // Always use normal print for past invoices from this page
+                      printFormat={'normal'} 
+                      locale={settings.locale}
+                   />
+                 </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground h-full flex flex-col justify-center items-center rounded-lg border">
+                  <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
+                  <p className="font-semibold">{t('no_invoice_selected_title')}</p>
+                  <p className="text-sm">{t('no_invoice_selected_description')}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
