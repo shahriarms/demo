@@ -16,6 +16,7 @@ import {
 import { useTranslation } from '@/hooks/use-translation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 const navItems = [
@@ -33,27 +34,34 @@ const navItems = [
 export function TopNavBar() {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   return (
-    <nav className="sticky top-16 z-10 bg-card border-b">
-      <div className="flex justify-center items-center gap-2 sm:gap-4 px-4 overflow-x-auto">
+    <nav className="sticky top-16 z-10 bg-card border-b shadow-sm">
+      <div className="flex justify-center items-center gap-1 sm:gap-2 px-4 overflow-x-auto no-scrollbar">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
           return (
-            <Tooltip key={item.href}>
+            <Tooltip key={item.href} delayDuration={0}>
               <TooltipTrigger asChild>
-                <Link href={item.href}>
-                  <div className="flex flex-col items-center gap-1 py-2 px-2 sm:px-4 relative">
-                    <Icon className={cn(
-                        "h-6 w-6 transition-colors",
-                        isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-                    )} />
-                    <span className="sr-only">{t(item.labelKey)}</span>
-                    {isActive && (
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full" />
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center transition-all duration-200 ease-in-out transform hover:bg-muted/50 hover:scale-105",
+                     isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+                     isMobile ? 'w-16 h-16' : 'w-24 h-20'
+                  )}
+                >
+                    <Icon className={cn("h-7 w-7 transition-colors", isActive && 'text-primary')} />
+                    {!isMobile && (
+                        <span className={cn("text-xs font-medium truncate transition-colors", isActive ? 'text-primary' : 'text-muted-foreground')}>
+                            {t(item.labelKey)}
+                        </span>
                     )}
-                  </div>
+                    {isActive && (
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-1 bg-primary rounded-t-full" />
+                    )}
                 </Link>
               </TooltipTrigger>
               <TooltipContent>
