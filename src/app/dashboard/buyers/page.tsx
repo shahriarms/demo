@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef } from 'react';
-import { useInvoices } from '@/hooks/use-invoices';
+import { useAppData } from '@/hooks/use-app-data';
 import { useSettings } from '@/hooks/use-settings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -14,7 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, FileText, ChevronRight, Calendar, DollarSign, Search, Printer } from 'lucide-react';
+import { Users, FileText, ChevronRight, Calendar, DollarSign, Search, Printer, Loader2 } from 'lucide-react';
 import type { Buyer, Invoice } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function BuyersPage() {
-  const { buyers, getInvoicesForBuyer } = useInvoices();
+  const { buyers, getInvoicesForBuyer, isAppDataLoading } = useAppData();
   const { settings } = useSettings();
   const { t } = useTranslation();
 
@@ -36,6 +36,7 @@ export default function BuyersPage() {
   const componentToPrintRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
+    // New simplified print logic using global CSS
     window.print();
   };
 
@@ -67,10 +68,14 @@ export default function BuyersPage() {
         (buyer.phone && buyer.phone.toLowerCase().includes(buyerSearchTerm.toLowerCase()))
     );
   }, [buyers, buyerSearchTerm]);
+  
+  if (isAppDataLoading) {
+    return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
 
   return (
-    <div className="flex flex-col h-full gap-4 no-print">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full gap-4">
+      <div className="flex items-center justify-between no-print">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Users className="w-6 h-6" />
             {t('buyers_page_title')}
@@ -78,7 +83,7 @@ export default function BuyersPage() {
       </div>
       <div className="grid md:grid-cols-3 gap-6 flex-1">
         {/* Buyers List & Invoice Log */}
-        <div className="md:col-span-1 flex flex-col gap-6">
+        <div className="md:col-span-1 flex flex-col gap-6 no-print">
             <Card className="flex-1 flex flex-col">
               <CardHeader className="space-y-4 flex-shrink-0">
                 <CardTitle>{t('all_buyers_title')}</CardTitle>
@@ -171,7 +176,7 @@ export default function BuyersPage() {
 
         {/* Invoice Display */}
         <div className="md:col-span-2 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between no-print">
               <h2 className="text-lg font-semibold">{t('invoice_details_title')}</h2>
               {selectedInvoice && (
                   <Button onClick={handlePrint} disabled={!selectedInvoice}>
@@ -199,7 +204,7 @@ export default function BuyersPage() {
                    />
                  </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground h-full flex flex-col justify-center items-center rounded-lg border">
+              <div className="text-center py-12 text-muted-foreground h-full flex flex-col justify-center items-center rounded-lg border no-print">
                   <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
                   <p className="font-semibold">{t('no_invoice_selected_title')}</p>
                   <p className="text-sm">{t('no_invoice_selected_description')}</p>
@@ -211,3 +216,5 @@ export default function BuyersPage() {
     </div>
   );
 }
+
+    

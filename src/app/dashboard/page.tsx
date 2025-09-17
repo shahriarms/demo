@@ -8,9 +8,7 @@ import {
   ChartTooltipContent,
   ChartConfig,
 } from '@/components/ui/chart';
-import { useInvoices } from '@/hooks/use-invoices';
-import { useExpenses } from '@/hooks/use-expenses';
-import { useEmployees } from '@/hooks/use-employees';
+import { useAppData } from '@/hooks/use-app-data';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
 import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, UserCheck, Package, HandCoins, Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
@@ -23,9 +21,7 @@ import { useTranslation } from '@/hooks/use-translation';
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 export default function Dashboard() {
-  const { getInvoicesForDateRange, getInvoicesForDay, isLoading: isInvoiceLoading } = useInvoices();
-  const { getExpensesForDateRange, isLoading: isExpenseLoading } = useExpenses();
-  const { getAttendanceSummaryForDate, isLoading: isEmployeeLoading } = useEmployees();
+  const { getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate, isAppDataLoading: isLoading } = useAppData();
   const { t } = useTranslation();
 
   const [date, setDate] = useState<Date>(new Date());
@@ -37,16 +33,15 @@ export default function Dashboard() {
   const [todayInvoices, setTodayInvoices] = useState<any[]>([]);
   const [todayAttendanceSummary, setTodayAttendanceSummary] = useState({ present: 0, total: 0 });
 
-  const isLoading = isInvoiceLoading || isExpenseLoading || isEmployeeLoading;
-
   useEffect(() => {
     if (!isLoading) {
       setMonthlyInvoices(getInvoicesForDateRange(monthStart, monthEnd));
       setMonthlyExpenses(getExpensesForDateRange(monthStart, monthEnd));
-      setTodayInvoices(getInvoicesForDay(new Date()));
-      setTodayAttendanceSummary(getAttendanceSummaryForDate(new Date()));
+      const today = new Date();
+      setTodayInvoices(getInvoicesForDateRange(today, today));
+      setTodayAttendanceSummary(getAttendanceSummaryForDate(today));
     }
-  }, [isLoading, getInvoicesForDateRange, getExpensesForDateRange, getInvoicesForDay, getAttendanceSummaryForDate, monthStart, monthEnd]);
+  }, [isLoading, getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate, date]);
 
 
   const monthlyStats = useMemo(() => {
@@ -100,6 +95,9 @@ export default function Dashboard() {
     quantity: { label: t('quantity_label') },
   };
 
+  if (isLoading) {
+    return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -140,7 +138,7 @@ export default function Dashboard() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                {isLoading ? <Loader2 className="h-6 w-6 animate-spin"/> : <div className="text-2xl font-bold">${todayStats.totalSales.toFixed(2)}</div>}
+                <div className="text-2xl font-bold">${todayStats.totalSales.toFixed(2)}</div>
                 <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
             </CardContent>
           </Card>
@@ -150,7 +148,7 @@ export default function Dashboard() {
                 <HandCoins className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                {isLoading ? <Loader2 className="h-6 w-6 animate-spin"/> : <div className="text-2xl font-bold">${todayStats.totalDue.toFixed(2)}</div>}
+                <div className="text-2xl font-bold">${todayStats.totalDue.toFixed(2)}</div>
                 <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
             </CardContent>
           </Card>
@@ -160,7 +158,7 @@ export default function Dashboard() {
                 <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                 {isLoading ? <Loader2 className="h-6 w-6 animate-spin"/> : <div className="text-2xl font-bold">{todayStats.unitsSold}</div>}
+                 <div className="text-2xl font-bold">{todayStats.unitsSold}</div>
                 <p className="text-xs text-muted-foreground">{t('total_items_footer')}</p>
             </CardContent>
           </Card>
@@ -170,7 +168,7 @@ export default function Dashboard() {
                 <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                {isLoading ? <Loader2 className="h-6 w-6 animate-spin"/> : <div className="text-2xl font-bold">{todayStats.presentEmployees}</div>}
+                <div className="text-2xl font-bold">{todayStats.presentEmployees}</div>
                 <p className="text-xs text-muted-foreground">{t('out_of_total_employees_footer', { total: todayAttendanceSummary.total })}</p>
             </CardContent>
           </Card>
@@ -183,7 +181,7 @@ export default function Dashboard() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoading ? <Loader2 className="h-6 w-6 animate-spin"/> : <div className="text-2xl font-bold">${monthlyStats.totalSales.toFixed(2)}</div>}
+            <div className="text-2xl font-bold">${monthlyStats.totalSales.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
           </CardContent>
         </Card>
@@ -193,7 +191,7 @@ export default function Dashboard() {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoading ? <Loader2 className="h-6 w-6 animate-spin"/> : <div className="text-2xl font-bold">${monthlyStats.totalExpenses.toFixed(2)}</div>}
+            <div className="text-2xl font-bold">${monthlyStats.totalExpenses.toFixed(2)}</div>
              <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
           </CardContent>
         </Card>
@@ -203,9 +201,9 @@ export default function Dashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoading ? <Loader2 className="h-6 w-6 animate-spin"/> : <div className={`text-2xl font-bold ${monthlyStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-2xl font-bold ${monthlyStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 ${monthlyStats.profit.toFixed(2)}
-            </div>}
+            </div>
              <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
           </CardContent>
         </Card>
@@ -218,7 +216,6 @@ export default function Dashboard() {
             <CardDescription>{t('daily_sales_chart_description')}</CardDescription>
             </CardHeader>
             <CardContent>
-            {isLoading ? <div className="flex justify-center items-center min-h-[250px]"><Loader2 className="h-8 w-8 animate-spin"/></div> :
             <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
                 <BarChart data={dailySalesChartData}>
                 <CartesianGrid vertical={false} />
@@ -230,7 +227,7 @@ export default function Dashboard() {
                 />
                 <Bar dataKey="Sales" fill="var(--color-Sales)" radius={4} />
                 </BarChart>
-            </ChartContainer>}
+            </ChartContainer>
             </CardContent>
         </Card>
          <Card className="lg:col-span-2">
@@ -239,8 +236,7 @@ export default function Dashboard() {
                 <CardDescription>{format(date, "MMMM yyyy")}</CardDescription>
             </CardHeader>
             <CardContent>
-                {isLoading ? <div className="flex justify-center items-center min-h-[250px]"><Loader2 className="h-8 w-8 animate-spin"/></div> :
-                topSellingProductsData.length > 0 ? (
+                {topSellingProductsData.length > 0 ? (
                     <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
                         <PieChart>
                             <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />

@@ -16,15 +16,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useProducts } from '@/hooks/use-products.tsx';
-import { useInvoices } from '@/hooks/use-invoices';
+import { useAppData } from '@/hooks/use-app-data';
 import { Plus, Trash2, Printer, X, Loader2, Search } from 'lucide-react';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useSettings } from '@/hooks/use-settings';
 import { useTranslation } from '@/hooks/use-translation';
-import type { DraftInvoice, DraftInvoiceItem } from '@/hooks/use-invoice-form';
+import type { DraftInvoice } from '@/hooks/use-invoice-form';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Product } from '@/lib/types';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -33,8 +32,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 
 export default function InvoicePage() {
-  const { products } = useProducts();
-  const { saveAndPrintInvoice } = useInvoices();
+  const { products, saveAndPrintInvoice } = useAppData();
   const { settings } = useSettings();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -51,8 +49,8 @@ export default function InvoicePage() {
     updateInvoiceItem,
     removeInvoiceItem,
     addInvoiceItem,
-    isFormLoading,
-    resetActiveDraft
+    resetActiveDraft,
+    isFormLoading
   } = useInvoiceForm();
   
   const [draftToDelete, setDraftToDelete] = useState<DraftInvoice | null>(null);
@@ -85,7 +83,7 @@ export default function InvoicePage() {
 
      setIsPrinting(true);
      try {
-       const printSuccess = await saveAndPrintInvoice(activeDraft, componentToPrintRef);
+       const printSuccess = await saveAndPrintInvoice(activeDraft);
 
        if (printSuccess) {
           toast({
@@ -380,8 +378,8 @@ export default function InvoicePage() {
                             {isPrinting ? 'Printing...' : t('save_and_print_button')}
                         </Button>
                    </CardHeader>
-                   <CardContent className="flex-1 min-h-0 p-4 bg-muted/50">
-                        <div ref={componentToPrintRef} className={cn("bg-white mx-auto print-source", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
+                   <CardContent className="flex-1 min-h-0 p-0 sm:p-4 bg-muted/50">
+                        <div ref={componentToPrintRef} className={cn("bg-white mx-auto print-source", settings.printFormat === 'pos' ? "w-[80mm] p-2" : "w-full")}>
                             <InvoicePrintLayout 
                                 invoiceId={draftId}
                                 currentDate={new Date().toLocaleDateString()}

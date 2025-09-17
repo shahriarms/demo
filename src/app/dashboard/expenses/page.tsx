@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { useExpenses } from '@/hooks/use-expenses';
+import { useState, useMemo, useEffect } from 'react';
+import { useAppData } from '@/hooks/use-app-data';
 import type { Expense } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -66,7 +66,7 @@ interface SummaryStats {
 
 
 export default function ExpensesPage() {
-    const { expenses, isLoading, deleteExpense } = useExpenses();
+    const { expenses, isAppDataLoading: isLoading, deleteExpense } = useAppData();
     const { t } = useTranslation();
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
@@ -194,6 +194,9 @@ export default function ExpensesPage() {
         }
     };
 
+    if (isLoading) {
+      return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    }
 
     return (
       <div className="flex flex-col gap-6">
@@ -224,7 +227,7 @@ export default function ExpensesPage() {
                     <CardDescription>{t('todays_expenses_description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {isLoading || !summaryStats ? <div className="flex justify-center items-center min-h-[150px]"><Loader2 className="h-8 w-8 animate-spin"/></div> : (
+                    {!summaryStats ? <div className="flex justify-center items-center min-h-[150px]"><Loader2 className="h-8 w-8 animate-spin"/></div> : (
                         <>
                             <p className="text-3xl font-bold">${summaryStats.todayTotal.toFixed(2)}</p>
                             {summaryStats.todayCategoryData.length > 0 ? (
@@ -246,10 +249,10 @@ export default function ExpensesPage() {
             <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>{t('this_months_expenses_title')}</CardTitle>
-                     {isLoading || !summaryStats ? <div className="h-5"/> : <CardDescription>{t('total_label')}: <span className="font-bold">${summaryStats.monthTotal.toFixed(2)}</span></CardDescription>}
+                     {!summaryStats ? <div className="h-5"/> : <CardDescription>{t('total_label')}: <span className="font-bold">${summaryStats.monthTotal.toFixed(2)}</span></CardDescription>}
                 </CardHeader>
                 <CardContent>
-                    {isLoading || !monthChartData ? <div className="flex justify-center items-center min-h-[200px]"><Loader2 className="h-8 w-8 animate-spin"/></div> : (
+                    {!monthChartData ? <div className="flex justify-center items-center min-h-[200px]"><Loader2 className="h-8 w-8 animate-spin"/></div> : (
                         <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
                             <BarChart data={monthChartData}>
                                 <CartesianGrid vertical={false} />
@@ -305,13 +308,7 @@ export default function ExpensesPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {isLoading ? (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="h-24 text-center">
-                                        <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-                                    </TableCell>
-                                </TableRow>
-                            ) : filteredAndSortedExpenses.length > 0 ? (
+                            {filteredAndSortedExpenses.length > 0 ? (
                                 filteredAndSortedExpenses.map(expense => (
                                     <TableRow key={expense.id}>
                                         <TableCell>

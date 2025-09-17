@@ -29,6 +29,7 @@ export interface Payment {
 
 export interface Invoice {
   id: string;
+  buyerId?: string;
   customerName: string;
   customerAddress: string;
   customerPhone: string;
@@ -37,7 +38,6 @@ export interface Invoice {
   paidAmount: number;
   dueAmount: number;
   date: string; // ISO 8601 date string
-  payments?: Payment[];
 }
 
 export interface Buyer {

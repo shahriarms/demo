@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useProducts } from '@/hooks/use-products.tsx';
+import { useAppData } from '@/hooks/use-app-data';
 import {
   Form,
   FormControl,
@@ -49,7 +49,7 @@ interface AddProductDialogProps {
 }
 
 export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) {
-  const { addProduct } = useProducts();
+  const { addProduct } = useAppData();
   const { settings } = useSettings();
   const { t } = useTranslation();
   
@@ -268,3 +268,5 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     </Dialog>
   );
 }
+
+    

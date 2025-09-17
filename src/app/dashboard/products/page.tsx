@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProducts } from '@/hooks/use-products.tsx';
+import { useAppData } from '@/hooks/use-app-data';
 import type { Product } from '@/lib/types';
 import { AddProductDialog } from '@/components/add-product-dialog';
 import { EditProductDialog } from '@/components/edit-product-dialog';
@@ -50,7 +50,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function ProductsPage() {
-  const { products, isLoading, addMultipleProducts, deleteProduct } = useProducts();
+  const { products, isAppDataLoading, addMultipleProducts, deleteProduct } = useAppData();
   const { user } = useUser();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -192,11 +192,11 @@ export default function ProductsPage() {
             className="hidden"
             accept=".xlsx, .xls, .csv"
           />
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading || user?.role !== 'admin'}>
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isAppDataLoading || user?.role !== 'admin'}>
             <Upload className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">{t('upload_button')}</span>
           </Button>
-          <Button variant="outline" onClick={handleDownload} disabled={isLoading || filteredProducts.length === 0}>
+          <Button variant="outline" onClick={handleDownload} disabled={isAppDataLoading || filteredProducts.length === 0}>
             <Download className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">{t('download_report_button')}</span>
           </Button>
@@ -250,7 +250,7 @@ export default function ProductsPage() {
                 </div>
                 {/* Table Section */}
                 <div className="relative rounded-md border overflow-auto flex-1">
-                {isLoading ? (
+                {isAppDataLoading ? (
                 <div className="absolute inset-0 flex justify-center items-center">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>

@@ -2,8 +2,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useCallback } from 'react';
-import { useInvoices } from '@/hooks/use-invoices';
-import { usePayments } from '@/hooks/use-payments';
+import { useAppData } from '@/hooks/use-app-data';
 import type { Buyer, Invoice, Payment } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -17,15 +16,14 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer, Search } from 'lucide-react';
+import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer, Search, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentReceipt } from '@/components/payment-receipt';
 import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function BuyersDuePage() {
-  const { buyers, getInvoicesForBuyer } = useInvoices();
-  const { addPayment, getPaymentsForInvoice } = usePayments();
+  const { buyers, getInvoicesForBuyer, addPayment, getPaymentsForInvoice, isAppDataLoading } = useAppData();
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -126,7 +124,6 @@ export default function BuyersDuePage() {
         return;
     }
     
-    // The print-source class will be handled by CSS media queries.
     // The transaction is completed first, then we print the new state.
     completePaymentTransaction();
 
@@ -148,16 +145,19 @@ export default function BuyersDuePage() {
     return [pendingPayment, ...paymentHistory];
   }, [paymentHistory, paymentAmount, selectedInvoice, selectedBuyer]);
 
+  if (isAppDataLoading) {
+    return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
 
   return (
-    <div className="flex flex-col h-full gap-4 no-print">
-      <h1 className="text-2xl font-semibold flex items-center gap-2">
+    <div className="flex flex-col h-full gap-4">
+      <h1 className="text-2xl font-semibold flex items-center gap-2 no-print">
         <HandCoins className="w-6 h-6" />
         {t('buyers_due_page_title')}
       </h1>
       <div className="grid md:grid-cols-5 gap-6 flex-1">
         {/* Buyers with Due List */}
-        <Card className="md:col-span-2 lg:col-span-1 flex flex-col">
+        <Card className="md:col-span-2 lg:col-span-1 flex flex-col no-print">
           <CardHeader className="flex-shrink-0">
             <CardTitle>{t('buyers_with_due_title')}</CardTitle>
             <div className="relative pt-2">
@@ -199,7 +199,7 @@ export default function BuyersDuePage() {
         </Card>
 
         {/* Due Invoices List */}
-        <Card className="md:col-span-3 lg:col-span-1 flex flex-col">
+        <Card className="md:col-span-3 lg:col-span-1 flex flex-col no-print">
           <CardHeader className="flex-shrink-0">
             <CardTitle className="truncate">{selectedBuyer ? t('due_invoices_title') : t('select_buyer_title')}</CardTitle>
             <CardDescription>{selectedBuyer ? t('for_buyer_subtitle', { name: selectedBuyer.name }) : t('outstanding_balances_subtitle')}</CardDescription>
@@ -248,11 +248,11 @@ export default function BuyersDuePage() {
         
         {/* Payment Section */}
         <Card className="md:col-span-5 lg:col-span-3 flex flex-col">
-            <CardHeader>
+            <CardHeader className='no-print'>
                 <CardTitle>{t('receive_payment_title')}</CardTitle>
                 <CardDescription>{t('receive_payment_description')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 no-print">
                 {selectedInvoice ? (
                     <>
                         <div className="flex justify-between items-start">
@@ -280,7 +280,7 @@ export default function BuyersDuePage() {
                 )}
             </CardContent>
             <div className="flex-1 flex flex-col min-h-0">
-                <div className="flex items-center gap-2 px-6 pt-4">
+                <div className="flex items-center gap-2 px-6 pt-4 no-print">
                     <History className="w-5 h-5" />
                     <h3 className="text-lg font-semibold">{t('live_receipt_preview_title')}</h3>
                 </div>
@@ -296,7 +296,7 @@ export default function BuyersDuePage() {
                                 />
                             </div>
                         ) : (
-                            <div className="text-center text-muted-foreground p-8 flex flex-col justify-center items-center h-full border rounded-lg">
+                            <div className="text-center text-muted-foreground p-8 flex flex-col justify-center items-center h-full border rounded-lg no-print">
                                 <FileText className="w-12 h-12 mb-4 text-muted-foreground/50"/>
                                 <p>{t('select_invoice_for_preview')}</p>
                            </div>
@@ -309,3 +309,5 @@ export default function BuyersDuePage() {
     </div>
   );
 }
+
+    

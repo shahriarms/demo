@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useProducts } from '@/hooks/use-products.tsx';
+import { useAppData } from '@/hooks/use-app-data';
 import {
   Form,
   FormControl,
@@ -50,7 +50,7 @@ interface EditProductDialogProps {
 }
 
 export function EditProductDialog({ open, onOpenChange, product }: EditProductDialogProps) {
-  const { updateProduct } = useProducts();
+  const { updateProduct } = useAppData();
   const { t } = useTranslation();
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -264,3 +264,5 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     </Dialog>
   );
 }
+
+    

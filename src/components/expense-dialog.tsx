@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { useExpenses } from '@/hooks/use-expenses';
+import { useAppData } from '@/hooks/use-app-data';
 import type { Expense } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import {
@@ -61,7 +61,7 @@ interface ExpenseDialogProps {
 }
 
 export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProps) {
-    const { addExpense, updateExpense } = useExpenses();
+    const { addExpense, updateExpense } = useAppData();
     const { t } = useTranslation();
     const isEditMode = !!expense;
 
@@ -229,3 +229,5 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
         </Dialog>
     );
 }
+
+    

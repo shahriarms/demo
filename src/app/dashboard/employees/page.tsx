@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useEmployees } from '@/hooks/use-employees';
+import { useAppData } from '@/hooks/use-app-data';
 import type { Employee, AttendanceStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -35,7 +35,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, CalendarIcon, Users, UserCheck, UserX, NotebookText } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, CalendarIcon, Users, UserCheck, UserX, NotebookText, Loader2 } from 'lucide-react';
 import { EmployeeDialog } from '@/components/employee-dialog';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -54,7 +54,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function EmployeesPage() {
-    const { employees, attendance, markAttendance, getAttendanceForDate, deleteEmployee } = useEmployees();
+    const { employees, markAttendance, getAttendanceForDate, deleteEmployee, isAppDataLoading } = useAppData();
     const { user } = useUser();
     const { t } = useTranslation();
     
@@ -132,6 +132,9 @@ export default function EmployeesPage() {
         }
     };
 
+    if (isAppDataLoading) {
+      return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    }
 
     return (
         <div className="flex flex-col gap-6">
@@ -306,3 +309,5 @@ export default function EmployeesPage() {
         </div>
     );
 }
+
+    

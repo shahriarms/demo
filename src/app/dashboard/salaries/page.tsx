@@ -2,8 +2,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { useEmployees } from '@/hooks/use-employees';
-import { useSalaries } from '@/hooks/use-salaries';
+import { useAppData } from '@/hooks/use-app-data';
 import { useUser } from '@/hooks/use-user';
 import type { Employee, SalaryPayment } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -18,15 +17,14 @@ import {
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Users, ChevronRight, DollarSign, Wallet, History, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Users, ChevronRight, DollarSign, Wallet, History, AlertCircle, ShieldCheck, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useTranslation } from '@/hooks/use-translation';
 
 export default function SalariesPage() {
-  const { employees } = useEmployees();
+  const { employees, getPaymentsForMonth, addSalaryPayment, getDueSalaryForMonth, isAppDataLoading } = useAppData();
   const { user } = useUser();
-  const { getPaymentsForMonth, addSalaryPayment, getDueSalaryForMonth } = useSalaries();
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -103,6 +101,9 @@ export default function SalariesPage() {
 
   }, [selectedEmployee, paymentAmount, isOverpayment, user, addSalaryPayment, toast, employees, t]);
 
+  if (isAppDataLoading) {
+    return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -233,3 +234,5 @@ export default function SalariesPage() {
     </div>
   );
 }
+
+    

@@ -8,8 +8,6 @@ import { DataProvider } from '@/hooks/use-app-data';
 import { TopNavBar } from '@/components/top-nav-bar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { InvoiceFormProvider } from '@/hooks/use-invoice-form';
-import { InvoiceProvider } from '@/hooks/use-invoices';
-
 
 export default function DashboardLayout({
   children,
@@ -21,22 +19,22 @@ export default function DashboardLayout({
       <SettingsProvider>
         <TranslationProvider>
           <DataProvider>
-            <InvoiceProvider>
-              <InvoiceFormProvider>
-                <TooltipProvider>
-                  <div className="flex flex-col h-svh">
-                    <SiteHeader />
-                    <TopNavBar />
-                    <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto bg-muted/30">
-                      {children}
-                    </main>
-                  </div>
-                </TooltipProvider>
-              </InvoiceFormProvider>
-            </InvoiceProvider>
+            <InvoiceFormProvider>
+              <TooltipProvider>
+                <div className="flex flex-col h-svh">
+                  <SiteHeader />
+                  <TopNavBar />
+                  <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto bg-muted/30">
+                    {children}
+                  </main>
+                </div>
+              </TooltipProvider>
+            </InvoiceFormProvider>
           </DataProvider>
         </TranslationProvider>
       </SettingsProvider>
     </UserProvider>
   );
 }
+
+    

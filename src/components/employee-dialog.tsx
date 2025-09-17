@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, DollarSign } from 'lucide-react';
-import { useEmployees } from '@/hooks/use-employees';
+import { useAppData } from '@/hooks/use-app-data';
 import type { Employee } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import {
@@ -61,7 +61,7 @@ interface EmployeeDialogProps {
 }
 
 export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogProps) {
-    const { addEmployee, updateEmployee } = useEmployees();
+    const { addEmployee, updateEmployee } = useAppData();
     const { t } = useTranslation();
     const isEditMode = !!employee;
 
@@ -234,3 +234,5 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         </Dialog>
     );
 }
+
+    
