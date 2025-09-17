@@ -13,15 +13,47 @@ StockPilot is a modern, responsive inventory management application designed to 
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
 - **Authentication**: [Firebase Authentication](https://firebase.google.com/docs/auth)
 - **Database**: PostgreSQL (optional, with fallback to `localStorage`)
+- **Containerization**: [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
 - **POS Printing**: [Next.js API Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) with direct device communication.
 
 ---
 
-## Getting Started (Local Setup)
+## Getting Started
 
-Follow these steps to get a local copy up and running on your machine.
+There are two ways to run this application: using Docker (recommended for production and easy setup) or running it locally with Node.js.
 
-### 1. Prerequisites (পূর্বশর্ত)
+### Option 1: Running with Docker (Recommended)
+
+This is the simplest and most reliable way to run the application, as it bundles all dependencies and configurations into a single container.
+
+#### **Prerequisites**
+- **Docker**: Install Docker Desktop from [docker.com](https://www.docker.com/products/docker-desktop/).
+
+#### **Run the Application**
+1. **Clone the repository** (if you haven't already):
+   ```bash
+   git clone https://github.com/your-username/stockpilot.git
+   cd stockpilot
+   ```
+2. **(Optional) Configure PostgreSQL**: If you want to use a PostgreSQL database, create a `.env.local` file and add your `POSTGRES_URL`. See the "Backend Development" section for more details. If you skip this, the app will use `localStorage`.
+
+3. **Start the application with Docker Compose**:
+   ```bash
+   docker-compose up --build
+   ```
+   This command will build the Docker image and start the application container.
+
+4. **Access the app**: Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+To stop the application, press `Ctrl + C` in the terminal.
+
+---
+
+### Option 2: Local Setup with Node.js
+
+Follow these steps to get a local copy up and running on your machine for development.
+
+#### **1. Prerequisites (পূর্বশর্ত)**
 
 Before you begin, ensure you have the following installed on your local machine:
 
@@ -29,7 +61,7 @@ Before you begin, ensure you have the following installed on your local machine:
 - **npm**: This comes automatically with Node.js.
 - **Git**: You need Git to clone the repository. You can download it from [git-scm.com](https://git-scm.com/).
 
-### 2. Clone the Repository (রিপোজিটরি ক্লোন করুন)
+#### **2. Clone the Repository (রিপোজিটরি ক্লোন করুন)**
 
 Open your terminal (like Git Bash, PowerShell, or Command Prompt) and run the following command to clone the project to your computer:
 
@@ -42,7 +74,7 @@ After the clone is complete, navigate into the project directory:
 cd stockpilot
 ```
 
-### 3. Install Dependencies (প্যাকেজ ইনস্টল করুন)
+#### **3. Install Dependencies (প্যাকেজ ইনস্টল করুন)**
 
 Inside the `stockpilot` folder, run this command to install all the necessary libraries and packages for the project.
 
@@ -51,7 +83,7 @@ npm install
 ```
 This might take a few minutes.
 
-### 4. Run the Development Server (প্রজেক্ট চালান)
+#### **4. Run the Development Server (প্রজেক্ট চালান)**
 
 Once the installation is complete, you can start the development server with this command:
 
@@ -59,7 +91,7 @@ Once the installation is complete, you can start the development server with thi
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result. The app will initially run using your browser's `localStorage` for data storage. You can start editing the page by modifying any file in `src/`. The app will auto-update as you edit the files.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result. The app will initially run using your browser's `localStorage` for data storage.
 
 ---
 
@@ -85,7 +117,7 @@ For security, your database connection string should not be hard-coded.
     ```
     POSTGRES_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
     ```
-    The `.gitignore` file is already configured to ignore `.env.local`, so your credentials will not be committed to Git.
+    The `.gitignore` file is already configured to ignore `.env.local`, so your credentials will not be committed to Git. If you are using Docker, `docker-compose.yml` will automatically load this file.
 
 ### 3. Set Up the Database Table
 
@@ -100,7 +132,7 @@ This command will connect to your PostgreSQL database using the URL from your `.
 
 ### 4. Restart and Verify
 
-After setting up the `.env.local` file and running the `db:setup` command, **restart your development server** (`npm run dev`). The application will now automatically perform all product operations directly on your PostgreSQL database. No other code changes are needed.
+After setting up the `.env.local` file and running the `db:setup` command, **restart your development server** (`npm run dev` or `docker-compose up`). The application will now automatically perform all product operations directly on your PostgreSQL database. No other code changes are needed.
 
 ---
 
@@ -147,12 +179,12 @@ For printers connected to your router via Ethernet or WiFi.
 
 ### Testing the Printer
 1.  Configure your printer in the **Settings** page.
-2.  Run the application (`npm run dev`).
+2.  Run the application (`npm run dev` or `docker-compose up`).
 3.  Navigate to the **Invoice** page from the sidebar.
 4.  Add a customer and at least one item to the invoice.
 5.  Click the **"Save & Print"** button.
 
-If everything is set up correctly, your thermal printer should print a detailed receipt. If it fails, check the terminal where you are running `npm run dev` for detailed error messages.
+If everything is set up correctly, your thermal printer should print a detailed receipt. If it fails, check the terminal where you are running the app for detailed error messages.
 
 ---
 

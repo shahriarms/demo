@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stockpilot_app
+    ports:
+      - "3000:3000"
+    # The 'env_file' property allows you to pass environment variables
+    # from a .env.local file on your host machine directly to the container.
+    # This is perfect for securely providing the POSTGRES_URL.
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    # You can add a volume for persistent data if needed in the future,
+    # for example, to persist uploaded files or logs outside the container.
+    # volumes:
+    #   - ./persistent_data:/app/persistent_data
