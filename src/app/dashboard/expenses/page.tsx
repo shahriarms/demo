@@ -224,7 +224,7 @@ export default function ExpensesPage() {
                     <CardDescription>{t('todays_expenses_description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {!summaryStats ? <Loader2 className="h-6 w-6 animate-spin"/> : (
+                    {isLoading || !summaryStats ? <div className="flex justify-center items-center min-h-[150px]"><Loader2 className="h-8 w-8 animate-spin"/></div> : (
                         <>
                             <p className="text-3xl font-bold">${summaryStats.todayTotal.toFixed(2)}</p>
                             {summaryStats.todayCategoryData.length > 0 ? (
@@ -246,11 +246,11 @@ export default function ExpensesPage() {
             <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>{t('this_months_expenses_title')}</CardTitle>
-                     {!summaryStats ? <div className="h-5"/> : <CardDescription>{t('total_label')}: <span className="font-bold">${summaryStats.monthTotal.toFixed(2)}</span></CardDescription>}
+                     {isLoading || !summaryStats ? <div className="h-5"/> : <CardDescription>{t('total_label')}: <span className="font-bold">${summaryStats.monthTotal.toFixed(2)}</span></CardDescription>}
                 </CardHeader>
                 <CardContent>
-                    {!monthChartData ? <div className="flex justify-center items-center min-h-48"><Loader2 className="h-6 w-6 animate-spin"/></div> : (
-                        <ChartContainer config={chartConfig} className="min-h-48 w-full">
+                    {isLoading || !monthChartData ? <div className="flex justify-center items-center min-h-[200px]"><Loader2 className="h-8 w-8 animate-spin"/></div> : (
+                        <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
                             <BarChart data={monthChartData}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />

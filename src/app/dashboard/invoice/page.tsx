@@ -43,10 +43,10 @@ export default function InvoicePage() {
   const {
     drafts,
     activeDraftIndex,
+    setActiveDraftIndex,
     activeDraft,
     addNewDraft,
     removeDraft,
-    setActiveDraftIndex,
     updateActiveDraft,
     updateInvoiceItem,
     removeInvoiceItem,
@@ -417,3 +417,5 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    

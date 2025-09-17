@@ -47,7 +47,7 @@ async function printPosReceipt(settings: AppSettings, orderData: any) {
     }
 }
 
-function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>, invoiceId: string): Promise<boolean> {
+function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<boolean> {
     return new Promise(async (resolve) => {
         const printContents = printRef.current?.innerHTML;
         if (!printContents) {
@@ -59,10 +59,21 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>, invoiceId
 
         if (printWindow) {
             try {
-                // Use the invoice ID in the title to suggest it as the filename
-                printWindow.document.write(`<html><head><title>${invoiceId}</title>`);
+                printWindow.document.write('<html><head><title>Print</title>');
                 // Inject styles directly
-                printWindow.document.write('</head><body>');
+                const styles = Array.from(document.styleSheets)
+                    .map(styleSheet => {
+                        try {
+                            return Array.from(styleSheet.cssRules)
+                                .map(rule => rule.cssText)
+                                .join('');
+                        } catch (e) {
+                            console.warn('Cannot read stylesheet rules:', e);
+                            return '';
+                        }
+                    })
+                    .join('\n');
+                printWindow.document.write(`<style>${styles}</style></head><body>`);
                 printWindow.document.write(printContents);
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
@@ -75,13 +86,14 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>, invoiceId
                 };
                 
                 printWindow.addEventListener('afterprint', handleAfterPrint);
+                
+                document.body.classList.add('printing');
 
-                // A short delay to ensure content is fully rendered before printing
                 setTimeout(() => {
                     printWindow.focus();
                     printWindow.print();
-                    // If the print dialog is closed without printing, `onafterprint` might not fire.
-                    // We use a timeout to check if it was likely cancelled.
+                    document.body.classList.remove('printing');
+                    
                     setTimeout(() => {
                        if (!printed) {
                            printWindow.close();
@@ -92,6 +104,7 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>, invoiceId
 
             } catch (error) {
                 console.error("Error preparing print window:", error);
+                document.body.classList.remove('printing');
                 alert("Could not prepare print window. Please try again.");
                 printWindow.close();
                 resolve(false);
@@ -111,8 +124,29 @@ const useInvoicesData = (): InvoiceContextType => {
   const { settings } = useSettings();
 
   const saveInvoiceData = (draftInvoice: DraftInvoice, newId: string) => {
+    
+    let buyerId = draftInvoice.buyerId;
+    
+    // Find or create buyer
+    const existingBuyer = buyers.find(b => b.name === draftInvoice.customerName && b.phone === draftInvoice.customerPhone);
+    if (existingBuyer) {
+        buyerId = existingBuyer.id;
+        setBuyers(prev => prev.map(b => b.id === buyerId ? { ...b, invoiceIds: [...b.invoiceIds, newId] } : b));
+    } else {
+        buyerId = `buyer-${Date.now()}`;
+        const newBuyer: Buyer = {
+            id: buyerId,
+            name: draftInvoice.customerName,
+            address: draftInvoice.customerAddress,
+            phone: draftInvoice.customerPhone,
+            invoiceIds: [newId],
+        };
+        setBuyers(prev => [...prev, newBuyer]);
+    }
+    
     const invoiceToSave: Invoice = {
       id: newId,
+      buyerId: buyerId,
       customerName: draftInvoice.customerName,
       customerAddress: draftInvoice.customerAddress,
       customerPhone: draftInvoice.customerPhone,
@@ -124,25 +158,6 @@ const useInvoicesData = (): InvoiceContextType => {
     };
     
     setInvoices(prev => [invoiceToSave, ...prev]);
-    setBuyers(prevBuyers => {
-      const existingBuyerIndex = prevBuyers.findIndex(b => b.name === invoiceToSave.customerName && b.phone === invoiceToSave.customerPhone);
-      
-      if (existingBuyerIndex > -1) {
-        const updatedBuyers = [...prevBuyers];
-        const existingBuyer = updatedBuyers[existingBuyerIndex];
-        existingBuyer.invoiceIds.push(newId);
-        return updatedBuyers;
-      } else {
-        const newBuyer: Buyer = {
-          id: `buyer-${Date.now()}`,
-          name: invoiceToSave.customerName,
-          address: invoiceToSave.customerAddress,
-          phone: invoiceToSave.customerPhone,
-          invoiceIds: [newId],
-        };
-        return [...prevBuyers, newBuyer];
-      }
-    });
   };
 
   const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice, printRef: React.RefObject<HTMLDivElement>): Promise<boolean> => {
@@ -161,7 +176,7 @@ const useInvoicesData = (): InvoiceContextType => {
       await printPosReceipt(settings, orderData);
       return true; 
     } else {
-      const printed = await printNormalReceipt(printRef, newId);
+      const printed = await printNormalReceipt(printRef);
       if (printed) {
         saveInvoiceData(draftInvoice, newId);
         return true;
@@ -173,7 +188,7 @@ const useInvoicesData = (): InvoiceContextType => {
       });
       return false;
     }
-  }, [settings, toast]);
+  }, [settings, toast, buyers, setBuyers, setInvoices]);
   
   const updateInvoiceDue = useCallback((invoiceId: string, amountPaid: number) => {
     setInvoices(prevInvoices => 
@@ -220,3 +235,5 @@ const useInvoicesData = (): InvoiceContextType => {
 export function useInvoices() {
   return useInvoicesData();
 }
+
+    

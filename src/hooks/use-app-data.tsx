@@ -2,29 +2,14 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import type { Product, Invoice, Buyer, Expense, Employee, Attendance, SalaryPayment, Payment, AppSettings } from '@/lib/types';
+import type { Product, Invoice, Buyer, Expense, Employee, Attendance, SalaryPayment, Payment } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
-import { isSameDay, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
-import type { DraftInvoice, DraftInvoiceItem } from './use-invoice-form';
+import type { DraftInvoice } from './use-invoice-form';
 
 // Initial data fallbacks
-const initialProducts: Product[] = [
-    { id: 'prod-1', name: 'Angel 1" 4mm', sku: 'ANG-1-4', buyingPrice: 8.4, profitMargin: 25, sellingPrice: 10.5, stock: 597, mainCategory: 'Material', category: 'Angel', subCategory: '28' },
-    { id: 'prod-2', name: 'Angel 1" 5mm', sku: 'ANG-1-5', buyingPrice: 10.2, profitMargin: 25, sellingPrice: 12.75, stock: 847, mainCategory: 'Material', category: 'Angel', subCategory: '28' },
-    { id: 'prod-15', name: 'Hammer 500g', sku: 'HMR-500', buyingPrice: 12, profitMargin: 25, sellingPrice: 15, stock: 50, mainCategory: 'Hardware', category: 'Tools', subCategory: 'Hand Tools' },
-    { id: 'prod-16', name: 'Screwdriver Set', sku: 'SCR-SET-10', buyingPrice: 18, profitMargin: 25, sellingPrice: 22.5, stock: 75, mainCategory: 'Hardware', category: 'Tools', subCategory: 'Hand Tools' },
-];
-const initialEmployees: Employee[] = [
-    { id: 'emp-1', name: 'Shahadat Hossain', phone: '01712345678', address: '123 Mirpur, Dhaka', role: 'Manager', salary: 35000, joiningDate: new Date(2023, 0, 15).toISOString() },
-    { id: 'emp-2', name: 'Rabiul Islam', phone: '01812345679', address: '456 Gulshan, Dhaka', role: 'Sales', salary: 22000, joiningDate: new Date(2023, 5, 1).toISOString() },
-    { id: 'emp-3', name: 'Mehedi Hasan', phone: '01912345680', address: '789 Banani, Dhaka', role: 'Worker', salary: 18000, joiningDate: new Date(2024, 2, 10).toISOString() },
-];
-const initialExpenses: Expense[] = [
-    { id: 'exp-1', category: 'Rent', description: 'Office rent for July', amount: 1200, date: new Date(2024, 6, 1).toISOString(), paymentMethod: 'Bank' },
-    { id: 'exp-2', category: 'Utility', description: 'Electricity Bill', amount: 150, date: new Date(2024, 6, 15).toISOString(), paymentMethod: 'bKash' },
-];
 const createNewDraft = (): DraftInvoice => ({
     id: `draft-${Date.now()}`,
+    buyerId: '',
     items: [],
     customerName: '',
     customerAddress: '',
@@ -44,6 +29,7 @@ const STORAGE_KEYS = {
     salaryPayments: 'stockpilot-salary-payments',
     payments: 'stockpilot-payments',
     invoiceDrafts: 'stockpilot-invoice-drafts',
+    activeInvoiceDraftIndex: 'stockpilot-active-invoice-draft-index'
 };
 
 interface AppDataContextType {
@@ -65,6 +51,8 @@ interface AppDataContextType {
     setPayments: React.Dispatch<React.SetStateAction<Payment[]>>;
     invoiceDrafts: DraftInvoice[];
     setInvoiceDrafts: React.Dispatch<React.SetStateAction<DraftInvoice[]>>;
+    activeInvoiceDraftIndex: number;
+    setActiveInvoiceDraftIndex: React.Dispatch<React.SetStateAction<number>>;
     isAppDataLoading: boolean;
 }
 
@@ -80,21 +68,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [salaryPayments, setSalaryPayments] = useState<SalaryPayment[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [invoiceDrafts, setInvoiceDrafts] = useState<DraftInvoice[]>([]);
+    const [activeInvoiceDraftIndex, setActiveInvoiceDraftIndex] = useState(0);
     const [isAppDataLoading, setIsAppDataLoading] = useState(true);
 
     // Load all data from localStorage at once
     useEffect(() => {
         try {
             const data = {
-                products: JSON.parse(localStorage.getItem(STORAGE_KEYS.products) || 'null') || initialProducts,
+                products: JSON.parse(localStorage.getItem(STORAGE_KEYS.products) || '[]'),
                 invoices: JSON.parse(localStorage.getItem(STORAGE_KEYS.invoices) || '[]'),
                 buyers: JSON.parse(localStorage.getItem(STORAGE_KEYS.buyers) || '[]'),
-                expenses: JSON.parse(localStorage.getItem(STORAGE_KEYS.expenses) || 'null') || initialExpenses,
-                employees: JSON.parse(localStorage.getItem(STORAGE_KEYS.employees) || 'null') || initialEmployees,
+                expenses: JSON.parse(localStorage.getItem(STORAGE_KEYS.expenses) || '[]'),
+                employees: JSON.parse(localStorage.getItem(STORAGE_KEYS.employees) || '[]'),
                 attendance: JSON.parse(localStorage.getItem(STORAGE_KEYS.attendance) || '[]'),
                 salaryPayments: JSON.parse(localStorage.getItem(STORAGE_KEYS.salaryPayments) || '[]'),
                 payments: JSON.parse(localStorage.getItem(STORAGE_KEYS.payments) || '[]'),
                 invoiceDrafts: JSON.parse(localStorage.getItem(STORAGE_KEYS.invoiceDrafts) || 'null') || [createNewDraft()],
+                activeInvoiceDraftIndex: JSON.parse(localStorage.getItem(STORAGE_KEYS.activeInvoiceDraftIndex) || '0'),
             };
 
             // Data Migration / Validation
@@ -116,6 +106,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             setSalaryPayments(data.salaryPayments);
             setPayments(data.payments);
             setInvoiceDrafts(data.invoiceDrafts.length > 0 ? data.invoiceDrafts : [createNewDraft()]);
+            setActiveInvoiceDraftIndex(data.activeInvoiceDraftIndex);
 
         } catch (error) {
             console.error("Failed to load app data from localStorage", error);
@@ -136,8 +127,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
             localStorage.setItem(STORAGE_KEYS.salaryPayments, JSON.stringify(salaryPayments));
             localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(payments));
             localStorage.setItem(STORAGE_KEYS.invoiceDrafts, JSON.stringify(invoiceDrafts));
+            localStorage.setItem(STORAGE_KEYS.activeInvoiceDraftIndex, JSON.stringify(activeInvoiceDraftIndex));
         }
-    }, [products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, invoiceDrafts, isAppDataLoading]);
+    }, [products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, invoiceDrafts, activeInvoiceDraftIndex, isAppDataLoading]);
 
     const value = useMemo(() => ({
         products, setProducts,
@@ -149,9 +141,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         salaryPayments, setSalaryPayments,
         payments, setPayments,
         invoiceDrafts, setInvoiceDrafts,
+        activeInvoiceDraftIndex, setActiveInvoiceDraftIndex,
         isAppDataLoading
     }), [
-        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, invoiceDrafts, isAppDataLoading
+        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, invoiceDrafts, activeInvoiceDraftIndex, isAppDataLoading
     ]);
 
     return (
@@ -168,3 +161,5 @@ export function useAppData() {
     }
     return context;
 }
+
+    

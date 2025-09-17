@@ -3,7 +3,6 @@
 import { createContext, useContext, useMemo, useCallback } from 'react';
 import type { Product } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
-import { getAllProducts, addProduct as addProductAction, updateProduct as updateProductAction, deleteProduct as deleteProductAction, addMultipleProducts as addMultipleProductsAction } from '@/lib/actions/product-actions';
 import { useAppData } from './use-app-data';
 
 interface ProductContextType {
@@ -34,7 +33,6 @@ export function useProducts() {
 const useProductsData = (): ProductContextType => {
   const { products, setProducts, isAppDataLoading } = useAppData();
   const { toast } = useToast();
-  const isUsingDB = false; // This hook now only manages local data. DB logic would be separate.
 
   const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {
     const sellingPrice = productData.buyingPrice + (productData.buyingPrice * productData.profitMargin / 100);
@@ -43,7 +41,7 @@ const useProductsData = (): ProductContextType => {
     const newProduct: Product = { ...productWithPrice, id: `prod-${Date.now()}` };
     setProducts(prev => [newProduct, ...prev]);
     toast({
-        title: "Product Added (Local)",
+        title: "Product Added",
         description: `${newProduct.name} has been added to your local inventory.`,
     });
   }, [toast, setProducts]);
@@ -60,8 +58,8 @@ const useProductsData = (): ProductContextType => {
     }));
     setProducts(prev => [...prev, ...newLocalProducts]);
     toast({
-        title: "Upload Successful (Local)",
-        description: `${newLocalProducts.length} products have been added locally.`,
+        title: "Upload Successful",
+        description: `${newLocalProducts.length} products have been added.`,
     });
   }, [toast, setProducts]);
 
@@ -72,8 +70,8 @@ const useProductsData = (): ProductContextType => {
     const updatedProduct: Product = { ...productWithPrice, id: productId };
     setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
     toast({
-        title: "Product Updated (Local)",
-        description: `Details for ${updatedProduct.name} have been updated locally.`,
+        title: "Product Updated",
+        description: `Details for ${updatedProduct.name} have been updated.`,
     });
   }, [toast, setProducts]);
     
@@ -82,8 +80,8 @@ const useProductsData = (): ProductContextType => {
     setProducts(prev => prev.filter(p => p.id !== productId));
     if (productToDelete) {
          toast({
-            title: "Product Deleted (Local)",
-            description: `${productToDelete.name} has been removed locally.`,
+            title: "Product Deleted",
+            description: `${productToDelete.name} has been removed.`,
         });
     }
   }, [toast, products, setProducts]);
@@ -102,3 +100,5 @@ const useProductsData = (): ProductContextType => {
     isLoading: isAppDataLoading 
   }), [products, addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById, isAppDataLoading]);
 }
+
+    
