@@ -2,14 +2,15 @@
 FROM node:18-alpine AS deps
 WORKDIR /app
 
-# Copy package.json and package-lock.json (or yarn.lock)
+# Copy package.json and package-lock.json (if available)
 COPY package.json ./
-# Use npm ci for faster, more reliable installs in CI/CD environments
-RUN npm ci
+# Use npm install which is more flexible than npm ci and doesn't require a lock file
+RUN npm install
 
 # Stage 2: Build the application
 FROM node:18-alpine AS builder
 WORKDIR /app
+
 # Copy installed dependencies from the 'deps' stage
 COPY --from=deps /app/node_modules ./node_modules
 # Copy the rest of the application code
