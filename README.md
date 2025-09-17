@@ -26,26 +26,40 @@ There are two ways to run this application: using Docker (recommended for produc
 
 This is the simplest and most reliable way to run the application, as it bundles all dependencies and configurations into a single container.
 
-#### **Prerequisites**
-- **Docker**: Install Docker Desktop from [docker.com](https://www.docker.com/products/docker-desktop/).
+#### **1. Prerequisites (পূর্বশর্ত)**
+- **Docker**: You must have Docker installed on your system. Download Docker Desktop from the official website: [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/).
 
-#### **Run the Application**
-1. **Clone the repository** (if you haven't already):
-   ```bash
-   git clone https://github.com/your-username/stockpilot.git
-   cd stockpilot
-   ```
-2. **(Optional) Configure PostgreSQL**: If you want to use a PostgreSQL database, create a `.env.local` file and add your `POSTGRES_URL`. See the "Backend Development" section for more details. If you skip this, the app will use `localStorage`.
+#### **2. Clone the Repository (রিপোজিটরি ক্লোন করুন)**
+If you haven't already, open your terminal and clone the project to your computer:
+```bash
+git clone https://github.com/your-username/stockpilot.git
+cd stockpilot
+```
+*(Replace `your-username/stockpilot.git` with your actual repository URL)*
 
-3. **Start the application with Docker Compose**:
-   ```bash
-   docker-compose up --build
-   ```
-   This command will build the Docker image and start the application container.
+#### **3. Configure Environment (Optional)**
+If you plan to use a PostgreSQL database, create a `.env.local` file in the root of the project. The `docker-compose.yml` file is configured to automatically load this file.
+```
+# .env.local
+POSTGRES_URL="your-database-connection-string"
+```
+If you skip this step, the application will default to using the browser's `localStorage`.
 
-4. **Access the app**: Open [http://localhost:3000](http://localhost:3000) in your browser.
+#### **4. Build and Run the Container (কন্টেইনার চালান)**
+Now, run a single command from your terminal in the project root:
+```bash
+docker-compose up --build
+```
+- **`docker-compose up`**: This command reads your `docker-compose.yml` file and starts the services defined in it (in this case, your `web` app).
+- **`--build`**: This flag tells Docker Compose to build the Docker image from scratch using the `Dockerfile` before starting the container. This is important to do the first time or whenever you make changes to your source code or dependencies.
 
-To stop the application, press `Ctrl + C` in the terminal.
+Docker will now build the image, install all `npm` dependencies, and start your Next.js application inside a container.
+
+#### **5. Access the Application (অ্যাপটি দেখুন)**
+Once the build is complete and the container is running, open your web browser and navigate to:
+[http://localhost:3000](http://localhost:3000)
+
+To stop the application, simply press `Ctrl + C` in the terminal where Docker Compose is running.
 
 ---
 
