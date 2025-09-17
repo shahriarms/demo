@@ -54,17 +54,15 @@ export function TopNavBar() {
                   )}
                 >
                     <Icon className={cn("h-6 w-6 sm:h-7 sm:w-7 transition-colors", isActive && 'text-primary')} />
-                    {!isMobile && (
-                        <span className={cn("text-xs font-medium truncate transition-colors", isActive ? 'text-primary' : 'text-muted-foreground')}>
-                            {t(item.labelKey)}
-                        </span>
-                    )}
+                    <span className={cn("text-xs font-medium truncate transition-colors", isActive ? 'text-primary' : 'text-muted-foreground', isMobile ? 'hidden' : 'block')}>
+                        {t(item.labelKey)}
+                    </span>
                     {isActive && (
                         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 sm:w-10 h-1 bg-primary rounded-t-full" />
                     )}
                 </Link>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className={cn(isMobile ? 'block' : 'hidden sm:block')}>
                 <p>{t(item.labelKey)}</p>
               </TooltipContent>
             </Tooltip>
