@@ -12,7 +12,7 @@ StockPilot is a modern, responsive inventory management application designed to 
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
 - **Authentication**: [Firebase Authentication](https://firebase.google.com/docs/auth)
-- **Database**: PostgreSQL (optional, with fallback to `localStorage`)
+- **Database**: PostgreSQL (managed by Docker)
 - **Containerization**: [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
 - **POS Printing**: [Next.js API Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) with direct device communication.
 
@@ -20,14 +20,14 @@ StockPilot is a modern, responsive inventory management application designed to 
 
 ## Getting Started
 
-There are two ways to run this application: using Docker (recommended for production and easy setup) or running it locally with Node.js.
+There are two primary ways to run this application. Using Docker is highly recommended as it automates the entire setup, including the database.
 
-### Option 1: Running with Docker (Recommended)
+### Option 1: Running with Docker (Recommended One-Click Setup)
 
-This is the simplest and most reliable way to run the application, as it bundles all dependencies and configurations into a single container.
+This is the simplest and most reliable way to run the application and its database. It bundles all services and configurations into a single, easy-to-manage environment.
 
 #### **1. Prerequisites (পূর্বশর্ত)**
-- **Docker**: You must have Docker installed on your system. Download Docker Desktop from the official website: [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/).
+- **Docker**: You must have Docker and Docker Compose installed. Download Docker Desktop from the official website, as it includes both: [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/).
 
 #### **2. Clone the Repository (রিপোজিটরি ক্লোন করুন)**
 If you haven't already, open your terminal and clone the project to your computer:
@@ -37,187 +37,105 @@ cd stockpilot
 ```
 *(Replace `your-username/stockpilot.git` with your actual repository URL)*
 
-#### **3. Configure Environment (Optional)**
-If you plan to use a PostgreSQL database, create a `.env.local` file in the root of the project. The `docker-compose.yml` file is configured to automatically load this file.
-```
-# .env.local
-POSTGRES_URL="your-database-connection-string"
-```
-If you skip this step, the application will default to using the browser's `localStorage`.
-
-#### **4. Build and Run the Container (কন্টেইনার চালান)**
-Now, run a single command from your terminal in the project root:
+#### **3. Build and Run Everything (অ্যাপ এবং ডেটাবেস চালান)**
+Run a single command from your terminal in the project's root directory:
 ```bash
 docker-compose up --build
 ```
-- **`docker-compose up`**: This command reads your `docker-compose.yml` file and starts the services defined in it (in this case, your `web` app).
-- **`--build`**: This flag tells Docker Compose to build the Docker image from scratch using the `Dockerfile` before starting the container. This is important to do the first time or whenever you make changes to your source code or dependencies.
+- **`docker-compose up`**: This command reads the `docker-compose.yml` file and starts all the services defined in it (your `web` app and the `db` database).
+- **`--build`**: This flag tells Docker Compose to build the application's Docker image from scratch using the `Dockerfile`. You should use this the first time you run the command or whenever you make changes to your source code or dependencies.
 
-Docker will now build the image, install all `npm` dependencies, and start your Next.js application inside a container.
+Docker will now download the PostgreSQL image, build your application's image, install all `npm` dependencies, and start both the database and the Next.js application inside separate, networked containers.
+
+#### **4. Set Up the Database Table (প্রথমবার)**
+The first time you run the application, you need to create the database tables. Open a **new terminal window** (leave Docker Compose running in the first one) and run the following command:
+```bash
+npm run db:setup
+```
+This command connects to the **running Docker database container** and automatically creates the necessary `products` table. You only need to do this once.
 
 #### **5. Access the Application (অ্যাপটি দেখুন)**
-Once the build is complete and the container is running, open your web browser and navigate to:
+Once the build is complete and the containers are running, open your web browser and navigate to:
 [http://localhost:3000](http://localhost:3000)
 
-To stop the application, simply press `Ctrl + C` in the terminal where Docker Compose is running.
+To stop the entire system (app and database), press `Ctrl + C` in the terminal where Docker Compose is running.
 
 ---
 
-### Option 2: Local Setup with Node.js
+### Option 2: Local Setup with Node.js (Manual Database)
 
-Follow these steps to get a local copy up and running on your machine for development.
+Follow these steps if you prefer to run the application directly on your machine and manage the PostgreSQL database yourself.
 
 #### **1. Prerequisites (পূর্বশর্ত)**
 
-Before you begin, ensure you have the following installed on your local machine:
+- **Node.js**: `v18.x` or later.
+- **npm**: Comes with Node.js.
+- **Git**: For cloning the repository.
+- **PostgreSQL**: You must have a PostgreSQL server installed and running on your machine or use a cloud-hosted service.
 
-- **Node.js**: `v18.x` or later is recommended. You can download it from [nodejs.org](https://nodejs.org/).
-- **npm**: This comes automatically with Node.js.
-- **Git**: You need Git to clone the repository. You can download it from [git-scm.com](https://git-scm.com/).
-
-#### **2. Clone the Repository (রিপোজিটরি ক্লোন করুন)**
-
-Open your terminal (like Git Bash, PowerShell, or Command Prompt) and run the following command to clone the project to your computer:
-
+#### **2. Clone and Install Dependencies (রিপোজিটরি ও প্যাকেজ)**
 ```bash
 git clone https://github.com/shahriarms/stockpilot.git
-```
-
-After the clone is complete, navigate into the project directory:
-```bash
 cd stockpilot
-```
-
-#### **3. Install Dependencies (প্যাকেজ ইনস্টল করুন)**
-
-Inside the `stockpilot` folder, run this command to install all the necessary libraries and packages for the project.
-
-```bash
 npm install
 ```
-This might take a few minutes.
 
-#### **4. Run the Development Server (প্রজেক্ট চালান)**
+#### **3. Set Up Environment Variables (ডেটাবেস কানেকশন)**
+For security, your database connection string should be stored in an environment file.
 
-Once the installation is complete, you can start the development server with this command:
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result. The app will initially run using your browser's `localStorage` for data storage.
-
----
-
-## Backend Development: PostgreSQL Integration (Optional)
-
-This project is configured to automatically switch from `localStorage` to a live **PostgreSQL** database. The application's server actions will detect if a `POSTGRES_URL` environment variable is present and use it. Otherwise, it will fall back to using `localStorage`.
-
-### 1. PostgreSQL Prerequisites
-
-- **Install PostgreSQL**: Ensure PostgreSQL is installed on your local machine or use a cloud-hosted service like [Supabase](https://supabase.com/), [Neon](https://neon.tech/), or [Vercel Postgres](https://vercel.com/storage/postgres).
-- **Create a Database**: Create a new database for this project (e.g., `stockpilot_db`).
-- **Get Connection String**: Obtain your database connection string. It will look something like this:
-  ```
-  postgresql://USER:PASSWORD@HOST:PORT/DATABASE
-  ```
-
-### 2. Set Up Environment Variables
-
-For security, your database connection string should not be hard-coded.
-
-1.  In the root of the project, create a copy of the `.env.local.example` file and rename it to `.env.local`.
-2.  Open the new `.env.local` file and add your PostgreSQL connection string:
+1.  In the root of the project, create a file named `.env.local`.
+2.  Open it and add your PostgreSQL connection string:
     ```
     POSTGRES_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
     ```
-    The `.gitignore` file is already configured to ignore `.env.local`, so your credentials will not be committed to Git. If you are using Docker, `docker-compose.yml` will automatically load this file.
+    *Replace with your actual database credentials.*
 
-### 3. Set Up the Database Table
-
-Instead of running SQL commands manually, you can now run a single command to set up your database.
-
-In your terminal, run the following command:
+#### **4. Set Up the Database Table (টেবিল তৈরি)**
+Run this command to connect to your specified database and create the `products` table.
 ```bash
 npm run db:setup
 ```
 
-This command will connect to your PostgreSQL database using the URL from your `.env.local` file and automatically create the necessary `products` table.
-
-### 4. Restart and Verify
-
-After setting up the `.env.local` file and running the `db:setup` command, **restart your development server** (`npm run dev` or `docker-compose up`). The application will now automatically perform all product operations directly on your PostgreSQL database. No other code changes are needed.
+#### **5. Run the Development Server (প্রজেক্ট চালান)**
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ---
 
 ## Fully Functional POS Printing System
 
-This application includes a powerful backend printing system that communicates directly with thermal printers, bypassing browser limitations for a seamless POS experience.
+This application includes a powerful backend printing system that communicates directly with thermal printers.
 
 ### How It Works
-- The frontend (the **Invoice** page) sends order data as JSON to a Next.js API route (`/api/print`) when you choose the POS print option.
+- The **Invoice** page sends order data to a Next.js API route (`/api/print`).
 - The Node.js backend receives the JSON, formats a receipt, and sends raw ESC/POS commands to the printer.
-- This allows for printing text, images, barcodes, QR codes, and controlling the cash drawer and cutter.
 
 ### Setting Up Your Printer
 
-The printer configuration is managed from within the application on the **Settings** page.
+Configure your printer on the **Settings** page within the application.
 
-1.  Navigate to the **Settings** page from the sidebar.
-2.  Under **Print Settings**, select **POS Receipt**. This will reveal the POS printer configuration options.
-3.  Choose your printer's connection type (**USB** or **Network**) and provide the necessary details.
+1.  Navigate to **Settings** from the sidebar.
+2.  Under **Print Settings**, select **POS Receipt**.
+3.  Choose your printer's connection type (**USB** or **Network**) and provide the details.
 
-#### **Option 1: USB Printer (Recommended)**
-This is the simplest method for many printers. In the Settings page, simply select "USB".
-
-**Troubleshooting USB on Windows:**
-1.  Connect your thermal printer via USB. Windows may install its own driver.
-2.  Download **Zadig** ([https://zadig.akeo.ie/](https://zadig.akeo.ie/)).
-3.  In Zadig, go to `Options > List All Devices` and select your printer from the dropdown (e.g., "POS-80", "TM-T20II", or "Unknown Device").
-4.  Select the **libusb-win32** or **WinUSB** driver from the list on the right.
-5.  Click "Replace Driver". This allows Node.js to communicate directly with the printer.
-
-**Troubleshooting USB on Linux/macOS:**
-- You might need to grant Node.js permission to access the USB device. Create a file at `/etc/udev/rules.d/99-usb-thermal.rules` and add the following line, replacing `VENDOR_ID` and `PRODUCT_ID` with your printer's IDs (use `lsusb` to find them):
-  ```
-  SUBSYSTEM=="usb", ATTRS{idVendor}=="VENDOR_ID", ATTRS{idProduct}=="PRODUCT_ID", MODE="0666", GROUP="dialout"
-  ```
-- Run `sudo udevadm control --reload-rules` and unplug/replug the printer.
+#### **Option 1: USB Printer**
+Select "USB" in the Settings. For troubleshooting, especially on Windows, you might need to use a tool like **Zadig** to replace the default driver with `libusb-win32` or `WinUSB`. This allows Node.js to communicate directly with the printer.
 
 #### **Option 2: Network (TCP/IP) Printer**
-For printers connected to your router via Ethernet or WiFi.
-
-1.  In the Settings page, select **Network (TCP)**.
-2.  Enter your printer's IP address in the "Printer IP Address" field (e.g., `192.168.1.123`).
-3.  Enter the port number. `9100` is the default for most raw printing.
-
-### Testing the Printer
-1.  Configure your printer in the **Settings** page.
-2.  Run the application (`npm run dev` or `docker-compose up`).
-3.  Navigate to the **Invoice** page from the sidebar.
-4.  Add a customer and at least one item to the invoice.
-5.  Click the **"Save & Print"** button.
-
-If everything is set up correctly, your thermal printer should print a detailed receipt. If it fails, check the terminal where you are running the app for detailed error messages.
+Select "Network (TCP)" and enter your printer's IP address (e.g., `192.168.1.123`) and port (usually `9100`).
 
 ---
 
-## How to Push Your Code to GitHub (সম্পূর্ণ প্রজেক্ট পুশ করার নিয়ম)
+## How to Push Your Code to GitHub (কোড পুশ করার নিয়ম)
 
-If you are starting a new project in Firebase Studio and want to push it to your own GitHub repository for the first time, follow these steps very carefully.
-
+To push your project to your own GitHub repository for the first time:
 ```bash
-# Initialize a new Git repository
 git init
-# Add ALL files to Git's tracking
 git add .
-# Create a "commit" - a snapshot of your entire project
-git commit -m "Initial project commit with all files"
-# Set the default branch name to 'main'
+git commit -m "Initial project commit"
 git branch -M main
-# Connect your local project to your GitHub repository
-# (আপনার রিপোজিটরির URL এখানে ব্যবহার করুন)
 git remote add origin https://github.com/your-username/your-repo-name.git
-# IMPORTANT: Push all your code to GitHub
 git push -u origin main
 ```
