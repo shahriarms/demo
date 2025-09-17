@@ -49,71 +49,15 @@ async function printPosReceipt(settings: AppSettings, orderData: any) {
 
 function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<boolean> {
     return new Promise(async (resolve) => {
-        const printContents = printRef.current?.innerHTML;
-        if (!printContents) {
-            resolve(false);
-            return;
-        }
+        
+        document.body.classList.add('printing');
 
-        const printWindow = window.open('', '', 'height=800,width=800');
+        setTimeout(() => {
+            window.print();
+            document.body.classList.remove('printing');
+            resolve(true);
+        }, 100); 
 
-        if (printWindow) {
-            try {
-                printWindow.document.write('<html><head><title>Print</title>');
-                // Inject styles directly
-                const styles = Array.from(document.styleSheets)
-                    .map(styleSheet => {
-                        try {
-                            return Array.from(styleSheet.cssRules)
-                                .map(rule => rule.cssText)
-                                .join('');
-                        } catch (e) {
-                            console.warn('Cannot read stylesheet rules:', e);
-                            return '';
-                        }
-                    })
-                    .join('\n');
-                printWindow.document.write(`<style>${styles}</style></head><body>`);
-                printWindow.document.write(printContents);
-                printWindow.document.write('</body></html>');
-                printWindow.document.close();
-
-                let printed = false;
-                const handleAfterPrint = () => {
-                    printed = true;
-                    printWindow.close();
-                    resolve(true);
-                };
-                
-                printWindow.addEventListener('afterprint', handleAfterPrint);
-                
-                document.body.classList.add('printing');
-
-                setTimeout(() => {
-                    printWindow.focus();
-                    printWindow.print();
-                    document.body.classList.remove('printing');
-                    
-                    setTimeout(() => {
-                       if (!printed) {
-                           printWindow.close();
-                           resolve(false);
-                       }
-                    }, 500); 
-                }, 250);
-
-            } catch (error) {
-                console.error("Error preparing print window:", error);
-                document.body.classList.remove('printing');
-                alert("Could not prepare print window. Please try again.");
-                printWindow.close();
-                resolve(false);
-            }
-
-        } else {
-            alert("Your browser is blocking popups. Please allow popups for this site to print.");
-            resolve(false);
-        }
     });
 }
 
@@ -125,7 +69,7 @@ const useInvoicesData = (): InvoiceContextType => {
 
   const saveInvoiceData = (draftInvoice: DraftInvoice, newId: string) => {
     
-    let buyerId = draftInvoice.buyerId;
+    let buyerId = draftInvoice.buyerId || '';
     
     // Find or create buyer
     const existingBuyer = buyers.find(b => b.name === draftInvoice.customerName && b.phone === draftInvoice.customerPhone);
@@ -231,9 +175,19 @@ const useInvoicesData = (): InvoiceContextType => {
   return useMemo(() => ({ invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, getInvoicesForDateRange, getInvoicesForDay, updateInvoiceDue, isLoading: isAppDataLoading }), [invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, getInvoicesForDateRange, getInvoicesForDay, updateInvoiceDue, isAppDataLoading]);
 }
 
-
-export function useInvoices() {
-  return useInvoicesData();
+export function InvoiceProvider({ children }: { children: ReactNode }) {
+    const value = useInvoicesData();
+    return (
+        <InvoiceContext.Provider value={value}>
+            {children}
+        </InvoiceContext.Provider>
+    );
 }
 
-    
+export function useInvoices() {
+    const context = useContext(InvoiceContext);
+    if (context === undefined) {
+        throw new Error('useInvoices must be used within an InvoiceProvider');
+    }
+    return context;
+}
