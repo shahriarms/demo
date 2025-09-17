@@ -318,7 +318,7 @@ export default function InvoicePage() {
                                         <TableRow key={item.id}>
                                             <TableCell>
                                                 <p className="font-medium">{item.name}</p>
-                                                <p className='text-xs text-muted-foreground'>Suggested: ${item.originalPrice.toFixed(2)}</p>
+                                                <p className='text-xs text-muted-foreground'>Suggested: ${(item.originalPrice || 0).toFixed(2)}</p>
                                             </TableCell>
                                             <TableCell>
                                                 <Input type="number" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
