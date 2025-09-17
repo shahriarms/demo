@@ -11,10 +11,16 @@ import PostgresProductService from '@/services/product-service.postgres';
 const usePostgres = !!process.env.POSTGRES_URL;
 
 export async function getAllProducts(): Promise<Product[]> {
-    // This action can be called by the client to check for a DB connection.
-    // If no DB, return empty array, and client will use localStorage.
-    if (!usePostgres) return []; 
-    return PostgresProductService.getAllProducts();
+    if (!usePostgres) {
+        console.warn("POSTGRES_URL not set. Running without a database. Product data will not be persisted.");
+        return [];
+    }
+    try {
+        return await PostgresProductService.getAllProducts();
+    } catch (error) {
+        console.error("Failed to get all products:", error);
+        throw new Error("Could not fetch products from the database.");
+    }
 }
 
 export async function getProductById(productId: string): Promise<Product | undefined> {
@@ -23,18 +29,23 @@ export async function getProductById(productId: string): Promise<Product | undef
 }
 
 export async function addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
-    // This action should only be called by the client if usePostgres is true.
+    if (!usePostgres) throw new Error("Database not connected.");
     return PostgresProductService.addProduct(productData);
 }
 
 export async function addMultipleProducts(productsData: Omit<Product, 'id'>[]): Promise<Product[]> {
+    if (!usePostgres) throw new Error("Database not connected.");
     return PostgresProductService.addMultipleProducts(productsData);
 }
 
 export async function updateProduct(productId: string, updatedData: Omit<Product, 'id'>): Promise<Product | null> {
+    if (!usePostgres) throw new Error("Database not connected.");
     return PostgresProductService.updateProduct(productId, updatedData);
 }
 
-export async function deleteProduct(productId: string): Promise<string | null> {
-    return PostgresProductService.deleteProduct(productId);
+export async function deleteProduct(productId: string): Promise<{ deletedProductName: string | null }> {
+    if (!usePostgres) throw new Error("Database not connected.");
+    const deletedName = await PostgresProductService.deleteProduct(productId);
+    return { deletedProductName: deletedName };
 }
+

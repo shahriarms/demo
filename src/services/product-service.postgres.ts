@@ -5,19 +5,31 @@ import { Pool } from 'pg';
 import type { Product } from '@/lib/types';
 
 let pool: Pool;
-// The check for process.env.POSTGRES_URL is now in the server action,
-// so we can safely initialize the pool here.
-pool = new Pool({
-    connectionString: process.env.POSTGRES_URL,
-});
+
+// Initialize pool only if the connection string is available.
+if (process.env.POSTGRES_URL) {
+    pool = new Pool({
+        connectionString: process.env.POSTGRES_URL,
+    });
+} else {
+    // This is a safeguard, though server actions should prevent this from being used without a DB.
+    console.warn("PostgresProductService: POSTGRES_URL is not set. Service will not function.");
+}
+
 
 function formatProduct(row: any): Product {
+    if (!row) return row;
     return {
-        ...row,
+        id: row.id,
+        name: row.name,
+        sku: row.sku,
         buyingPrice: parseFloat(row.buyingPrice) || 0,
         profitMargin: parseFloat(row.profitMargin) || 0,
         sellingPrice: parseFloat(row.sellingPrice) || 0,
         stock: parseInt(row.stock, 10) || 0,
+        mainCategory: row.mainCategory,
+        category: row.category,
+        subCategory: row.subCategory,
     };
 }
 
@@ -30,7 +42,6 @@ class PostgresProductService {
 
     static async getProductById(productId: string): Promise<Product | undefined> {
         const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [productId]);
-        if (!rows[0]) return undefined;
         return formatProduct(rows[0]);
     }
 
@@ -74,7 +85,6 @@ class PostgresProductService {
             'UPDATE products SET name = $1, sku = $2, "buyingPrice" = $3, "profitMargin" = $4, "sellingPrice" = $5, stock = $6, "mainCategory" = $7, category = $8, "subCategory" = $9 WHERE id = $10 RETURNING *',
             [name, sku, buyingPrice, profitMargin, sellingPrice, stock, mainCategory, category, subCategory, productId]
         );
-        if (!result.rows[0]) return null;
         return formatProduct(result.rows[0]);
     }
 
@@ -85,5 +95,3 @@ class PostgresProductService {
 }
 
 export default PostgresProductService;
-
-    

@@ -7,9 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 import type { DraftInvoice } from './use-invoice-form';
 import { isSameDay, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 import { useSettings } from './use-settings';
+import * as productActions from '@/lib/actions/product-actions';
 
 const STORAGE_KEYS = {
-    products: 'stockpilot-products',
+    // products: 'stockpilot-products', - Now handled by DB
     invoices: 'stockpilot-invoices',
     buyers: 'stockpilot-buyers',
     expenses: 'stockpilot-expenses',
@@ -47,10 +48,10 @@ interface AppDataContextType {
     isAppDataLoading: boolean;
     
     // Product Functions
-    addProduct: (product: Omit<Product, 'id' | 'sellingPrice'>) => void;
-    addMultipleProducts: (products: Omit<Product, 'id'|'sellingPrice'>[]) => void;
-    updateProduct: (productId: string, updatedData: Omit<Product, 'id' | 'sellingPrice'>) => void;
-    deleteProduct: (productId: string) => void;
+    addProduct: (product: Omit<Product, 'id' | 'sellingPrice'>) => Promise<void>;
+    addMultipleProducts: (products: Omit<Product, 'id'|'sellingPrice'>[]) => Promise<void>;
+    updateProduct: (productId: string, updatedData: Omit<Product, 'id' | 'sellingPrice'>) => Promise<void>;
+    deleteProduct: (productId: string) => Promise<void>;
     getProductById: (productId: string) => Product | undefined;
 
     // Invoice & Buyer Functions
@@ -137,43 +138,62 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [activeInvoiceDraftIndex, setActiveInvoiceDraftIndex] = useState(0);
     const [isAppDataLoading, setIsAppDataLoading] = useState(true);
 
-    useEffect(() => {
+    const loadServerData = useCallback(async () => {
         setIsAppDataLoading(true);
         try {
-            const data = {
-                products: JSON.parse(localStorage.getItem(STORAGE_KEYS.products) || '[]'),
-                invoices: JSON.parse(localStorage.getItem(STORAGE_KEYS.invoices) || '[]'),
-                buyers: JSON.parse(localStorage.getItem(STORAGE_KEYS.buyers) || '[]'),
-                expenses: JSON.parse(localStorage.getItem(STORAGE_KEYS.expenses) || '[]'),
-                employees: JSON.parse(localStorage.getItem(STORAGE_KEYS.employees) || '[]'),
-                attendance: JSON.parse(localStorage.getItem(STORAGE_KEYS.attendance) || '[]'),
-                salaryPayments: JSON.parse(localStorage.getItem(STORAGE_KEYS.salaryPayments) || '[]'),
-                payments: JSON.parse(localStorage.getItem(STORAGE_KEYS.payments) || '[]'),
-                invoiceDrafts: JSON.parse(localStorage.getItem(STORAGE_KEYS.invoiceDrafts) || 'null') || [createNewDraft()],
-                activeInvoiceDraftIndex: JSON.parse(localStorage.getItem(STORAGE_KEYS.activeInvoiceDraftIndex) || '0'),
-            };
-
-            setProducts(data.products);
-            setInvoices(data.invoices);
-            setBuyers(data.buyers);
-            setExpenses(data.expenses);
-            setEmployees(data.employees);
-            setAttendance(data.attendance);
-            setSalaryPayments(data.salaryPayments);
-            setPayments(data.payments);
-            setInvoiceDrafts(data.invoiceDrafts.length > 0 ? data.invoiceDrafts : [createNewDraft()]);
-            setActiveInvoiceDraftIndex(data.activeInvoiceDraftIndex);
-
+            const serverProducts = await productActions.getAllProducts();
+            setProducts(serverProducts);
         } catch (error) {
-            console.error("Failed to load app data from localStorage", error);
+            console.error("Failed to load products from server:", error);
+            toast({ variant: 'destructive', title: 'Database Error', description: 'Could not connect to the database.' });
         } finally {
             setIsAppDataLoading(false);
         }
-    }, []);
+    }, [toast]);
+
+    useEffect(() => {
+        // This effect runs once on mount to load all data.
+        async function loadAllData() {
+            setIsAppDataLoading(true);
+            try {
+                // Load DB data
+                const serverProducts = await productActions.getAllProducts();
+                setProducts(serverProducts);
+
+                // Load localStorage data
+                const localDataKeys: (keyof typeof STORAGE_KEYS)[] = [
+                    'invoices', 'buyers', 'expenses', 'employees', 'attendance', 
+                    'salaryPayments', 'payments', 'invoiceDrafts', 'activeInvoiceDraftIndex'
+                ];
+                
+                const data: { [key: string]: any } = {};
+                localDataKeys.forEach(key => {
+                    data[key] = JSON.parse(localStorage.getItem(STORAGE_KEYS[key]) || 'null');
+                });
+
+                setInvoices(data.invoices || []);
+                setBuyers(data.buyers || []);
+                setExpenses(data.expenses || []);
+                setEmployees(data.employees || []);
+                setAttendance(data.attendance || []);
+                setSalaryPayments(data.salaryPayments || []);
+                setPayments(data.payments || []);
+                setInvoiceDrafts(data.invoiceDrafts && data.invoiceDrafts.length > 0 ? data.invoiceDrafts : [createNewDraft()]);
+                setActiveInvoiceDraftIndex(data.activeInvoiceDraftIndex || 0);
+
+            } catch (error) {
+                console.error("Failed to load app data", error);
+                toast({ variant: 'destructive', title: 'Loading Error', description: 'Failed to load application data.' });
+            } finally {
+                setIsAppDataLoading(false);
+            }
+        }
+        loadAllData();
+    }, [toast]);
 
     useEffect(() => {
         if (!isAppDataLoading) {
-            localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
+            // Only save non-DB data to localStorage
             localStorage.setItem(STORAGE_KEYS.invoices, JSON.stringify(invoices));
             localStorage.setItem(STORAGE_KEYS.buyers, JSON.stringify(buyers));
             localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(expenses));
@@ -184,37 +204,58 @@ export function DataProvider({ children }: { children: ReactNode }) {
             localStorage.setItem(STORAGE_KEYS.invoiceDrafts, JSON.stringify(invoiceDrafts));
             localStorage.setItem(STORAGE_KEYS.activeInvoiceDraftIndex, JSON.stringify(activeInvoiceDraftIndex));
         }
-    }, [products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, invoiceDrafts, activeInvoiceDraftIndex, isAppDataLoading]);
+    }, [invoices, buyers, expenses, employees, attendance, salaryPayments, payments, invoiceDrafts, activeInvoiceDraftIndex, isAppDataLoading]);
 
-    // Product Functions
-    const addProduct = useCallback((productData: Omit<Product, 'id' | 'sellingPrice'>) => {
-        const sellingPrice = productData.buyingPrice + (productData.buyingPrice * productData.profitMargin / 100);
-        const newProduct: Product = { ...productData, sellingPrice, id: `prod-${Date.now()}` };
-        setProducts(prev => [newProduct, ...prev]);
-        toast({ title: "Product Added", description: `${newProduct.name} has been added.` });
-    }, [toast]);
+    // Product Functions - Now interact with server actions
+    const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {
+        try {
+            const sellingPrice = productData.buyingPrice + (productData.buyingPrice * productData.profitMargin / 100);
+            await productActions.addProduct({...productData, sellingPrice});
+            await loadServerData(); // Reload data from server
+            toast({ title: "Product Added", description: `${productData.name} has been added.` });
+        } catch (error) {
+            console.error("Failed to add product:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to add product.' });
+        }
+    }, [toast, loadServerData]);
 
-    const addMultipleProducts = useCallback((productsData: Omit<Product, 'id' | 'sellingPrice'>[]) => {
-        const newProducts: Product[] = productsData.map(p => ({
-            ...p,
-            sellingPrice: p.buyingPrice + (p.buyingPrice * p.profitMargin / 100),
-            id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-        }));
-        setProducts(prev => [...prev, ...newProducts]);
-        toast({ title: "Upload Successful", description: `${newProducts.length} products have been added.` });
-    }, [toast]);
+    const addMultipleProducts = useCallback(async (productsData: Omit<Product, 'id' | 'sellingPrice'>[]) => {
+        try {
+            const productsWithSellingPrice = productsData.map(p => ({
+                ...p,
+                sellingPrice: p.buyingPrice + (p.buyingPrice * p.profitMargin / 100),
+            }));
+            await productActions.addMultipleProducts(productsWithSellingPrice);
+            await loadServerData();
+            toast({ title: "Upload Successful", description: `${productsData.length} products have been added.` });
+        } catch (error) {
+             console.error("Failed to add multiple products:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to add products in bulk.' });
+        }
+    }, [toast, loadServerData]);
 
-    const updateProduct = useCallback((productId: string, updatedData: Omit<Product, 'id' | 'sellingPrice'>) => {
-        const sellingPrice = updatedData.buyingPrice + (updatedData.buyingPrice * updatedData.profitMargin / 100);
-        const updatedProduct: Product = { ...updatedData, sellingPrice, id: productId };
-        setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
-        toast({ title: "Product Updated", description: `Details for ${updatedProduct.name} have been updated.` });
-    }, [toast]);
+    const updateProduct = useCallback(async (productId: string, updatedData: Omit<Product, 'id' | 'sellingPrice'>) => {
+        try {
+             const sellingPrice = updatedData.buyingPrice + (updatedData.buyingPrice * updatedData.profitMargin / 100);
+            await productActions.updateProduct(productId, {...updatedData, sellingPrice});
+            await loadServerData();
+            toast({ title: "Product Updated", description: `Details for ${updatedData.name} have been updated.` });
+        } catch (error) {
+            console.error("Failed to update product:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to update product.' });
+        }
+    }, [toast, loadServerData]);
 
-    const deleteProduct = useCallback((productId: string) => {
-        setProducts(prev => prev.filter(p => p.id !== productId));
-        toast({ title: "Product Deleted", description: `The product has been removed.` });
-    }, [toast]);
+    const deleteProduct = useCallback(async (productId: string) => {
+        try {
+            await productActions.deleteProduct(productId);
+            await loadServerData();
+            toast({ title: "Product Deleted", description: `The product has been removed.` });
+        } catch (error) {
+             console.error("Failed to delete product:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete product.' });
+        }
+    }, [toast, loadServerData]);
 
     const getProductById = useCallback((productId: string) => products.find(p => p.id === productId), [products]);
 
@@ -222,7 +263,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice): Promise<boolean> => {
         const newId = `INV-${Date.now()}`;
         
-        // Save invoice data first
         let buyerId = draftInvoice.buyerId || '';
         const existingBuyer = buyers.find(b => b.name === draftInvoice.customerName && b.phone === draftInvoice.customerPhone);
         if (existingBuyer) {
@@ -248,7 +288,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         };
         setInvoices(prev => [invoiceToSave, ...prev]);
 
-        // Then handle printing
         if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
             const orderData = { orderId: newId, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
             await printPosReceipt(settings, orderData);
@@ -397,5 +436,3 @@ export function useAppData() {
     }
     return context;
 }
-
-    
