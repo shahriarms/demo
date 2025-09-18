@@ -75,8 +75,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
             <StockPilotLogo className="w-10 h-10" />
             <h1 className="text-xl font-semibold">
-              <span className="text-foreground">Stock</span>
-              <span className="text-primary">Pilot</span>
+              <span className="text-foreground">Mahmud Engineering Shop</span>
             </h1>
         </div>
       </header>
@@ -97,8 +96,7 @@ export function SiteHeader() {
         <Link href="/dashboard" className="flex items-center gap-2">
             <StockPilotLogo className="w-8 h-8" />
             <h1 className="hidden sm:block text-xl font-semibold">
-                <span className="text-foreground">Stock</span>
-                <span className="text-primary">Pilot</span>
+                <span className="text-foreground">Mahmud Engineering Shop</span>
             </h1>
         </Link>
         

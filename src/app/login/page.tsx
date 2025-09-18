@@ -89,7 +89,7 @@ export default function LoginPage() {
           <CardHeader className="text-center">
              <StockPilotLogo />
             <CardTitle className="text-3xl font-bold tracking-tight">
-              <span className="text-foreground">Stock</span><span className="text-primary">Pilot</span>
+              <span className="text-foreground">Mahmud Engineering Shop</span>
             </CardTitle>
             <CardDescription>Enter your credentials to access your account.</CardDescription>
           </CardHeader>

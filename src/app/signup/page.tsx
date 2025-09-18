@@ -86,7 +86,7 @@ export default function SignupPage() {
         <CardHeader className="text-center">
           <StockPilotLogo />
           <CardTitle className="text-3xl font-bold tracking-tight">
-            <span className="text-foreground">Stock</span><span className="text-primary">Pilot</span>
+            <span className="text-foreground">Mahmud Engineering Shop</span>
           </CardTitle>
           <CardDescription>Enter your details below to get started.</CardDescription>
         </CardHeader>
