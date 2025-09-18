@@ -68,25 +68,19 @@ export function SiteHeader() {
   return (
     <>
       <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 sm:px-6">
-        {/* Left Section */}
+        {/* Left Section: Logo and Title */}
+        <Link href="/dashboard" className="flex items-center gap-2">
+            <StockPilotLogo className="w-8 h-8" />
+            <h1 className="hidden sm:block text-xl font-semibold">
+                <span className="text-foreground">Stock</span>
+                <span className="text-primary">Pilot</span>
+            </h1>
+        </Link>
+        
+        {/* Right Section: Status, Clock, and User Menu */}
         <div className="flex items-center gap-4">
             <DatabaseStatus />
             <LiveClock />
-        </div>
-
-        {/* Center Section */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Link href="/dashboard" className="flex items-center gap-2">
-                <StockPilotLogo className="w-8 h-8" />
-                <h1 className="text-xl font-semibold">
-                  <span className="text-foreground">Stock</span>
-                  <span className="text-primary">Pilot</span>
-                </h1>
-            </Link>
-        </div>
-        
-        {/* Right Section */}
-        <div className="flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
