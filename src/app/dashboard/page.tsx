@@ -21,6 +21,10 @@ import { DailySalesDialog } from '@/components/daily-sales-report-dialog';
 import { DailyExpensesReportDialog } from '@/components/daily-expenses-report-dialog';
 import { DailyDueReportDialog } from '@/components/daily-due-report-dialog';
 import { DailyUnitsSoldReportDialog } from '@/components/daily-units-sold-report-dialog';
+import { MonthlySalesDialog } from '@/components/monthly-sales-report-dialog';
+import { MonthlyExpensesDialog } from '@/components/monthly-expenses-report-dialog';
+import { MonthlyDueDialog } from '@/components/monthly-due-report-dialog';
+import { MonthlyUnitsSoldDialog } from '@/components/monthly-units-sold-report-dialog';
 
 
 export default function Dashboard() {
@@ -34,10 +38,15 @@ export default function Dashboard() {
   const [todayInvoices, setTodayInvoices] = useState<any[]>([]);
   const [todayExpenses, setTodayExpenses] = useState<any[]>([]);
   
-  const [isSalesReportDialogOpen, setSalesReportDialogOpen] = useState(false);
-  const [isExpensesReportDialogOpen, setExpensesReportDialogOpen] = useState(false);
-  const [isDueReportDialogOpen, setDueReportDialogOpen] = useState(false);
-  const [isUnitsSoldReportDialogOpen, setUnitsSoldReportDialogOpen] = useState(false);
+  const [isDailySalesReportOpen, setDailySalesReportOpen] = useState(false);
+  const [isDailyExpensesReportOpen, setDailyExpensesReportOpen] = useState(false);
+  const [isDailyDueReportOpen, setDailyDueReportOpen] = useState(false);
+  const [isDailyUnitsSoldReportOpen, setDailyUnitsSoldReportOpen] = useState(false);
+  
+  const [isMonthlySalesReportOpen, setMonthlySalesReportOpen] = useState(false);
+  const [isMonthlyExpensesReportOpen, setMonthlyExpensesReportOpen] = useState(false);
+  const [isMonthlyDueReportOpen, setMonthlyDueReportOpen] = useState(false);
+  const [isMonthlyUnitsSoldReportOpen, setMonthlyUnitsSoldReportOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
@@ -140,7 +149,7 @@ export default function Dashboard() {
         <div>
             <h2 className="text-lg font-semibold mb-4">Today's Summary</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                <Card as="button" onClick={() => setSalesReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+                <Card as="button" onClick={() => setDailySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('todays_sales_card_title')}</CardTitle>
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -150,7 +159,7 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
                   </CardContent>
                 </Card>
-                <Card as="button" onClick={() => setExpensesReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+                <Card as="button" onClick={() => setDailyExpensesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{"Today's Expenses"}</CardTitle>
                       <Receipt className="h-4 w-4 text-muted-foreground" />
@@ -160,7 +169,7 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
                   </CardContent>
                 </Card>
-                <Card as="button" onClick={() => setDueReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+                <Card as="button" onClick={() => setDailyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('todays_due_card_title')}</CardTitle>
                       <HandCoins className="h-4 w-4 text-muted-foreground" />
@@ -170,7 +179,7 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
                   </CardContent>
                 </Card>
-                <Card as="button" onClick={() => setUnitsSoldReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+                <Card as="button" onClick={() => setDailyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('units_sold_today_card_title')}</CardTitle>
                       <Package className="h-4 w-4 text-muted-foreground" />
@@ -198,7 +207,7 @@ export default function Dashboard() {
         <div>
             <h2 className="text-lg font-semibold mb-4">This Month's Summary ({format(date, "MMMM")})</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-              <Card>
+              <Card as="button" onClick={() => setMonthlySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('monthly_sales_card_title')}</CardTitle>
                   <ShoppingCart className="h-4 w-4 text-muted-foreground" />
@@ -208,7 +217,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{monthlyInvoices.length} invoices this month</p>
                 </CardContent>
               </Card>
-              <Card>
+              <Card as="button" onClick={() => setMonthlyExpensesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('monthly_expenses_card_title')}</CardTitle>
                   <TrendingDown className="h-4 w-4 text-muted-foreground" />
@@ -218,7 +227,7 @@ export default function Dashboard() {
                    <p className="text-xs text-muted-foreground">{monthlyExpenses.length} entries this month</p>
                 </CardContent>
               </Card>
-               <Card>
+               <Card as="button" onClick={() => setMonthlyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Monthly Due</CardTitle>
                   <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />
@@ -228,7 +237,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">Total outstanding from this month</p>
                 </CardContent>
               </Card>
-               <Card>
+               <Card as="button" onClick={() => setMonthlyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Monthly Units Sold</CardTitle>
                   <Container className="h-4 w-4 text-muted-foreground" />
@@ -297,25 +306,51 @@ export default function Dashboard() {
         </div>
       </div>
       <DailySalesDialog
-        open={isSalesReportDialogOpen}
-        onOpenChange={setSalesReportDialogOpen}
+        open={isDailySalesReportOpen}
+        onOpenChange={setDailySalesReportOpen}
         invoices={todayInvoices}
       />
       <DailyExpensesReportDialog
-        open={isExpensesReportDialogOpen}
-        onOpenChange={setExpensesReportDialogOpen}
+        open={isDailyExpensesReportOpen}
+        onOpenChange={setDailyExpensesReportOpen}
         expenses={todayExpenses}
       />
       <DailyDueReportDialog
-        open={isDueReportDialogOpen}
-        onOpenChange={setDueReportDialogOpen}
+        open={isDailyDueReportOpen}
+        onOpenChange={setDailyDueReportOpen}
         invoices={todayInvoices}
       />
       <DailyUnitsSoldReportDialog
-        open={isUnitsSoldReportDialogOpen}
-        onOpenChange={setUnitsSoldReportDialogOpen}
+        open={isDailyUnitsSoldReportOpen}
+        onOpenChange={setDailyUnitsSoldReportOpen}
         invoices={todayInvoices}
         products={products}
+      />
+
+      <MonthlySalesDialog
+        open={isMonthlySalesReportOpen}
+        onOpenChange={setMonthlySalesReportOpen}
+        invoices={monthlyInvoices}
+        month={date}
+      />
+      <MonthlyExpensesDialog
+        open={isMonthlyExpensesReportOpen}
+        onOpenChange={setMonthlyExpensesReportOpen}
+        expenses={monthlyExpenses}
+        month={date}
+      />
+      <MonthlyDueDialog
+        open={isMonthlyDueReportOpen}
+        onOpenChange={setMonthlyDueReportOpen}
+        invoices={monthlyInvoices}
+        month={date}
+      />
+      <MonthlyUnitsSoldDialog
+        open={isMonthlyUnitsSoldReportOpen}
+        onOpenChange={setMonthlyUnitsSoldReportOpen}
+        invoices={monthlyInvoices}
+        products={products}
+        month={date}
       />
     </>
   );
