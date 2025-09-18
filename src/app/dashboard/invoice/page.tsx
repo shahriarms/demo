@@ -365,14 +365,14 @@ export default function InvoicePage() {
                 </Table>
             </ScrollArea>
         </CardContent>
-        <CardFooter className="flex-col items-stretch space-y-4 pt-4">
+        <CardFooter className="flex-col items-stretch space-y-2 pt-4">
             <div className="w-full md:w-80 ml-auto space-y-2">
                <div className="flex justify-between items-center text-sm">
                    <span className='text-muted-foreground'>{t('subtotal_label')}</span>
                    <span className="font-medium">৳{subtotal.toFixed(2)}</span>
                </div>
-               <div className="flex justify-between items-center text-sm">
-                   <Label htmlFor='paidAmount' className="shrink-0 text-muted-foreground">{t('paid_label')}</Label>
+               <div className="flex justify-between items-center">
+                   <Label htmlFor='paidAmount' className="shrink-0 text-muted-foreground text-sm">{t('paid_label')}</Label>
                    <div className="relative w-32">
                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
                         <Input 
@@ -389,29 +389,6 @@ export default function InvoicePage() {
                <div className="flex justify-between items-center font-bold text-base border-t pt-2 mt-2">
                    <span>{t('due_label')}</span>
                    <span>৳{dueAmount.toFixed(2)}</span>
-               </div>
-            </div>
-            <Separator />
-            <div className="w-full md:w-80 ml-auto space-y-2">
-                <h4 className="text-sm font-medium text-center text-muted-foreground">Change Calculator</h4>
-                <div className="flex justify-between items-center text-sm">
-                   <Label htmlFor='cashReceived' className="shrink-0 text-muted-foreground">Cash Received</Label>
-                   <div className="relative w-32">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
-                        <Input 
-                            id='cashReceived' 
-                            type="text"
-                            inputMode='decimal'
-                            value={cashReceived || ''} 
-                            onChange={e => updateActiveDraft({ cashReceived: parseFloat(e.target.value) || undefined })} 
-                            className="h-9 pl-5 text-right font-medium"
-                            placeholder='0'
-                        />
-                   </div>
-               </div>
-                <div className="flex justify-between items-center font-bold text-base pt-2 mt-2">
-                   <span>Change</span>
-                   <span className="text-green-600">৳{(changeAmount ?? 0).toFixed(2)}</span>
                </div>
             </div>
         </CardFooter>
@@ -514,8 +491,41 @@ export default function InvoicePage() {
             </Button>
         </div>
 
+        {/* Change Calculator */}
+        <div className="py-4 no-print">
+            <Card>
+                <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <div className="text-center sm:text-left">
+                        <p className="text-sm text-muted-foreground">Total Bill</p>
+                        <p className="text-2xl font-bold">৳{(subtotal || 0).toFixed(2)}</p>
+                    </div>
+                    <Separator orientation={isMobile ? 'horizontal' : 'vertical'} className={isMobile ? 'w-full' : 'h-10'} />
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="cashReceived" className="text-sm font-medium">Cash Received:</Label>
+                        <div className="relative w-40">
+                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
+                             <Input 
+                                id='cashReceived' 
+                                type="text"
+                                inputMode='decimal'
+                                value={cashReceived || ''} 
+                                onChange={e => updateActiveDraft({ cashReceived: parseFloat(e.target.value) || undefined })} 
+                                className="pl-5 text-right font-bold text-lg h-11"
+                                placeholder='0'
+                            />
+                        </div>
+                    </div>
+                    <Separator orientation={isMobile ? 'horizontal' : 'vertical'} className={isMobile ? 'w-full' : 'h-10'} />
+                    <div className="text-center sm:text-left">
+                        <p className="text-sm text-muted-foreground">Change</p>
+                        <p className="text-2xl font-bold text-green-600">৳{(changeAmount || 0).toFixed(2)}</p>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+
         {/* Main Content Area */}
-        <div className="flex-1 py-4 min-h-0">
+        <div className="flex-1 pb-4 min-h-0">
             {isMobile ? mobileLayout : desktopLayout}
         </div>
 
