@@ -57,10 +57,10 @@ const calculateTotals = (items: DraftInvoiceItem[], paidAmount: number) => {
 }
 
 const useInvoiceFormData = (): InvoiceFormContextType => {
-    const { invoiceDrafts, setInvoiceDrafts, activeInvoiceDraftIndex, setActiveInvoiceDraftIndex, isAppDataLoading } = useAppData();
+    const { invoiceDrafts, setInvoiceDrafts, activeDraftIndex, setActiveInvoiceDraftIndex, isAppDataLoading } = useAppData();
     const { toast } = useToast();
     
-    const activeDraft = useMemo(() => invoiceDrafts[activeInvoiceDraftIndex] || null, [invoiceDrafts, activeInvoiceDraftIndex]);
+    const activeDraft = useMemo(() => invoiceDrafts[activeInvoiceDraftIndex] || null, [invoiceDrafts, activeDraftIndex]);
     
     const addNewDraft = useCallback(() => {
         if (invoiceDrafts.length >= 10) {
@@ -83,12 +83,16 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
                 setActiveInvoiceDraftIndex(0);
                 return [createNewDraft()];
             }
-            if (activeDraftIndex >= newDrafts.length) {
-                setActiveInvoiceDraftIndex(newDrafts.length - 1);
-            }
+            // Use a functional update to get the latest activeDraftIndex
+            setActiveInvoiceDraftIndex(currentActiveIndex => {
+                if (currentActiveIndex >= newDrafts.length) {
+                    return newDrafts.length - 1;
+                }
+                return currentActiveIndex;
+            });
             return newDrafts;
         });
-    }, [activeDraftIndex, setInvoiceDrafts, setActiveInvoiceDraftIndex]);
+    }, [setInvoiceDrafts, setActiveInvoiceDraftIndex]);
 
     const updateActiveDraft = useCallback((update: Partial<Omit<DraftInvoice, 'id' | 'subtotal' | 'dueAmount'>>) => {
         setInvoiceDrafts(prev => prev.map((draft, index) => {
@@ -167,7 +171,7 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         removeInvoiceItem,
         resetActiveDraft,
         isFormLoading: isAppDataLoading,
-    }), [invoiceDrafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, resetActiveDraft, isAppDataLoading]);
+    }), [invoiceDrafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveInvoiceDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, resetActiveDraft, isAppDataLoading]);
 }
 
 export function InvoiceFormProvider({ children }: { children: ReactNode }) {
