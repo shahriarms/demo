@@ -45,10 +45,9 @@ export function DailyExpensesReportDialog({ open, onOpenChange, expenses }: Dail
     const handleExportExcel = () => {
         const worksheet = XLSX.utils.json_to_sheet(reportData.map(item => ({
             "Time": format(new Date(item.date), 'p'),
-            "Category": t(`expense_category_${item.category.toLowerCase()}` as any, {}),
-            "Description": item.description,
+            "Category": item.mainCategory,
+            "Name": item.name,
             "Amount": item.amount,
-            "Payment Method": item.paymentMethod,
         })));
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Today's Expenses");
@@ -59,13 +58,12 @@ export function DailyExpensesReportDialog({ open, onOpenChange, expenses }: Dail
         const doc = new jsPDF();
         doc.text(`Today's Expenses Report - ${format(new Date(), 'PPP')}`, 14, 16);
         (doc as any).autoTable({
-            head: [['Time', 'Category', 'Description', 'Amount', 'Payment Method']],
+            head: [['Time', 'Category', 'Name', 'Amount']],
             body: reportData.map(item => [
                 format(new Date(item.date), 'p'),
-                t(`expense_category_${item.category.toLowerCase()}` as any, {}),
-                item.description,
+                item.mainCategory,
+                item.name,
                 `৳${item.amount.toFixed(2)}`,
-                item.paymentMethod,
             ]),
             startY: 22,
         });
@@ -95,25 +93,23 @@ export function DailyExpensesReportDialog({ open, onOpenChange, expenses }: Dail
               <TableRow>
                 <TableHead>Time</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Payment Method</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {reportData.length > 0 ? (
-                reportData.map((item, index) => (
+                reportData.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-mono text-xs">{format(new Date(item.date), 'p')}</TableCell>
-                    <TableCell>{t(`expense_category_${item.category.toLowerCase()}` as any, {})}</TableCell>
-                    <TableCell className="font-medium">{item.description}</TableCell>
-                    <TableCell>{item.paymentMethod}</TableCell>
+                    <TableCell>{item.mainCategory}</TableCell>
+                    <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell className="text-right font-mono font-semibold">৳{item.amount.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={4} className="h-24 text-center">
                     No expenses recorded for today.
                   </TableCell>
                 </TableRow>

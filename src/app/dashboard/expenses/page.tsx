@@ -301,7 +301,7 @@ export default function ExpensesPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Name</TableHead>
-                                <TableHead className="hidden sm:table-cell">Description</TableHead>
+                                <TableHead className="hidden sm:table-cell">Category</TableHead>
                                 <TableHead className="hidden md:table-cell">{t('date_header')}</TableHead>
                                 <TableHead className="text-right">{t('amount_header')}</TableHead>
                                 <TableHead className="w-12"></TableHead>
@@ -315,7 +315,7 @@ export default function ExpensesPage() {
                                             <p className="font-medium">{expense.name}</p>
                                             <p className="text-sm text-muted-foreground sm:hidden">{format(new Date(expense.date), 'PP')}</p>
                                         </TableCell>
-                                        <TableCell className="hidden sm:table-cell"><span className="text-sm text-muted-foreground">{expense.description || '-'}</span></TableCell>
+                                        <TableCell className="hidden sm:table-cell"><span className="text-sm text-muted-foreground">{expense.mainCategory}</span></TableCell>
                                         <TableCell className="hidden md:table-cell">{format(new Date(expense.date), 'PP')}</TableCell>
                                         <TableCell className="text-right font-mono">৳{expense.amount.toFixed(2)}</TableCell>
                                         <TableCell>
