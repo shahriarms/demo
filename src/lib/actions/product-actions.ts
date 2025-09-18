@@ -10,6 +10,19 @@ import PostgresProductService from '@/services/product-service.postgres';
 
 const usePostgres = !!process.env.POSTGRES_URL;
 
+export async function checkDbConnection(): Promise<boolean> {
+    if (!usePostgres) return false;
+    try {
+        // A lightweight query to check connection
+        await PostgresProductService.checkConnection();
+        return true;
+    } catch (error) {
+        console.error("Database connection check failed:", error);
+        return false;
+    }
+}
+
+
 export async function getAllProducts(): Promise<Product[]> {
     if (!usePostgres) {
         console.warn("POSTGRES_URL not set. Running without a database. Product data will not be persisted.");

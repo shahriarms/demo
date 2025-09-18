@@ -10,6 +10,7 @@ import { useSettings } from './use-settings';
 import * as productActions from '@/lib/actions/product-actions';
 
 const STORAGE_KEYS = {
+    // Products are no longer in local storage
     invoices: 'stockpilot-invoices',
     buyers: 'stockpilot-buyers',
     expenses: 'stockpilot-expenses',
@@ -29,6 +30,7 @@ interface AppDataContextType {
     salaryPayments: SalaryPayment[];
     payments: Payment[];
     isAppDataLoading: boolean;
+    isDbConnected: boolean;
     
     // Product Functions
     addProduct: (product: Omit<Product, 'id' | 'sellingPrice'>) => Promise<void>;
@@ -112,13 +114,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [salaryPayments, setSalaryPayments] = useState<SalaryPayment[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [isAppDataLoading, setIsAppDataLoading] = useState(true);
+    const [isDbConnected, setIsDbConnected] = useState(false);
 
     const loadServerData = useCallback(async () => {
         try {
-            const serverProducts = await productActions.getAllProducts();
-            setProducts(serverProducts);
+            const isConnected = await productActions.checkDbConnection();
+            setIsDbConnected(isConnected);
+            if (isConnected) {
+                const serverProducts = await productActions.getAllProducts();
+                setProducts(serverProducts);
+            }
         } catch (error) {
             console.error("Failed to load products from server:", error);
+            setIsDbConnected(false); // Assume not connected on error
             toast({ variant: 'destructive', title: 'Database Error', description: 'Could not connect to the database.' });
         }
     }, [toast]);
@@ -127,10 +135,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         async function loadAllData() {
             setIsAppDataLoading(true);
             try {
-                // Load DB data first
                 await loadServerData();
 
-                // Then load non-critical data from localStorage
                 const localDataKeys: (keyof typeof STORAGE_KEYS)[] = [
                     'invoices', 'buyers', 'expenses', 'employees', 'attendance', 
                     'salaryPayments', 'payments'
@@ -139,15 +145,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 localDataKeys.forEach(key => {
                     const savedData = localStorage.getItem(STORAGE_KEYS[key]);
                     if (savedData) {
-                        const parsedData = JSON.parse(savedData);
-                        switch (key) {
-                            case 'invoices': setInvoices(parsedData || []); break;
-                            case 'buyers': setBuyers(parsedData || []); break;
-                            case 'expenses': setExpenses(parsedData || []); break;
-                            case 'employees': setEmployees(parsedData || []); break;
-                            case 'attendance': setAttendance(parsedData || []); break;
-                            case 'salaryPayments': setSalaryPayments(parsedData || []); break;
-                            case 'payments': setPayments(parsedData || []); break;
+                        try {
+                            const parsedData = JSON.parse(savedData);
+                             switch (key) {
+                                case 'invoices': setInvoices(parsedData || []); break;
+                                case 'buyers': setBuyers(parsedData || []); break;
+                                case 'expenses': setExpenses(parsedData || []); break;
+                                case 'employees': setEmployees(parsedData || []); break;
+                                case 'attendance': setAttendance(parsedData || []); break;
+                                case 'salaryPayments': setSalaryPayments(parsedData || []); break;
+                                case 'payments': setPayments(parsedData || []); break;
+                            }
+                        } catch (e) {
+                             console.error(`Failed to parse ${key} from localStorage`, e);
                         }
                     }
                 });
@@ -162,17 +172,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
         loadAllData();
     }, [loadServerData, toast]);
 
-    useEffect(() => {
-        if (!isAppDataLoading) {
-            localStorage.setItem(STORAGE_KEYS.invoices, JSON.stringify(invoices));
-            localStorage.setItem(STORAGE_KEYS.buyers, JSON.stringify(buyers));
-            localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(expenses));
-            localStorage.setItem(STORAGE_KEYS.employees, JSON.stringify(employees));
-            localStorage.setItem(STORAGE_KEYS.attendance, JSON.stringify(attendance));
-            localStorage.setItem(STORAGE_KEYS.salaryPayments, JSON.stringify(salaryPayments));
-            localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(payments));
-        }
-    }, [invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading]);
+    const usePersistedState = <T,>(key: keyof typeof STORAGE_KEYS, state: T) => {
+        useEffect(() => {
+            if (!isAppDataLoading) {
+                localStorage.setItem(STORAGE_KEYS[key], JSON.stringify(state));
+            }
+        }, [key, state]);
+    };
+    
+    usePersistedState('invoices', invoices);
+    usePersistedState('buyers', buyers);
+    usePersistedState('expenses', expenses);
+    usePersistedState('employees', employees);
+    usePersistedState('attendance', attendance);
+    usePersistedState('salaryPayments', salaryPayments);
+    usePersistedState('payments', payments);
 
     const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {
         try {
@@ -247,17 +261,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         };
         setInvoices(prev => [invoiceToSave, ...prev]);
 
-        // Update product stock
-        const stockUpdates = draftInvoice.items.map(item => ({
-            id: item.id,
-            stockChange: -item.quantity,
-        }));
-        
-        try {
-            await productActions.updateMultipleStocks(stockUpdates);
-            await loadServerData(); // Refresh product list with new stock
-        } catch (error) {
-            console.error("Failed to update product stock after invoice creation:", error);
+        // Update product stock if connected to DB
+        if (isDbConnected) {
+            const stockUpdates = draftInvoice.items.map(item => ({
+                id: item.id,
+                stockChange: -item.quantity,
+            }));
+            
+            try {
+                await productActions.updateMultipleStocks(stockUpdates);
+                await loadServerData(); // Refresh product list with new stock
+            } catch (error) {
+                console.error("Failed to update product stock after invoice creation:", error);
+            }
         }
 
         if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
@@ -267,7 +283,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         } else {
             return await printNormalReceipt();
         }
-    }, [settings, buyers, loadServerData]);
+    }, [settings, buyers, loadServerData, isDbConnected]);
 
     const updateInvoiceDue = useCallback((invoiceId: string, amountPaid: number) => {
         setInvoices(prev => prev.map(inv => inv.id === invoiceId ? { ...inv, paidAmount: inv.paidAmount + amountPaid, dueAmount: inv.dueAmount - amountPaid } : inv));
@@ -371,7 +387,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [getPaymentsForMonth]);
 
     const value = useMemo(() => ({
-        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading,
+        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
         saveAndPrintInvoice, updateInvoiceDue, getInvoicesForBuyer, getInvoicesForDateRange,
         addPayment, getPaymentsForInvoice,
@@ -379,7 +395,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate,
         addSalaryPayment, getPaymentsForMonth, getDueSalaryForMonth,
     }), [
-        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading,
+        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
         saveAndPrintInvoice, updateInvoiceDue, getInvoicesForBuyer, getInvoicesForDateRange,
         addPayment, getPaymentsForInvoice,

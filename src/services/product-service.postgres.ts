@@ -35,6 +35,10 @@ function formatProduct(row: any): Product {
 
 
 class PostgresProductService {
+    static async checkConnection(): Promise<void> {
+        await pool.query('SELECT 1');
+    }
+
     static async getAllProducts(): Promise<Product[]> {
         const { rows } = await pool.query('SELECT * FROM products ORDER BY name ASC');
         return rows.map(formatProduct);

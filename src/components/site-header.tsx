@@ -26,6 +26,7 @@ import { useSettings } from '@/hooks/use-settings';
 import type { Locale } from '@/lib/types';
 import Link from 'next/link';
 import { StockPilotLogo } from './stock-pilot-logo';
+import { DatabaseStatus } from './database-status';
 
 const LiveClock = dynamic(() => import('./live-clock').then(mod => mod.LiveClock), {
   ssr: false,
@@ -69,6 +70,7 @@ export function SiteHeader() {
       <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 sm:px-6">
         {/* Left Section */}
         <div className="flex items-center gap-4">
+            <DatabaseStatus />
             <LiveClock />
         </div>
 
