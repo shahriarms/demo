@@ -51,11 +51,10 @@ export interface Buyer {
 export interface Expense {
     id: string;
     mainCategory: 'Shop' | 'Owner';
-    subCategory: string;
-    description: string;
+    name: string;
+    description?: string;
     amount: number;
     date: string; // ISO 8601 date string
-    paymentMethod: 'Cash' | 'bKash' | 'Card' | 'Bank' | string;
 }
 
 export interface Employee {

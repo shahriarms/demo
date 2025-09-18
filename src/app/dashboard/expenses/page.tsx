@@ -103,7 +103,7 @@ export default function ExpensesPage() {
 
     const filteredAndSortedExpenses = useMemo(() => {
         let result = expenses
-            .filter(e => searchTerm ? e.description.toLowerCase().includes(searchTerm.toLowerCase()) : true)
+            .filter(e => searchTerm ? e.name.toLowerCase().includes(searchTerm.toLowerCase()) : true)
             .filter(e => categoryFilter ? e.mainCategory === categoryFilter : true);
 
         result.sort((a, b) => {
@@ -115,8 +115,8 @@ export default function ExpensesPage() {
                 valA = a.amount;
                 valB = b.amount;
             } else { // category
-                valA = a.subCategory;
-                valB = b.subCategory;
+                valA = a.name;
+                valB = b.name;
             }
 
             if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
@@ -169,14 +169,13 @@ export default function ExpensesPage() {
             const doc = new jsPDF();
             doc.text(t('expense_report_title'), 14, 16);
             (doc as any).autoTable({
-                head: [[t('date_header'), 'Main Category', 'Sub Category', t('description_header'), t('amount_header'), t('payment_method_header')]],
+                head: [[t('date_header'), 'Main Category', 'Name', t('description_header'), t('amount_header')]],
                 body: filteredAndSortedExpenses.map(e => [
                     format(new Date(e.date), 'yyyy-MM-dd'),
                     e.mainCategory,
-                    e.subCategory,
-                    e.description,
+                    e.name,
+                    e.description || '-',
                     `৳${e.amount.toFixed(2)}`,
-                    e.paymentMethod
                 ]),
             });
             doc.save('expenses.pdf');
@@ -184,10 +183,9 @@ export default function ExpensesPage() {
             const worksheet = XLSX.utils.json_to_sheet(filteredAndSortedExpenses.map(e => ({
                 [t('date_header')]: format(new Date(e.date), 'yyyy-MM-dd'),
                 'Main Category': e.mainCategory,
-                'Sub Category': e.subCategory,
-                [t('description_header')]: e.description,
+                'Name': e.name,
+                [t('description_header')]: e.description || '-',
                 [t('amount_header')]: e.amount,
-                [t('payment_method_header')]: e.paymentMethod,
             })));
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, t('expenses_tab_title'));
@@ -281,7 +279,7 @@ export default function ExpensesPage() {
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input 
                             type="search" 
-                            placeholder={t('search_by_description_placeholder')}
+                            placeholder="Search by name..."
                             className="pl-8" 
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
@@ -302,8 +300,8 @@ export default function ExpensesPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>{t('description_header')}</TableHead>
-                                <TableHead className="hidden sm:table-cell">Sub-Category</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead className="hidden sm:table-cell">Description</TableHead>
                                 <TableHead className="hidden md:table-cell">{t('date_header')}</TableHead>
                                 <TableHead className="text-right">{t('amount_header')}</TableHead>
                                 <TableHead className="w-12"></TableHead>
@@ -314,10 +312,10 @@ export default function ExpensesPage() {
                                 filteredAndSortedExpenses.map(expense => (
                                     <TableRow key={expense.id}>
                                         <TableCell>
-                                            <p className="font-medium">{expense.description}</p>
-                                            <p className="text-sm text-muted-foreground sm:hidden">{expense.subCategory} - {format(new Date(expense.date), 'PP')}</p>
+                                            <p className="font-medium">{expense.name}</p>
+                                            <p className="text-sm text-muted-foreground sm:hidden">{format(new Date(expense.date), 'PP')}</p>
                                         </TableCell>
-                                        <TableCell className="hidden sm:table-cell"><span className="font-medium">{expense.subCategory}</span></TableCell>
+                                        <TableCell className="hidden sm:table-cell"><span className="text-sm text-muted-foreground">{expense.description || '-'}</span></TableCell>
                                         <TableCell className="hidden md:table-cell">{format(new Date(expense.date), 'PP')}</TableCell>
                                         <TableCell className="text-right font-mono">৳{expense.amount.toFixed(2)}</TableCell>
                                         <TableCell>
