@@ -28,19 +28,30 @@ export async function getProductById(productId: string): Promise<Product | undef
     return PostgresProductService.getProductById(productId);
 }
 
-export async function addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
+export async function addProduct(productData: Omit<Product, 'id' | 'sellingPrice'>): Promise<Product> {
     if (!usePostgres) throw new Error("Database not connected.");
-    return PostgresProductService.addProduct(productData);
+    const sellingPrice = productData.buyingPrice + (productData.buyingPrice * productData.profitMargin / 100);
+    return PostgresProductService.addProduct({...productData, sellingPrice});
 }
 
-export async function addMultipleProducts(productsData: Omit<Product, 'id'>[]): Promise<Product[]> {
+export async function addMultipleProducts(productsData: Omit<Product, 'id' | 'sellingPrice'>[]): Promise<Product[]> {
     if (!usePostgres) throw new Error("Database not connected.");
-    return PostgresProductService.addMultipleProducts(productsData);
+     const productsWithSellingPrice = productsData.map(p => ({
+        ...p,
+        sellingPrice: p.buyingPrice + (p.buyingPrice * p.profitMargin / 100),
+    }));
+    return PostgresProductService.addMultipleProducts(productsWithSellingPrice);
 }
 
-export async function updateProduct(productId: string, updatedData: Omit<Product, 'id'>): Promise<Product | null> {
+export async function updateProduct(productId: string, updatedData: Omit<Product, 'id' | 'sellingPrice'>): Promise<Product | null> {
     if (!usePostgres) throw new Error("Database not connected.");
-    return PostgresProductService.updateProduct(productId, updatedData);
+    const sellingPrice = updatedData.buyingPrice + (updatedData.buyingPrice * updatedData.profitMargin / 100);
+    return PostgresProductService.updateProduct(productId, {...updatedData, sellingPrice});
+}
+
+export async function updateMultipleStocks(updates: { id: string, stockChange: number }[]): Promise<void> {
+    if (!usePostgres) throw new Error("Database not connected.");
+    return PostgresProductService.updateMultipleStocks(updates);
 }
 
 export async function deleteProduct(productId: string): Promise<{ deletedProductName: string | null }> {
@@ -48,4 +59,3 @@ export async function deleteProduct(productId: string): Promise<{ deletedProduct
     const deletedName = await PostgresProductService.deleteProduct(productId);
     return { deletedProductName: deletedName };
 }
-

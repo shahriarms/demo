@@ -10,7 +10,6 @@ import { useSettings } from './use-settings';
 import * as productActions from '@/lib/actions/product-actions';
 
 const STORAGE_KEYS = {
-    // products: 'stockpilot-products', - Now handled by DB
     invoices: 'stockpilot-invoices',
     buyers: 'stockpilot-buyers',
     expenses: 'stockpilot-expenses',
@@ -139,26 +138,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [isAppDataLoading, setIsAppDataLoading] = useState(true);
 
     const loadServerData = useCallback(async () => {
-        setIsAppDataLoading(true);
         try {
             const serverProducts = await productActions.getAllProducts();
             setProducts(serverProducts);
         } catch (error) {
             console.error("Failed to load products from server:", error);
             toast({ variant: 'destructive', title: 'Database Error', description: 'Could not connect to the database.' });
-        } finally {
-            setIsAppDataLoading(false);
         }
     }, [toast]);
 
     useEffect(() => {
-        // This effect runs once on mount to load all data.
         async function loadAllData() {
             setIsAppDataLoading(true);
             try {
                 // Load DB data
-                const serverProducts = await productActions.getAllProducts();
-                setProducts(serverProducts);
+                await loadServerData();
 
                 // Load localStorage data
                 const localDataKeys: (keyof typeof STORAGE_KEYS)[] = [
@@ -189,11 +183,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
             }
         }
         loadAllData();
-    }, [toast]);
+    }, [toast, loadServerData]);
 
     useEffect(() => {
         if (!isAppDataLoading) {
-            // Only save non-DB data to localStorage
             localStorage.setItem(STORAGE_KEYS.invoices, JSON.stringify(invoices));
             localStorage.setItem(STORAGE_KEYS.buyers, JSON.stringify(buyers));
             localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(expenses));
@@ -206,12 +199,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
     }, [invoices, buyers, expenses, employees, attendance, salaryPayments, payments, invoiceDrafts, activeInvoiceDraftIndex, isAppDataLoading]);
 
-    // Product Functions - Now interact with server actions
     const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {
         try {
-            const sellingPrice = productData.buyingPrice + (productData.buyingPrice * productData.profitMargin / 100);
-            await productActions.addProduct({...productData, sellingPrice});
-            await loadServerData(); // Reload data from server
+            await productActions.addProduct(productData);
+            await loadServerData();
             toast({ title: "Product Added", description: `${productData.name} has been added.` });
         } catch (error) {
             console.error("Failed to add product:", error);
@@ -221,11 +212,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const addMultipleProducts = useCallback(async (productsData: Omit<Product, 'id' | 'sellingPrice'>[]) => {
         try {
-            const productsWithSellingPrice = productsData.map(p => ({
-                ...p,
-                sellingPrice: p.buyingPrice + (p.buyingPrice * p.profitMargin / 100),
-            }));
-            await productActions.addMultipleProducts(productsWithSellingPrice);
+            await productActions.addMultipleProducts(productsData);
             await loadServerData();
             toast({ title: "Upload Successful", description: `${productsData.length} products have been added.` });
         } catch (error) {
@@ -236,8 +223,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const updateProduct = useCallback(async (productId: string, updatedData: Omit<Product, 'id' | 'sellingPrice'>) => {
         try {
-             const sellingPrice = updatedData.buyingPrice + (updatedData.buyingPrice * updatedData.profitMargin / 100);
-            await productActions.updateProduct(productId, {...updatedData, sellingPrice});
+            await productActions.updateProduct(productId, updatedData);
             await loadServerData();
             toast({ title: "Product Updated", description: `Details for ${updatedData.name} have been updated.` });
         } catch (error) {
@@ -259,7 +245,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const getProductById = useCallback((productId: string) => products.find(p => p.id === productId), [products]);
 
-    // Invoice, Buyer, and Printing Functions
     const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice): Promise<boolean> => {
         const newId = `INV-${Date.now()}`;
         
@@ -288,6 +273,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
         };
         setInvoices(prev => [invoiceToSave, ...prev]);
 
+        // Update product stock
+        const stockUpdates = draftInvoice.items.map(item => ({
+            id: item.id,
+            stockChange: -item.quantity,
+        }));
+        
+        try {
+            await productActions.updateMultipleStocks(stockUpdates);
+            await loadServerData(); // Refresh product list with new stock
+        } catch (error) {
+            console.error("Failed to update product stock after invoice creation:", error);
+            // Optionally revert invoice creation or show a warning
+        }
+
+
         if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
             const orderData = { orderId: newId, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
             await printPosReceipt(settings, orderData);
@@ -295,7 +295,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         } else {
             return await printNormalReceipt();
         }
-    }, [settings, buyers]);
+    }, [settings, buyers, loadServerData]);
 
     const updateInvoiceDue = useCallback((invoiceId: string, amountPaid: number) => {
         setInvoices(prev => prev.map(inv => inv.id === invoiceId ? { ...inv, paidAmount: inv.paidAmount + amountPaid, dueAmount: inv.dueAmount - amountPaid } : inv));
@@ -311,7 +311,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return invoices.filter(inv => isWithinInterval(new Date(inv.date), { start: startDate, end: endDate }));
     }, [invoices]);
 
-    // Payment Functions
     const addPayment = useCallback((paymentData: Omit<Payment, 'id' | 'date'>) => {
         const newPayment: Payment = { ...paymentData, id: `pay-${Date.now()}`, date: new Date().toISOString() };
         setPayments(prev => [...prev, newPayment]);
@@ -322,11 +321,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return payments.filter(p => p.invoiceId === invoiceId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [payments]);
 
-    // Expense Functions
     const addExpense = useCallback((expenseData: Omit<Expense, 'id'>) => {
         const newExpense: Expense = { ...expenseData, id: `exp-${Date.now()}` };
         setExpenses(prev => [newExpense, ...prev]);
-        toast({ title: "Expense Added", description: `New expense of $${expenseData.amount} has been recorded.` });
+        toast({ title: "Expense Added", description: `New expense of ৳${expenseData.amount} has been recorded.` });
     }, [toast]);
 
     const updateExpense = useCallback((expenseId: string, updatedData: Omit<Expense, 'id'>) => {
@@ -343,7 +341,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return expenses.filter(exp => isWithinInterval(new Date(exp.date), { start: startDate, end: endDate }));
     }, [expenses]);
 
-    // Employee Functions
     const addEmployee = useCallback((employeeData: Omit<Employee, 'id'>) => {
         const newEmployee: Employee = { ...employeeData, id: `emp-${Date.now()}` };
         setEmployees(prev => [newEmployee, ...prev]);
@@ -384,7 +381,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return { present, absent, leave, total: employees.length };
     }, [getAttendanceForDate, employees.length]);
 
-    // Salary Functions
     const addSalaryPayment = useCallback((paymentData: Omit<SalaryPayment, 'id'>) => {
         const newPayment: SalaryPayment = { ...paymentData, id: `sal-${Date.now()}` };
         setSalaryPayments(prev => [newPayment, ...prev]);

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createContext, useContext, ReactNode, useMemo, useCallback, useState } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
 import type { InvoiceItem, Product } from '@/lib/types';
 import { useToast } from './use-toast';
 import { useAppData } from './use-app-data';
@@ -19,6 +19,7 @@ export interface DraftInvoice {
     paidAmount: number;
     subtotal: number;
     dueAmount: number;
+    buyerId?: string; // Add buyerId to draft
 }
 
 interface InvoiceFormContextType {
@@ -56,13 +57,10 @@ const calculateTotals = (items: DraftInvoiceItem[], paidAmount: number) => {
 }
 
 const useInvoiceFormData = (): InvoiceFormContextType => {
-    const { invoiceDrafts, setInvoiceDrafts, isAppDataLoading } = useAppData();
+    const { invoiceDrafts, setInvoiceDrafts, activeInvoiceDraftIndex, setActiveInvoiceDraftIndex, isAppDataLoading } = useAppData();
     const { toast } = useToast();
     
-    // For simplicity, we manage the active index locally in the hook
-    const [activeDraftIndex, setActiveDraftIndex] = useState(0);
-
-    const activeDraft = useMemo(() => invoiceDrafts[activeDraftIndex] || null, [invoiceDrafts, activeDraftIndex]);
+    const activeDraft = useMemo(() => invoiceDrafts[activeInvoiceDraftIndex] || null, [invoiceDrafts, activeInvoiceDraftIndex]);
     
     const addNewDraft = useCallback(() => {
         if (invoiceDrafts.length >= 10) {
@@ -75,22 +73,22 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         }
         const newDraft = createNewDraft();
         setInvoiceDrafts(prev => [...prev, newDraft]);
-        setActiveDraftIndex(invoiceDrafts.length);
-    }, [invoiceDrafts.length, toast, setInvoiceDrafts]);
+        setActiveInvoiceDraftIndex(invoiceDrafts.length);
+    }, [invoiceDrafts.length, toast, setInvoiceDrafts, setActiveInvoiceDraftIndex]);
     
     const removeDraft = useCallback((draftId: string) => {
         setInvoiceDrafts(prev => {
             const newDrafts = prev.filter(d => d.id !== draftId);
             if (newDrafts.length === 0) {
-                setActiveDraftIndex(0);
+                setActiveInvoiceDraftIndex(0);
                 return [createNewDraft()];
             }
             if (activeDraftIndex >= newDrafts.length) {
-                setActiveDraftIndex(newDrafts.length - 1);
+                setActiveInvoiceDraftIndex(newDrafts.length - 1);
             }
             return newDrafts;
         });
-    }, [activeDraftIndex, setInvoiceDrafts]);
+    }, [activeDraftIndex, setInvoiceDrafts, setActiveInvoiceDraftIndex]);
 
     const updateActiveDraft = useCallback((update: Partial<Omit<DraftInvoice, 'id' | 'subtotal' | 'dueAmount'>>) => {
         setInvoiceDrafts(prev => prev.map((draft, index) => {

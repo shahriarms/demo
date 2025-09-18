@@ -87,6 +87,26 @@ class PostgresProductService {
         );
         return formatProduct(result.rows[0]);
     }
+    
+    static async updateMultipleStocks(updates: { id: string; stockChange: number }[]): Promise<void> {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            for (const update of updates) {
+                await client.query(
+                    'UPDATE products SET stock = stock + $1 WHERE id = $2',
+                    [update.stockChange, update.id]
+                );
+            }
+            await client.query('COMMIT');
+        } catch (e) {
+            await client.query('ROLLBACK');
+            throw e;
+        } finally {
+            client.release();
+        }
+    }
+
 
     static async deleteProduct(productId: string): Promise<string | null> {
         const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING name', [productId]);
