@@ -67,6 +67,28 @@ Once the containers are running, you can access the different parts of your appl
 
 ---
 
+## How to Start the Application Automatically on PC Startup
+*(পিসি চালু করার সাথে সাথে অ্যাপ্লিকেশন স্বয়ংক্রিয়ভাবে চালু করার পদ্ধতি)*
+
+You can configure Docker to automatically start your StockPilot application every time you turn on your computer. This is possible because we've set `restart: always` in our `docker-compose.yml` file.
+
+You just need to enable one setting in Docker Desktop:
+
+1.  **Open Docker Desktop Settings:**
+    - Find the Docker icon in your system tray (usually at the bottom-right of your screen).
+    - Right-click the icon and select **Settings**.
+
+2.  **Enable "Start Docker Desktop when you log in":**
+    - In the Settings window, go to the **General** tab.
+    - Make sure the checkbox for **"Start Docker Desktop when you log in"** is checked.
+    - Click **"Apply & restart"**.
+
+
+
+That's it! Now, whenever you log in to your PC, Docker will start automatically, and because of the `restart: always` policy, it will automatically start your StockPilot app, database, and pgAdmin containers.
+
+---
+
 ## Database Backup and Restore (ডেটাবেস ব্যাকআপ এবং পুনরুদ্ধার)
 
 Your data is valuable. Here’s how to back it up and restore it using both pgAdmin and the command line.
