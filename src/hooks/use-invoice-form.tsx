@@ -171,7 +171,7 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         removeInvoiceItem,
         resetActiveDraft,
         isFormLoading: isAppDataLoading,
-    }), [invoiceDrafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceİtem, resetActiveDraft, isAppDataLoading]);
+    }), [invoiceDrafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, resetActiveDraft, isAppDataLoading]);
 }
 
 export function InvoiceFormProvider({ children }: { children: ReactNode }) {
