@@ -25,9 +25,7 @@ export default function Dashboard() {
   const { t } = useTranslation();
 
   const [date, setDate] = useState<Date>(new Date());
-  const monthStart = startOfMonth(date);
-  const monthEnd = endOfMonth(date);
-
+  
   const [monthlyInvoices, setMonthlyInvoices] = useState<any[]>([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState<any[]>([]);
   const [todayInvoices, setTodayInvoices] = useState<any[]>([]);
@@ -36,14 +34,17 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!isLoading) {
+      const monthStart = startOfMonth(date);
+      const monthEnd = endOfMonth(date);
       setMonthlyInvoices(getInvoicesForDateRange(monthStart, monthEnd));
       setMonthlyExpenses(getExpensesForDateRange(monthStart, monthEnd));
+      
       const today = new Date();
       setTodayInvoices(getInvoicesForDateRange(today, today));
       setTodayExpenses(getExpensesForDateRange(today, today));
       setTodayAttendanceSummary(getAttendanceSummaryForDate(today));
     }
-  }, [isLoading, getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate, date, monthStart, monthEnd]);
+  }, [isLoading, date, getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate]);
 
 
   const monthlyStats = useMemo(() => {
@@ -63,6 +64,8 @@ export default function Dashboard() {
   }, [todayInvoices, todayExpenses, todayAttendanceSummary]);
   
   const dailySalesChartData = useMemo(() => {
+    const monthStart = startOfMonth(date);
+    const monthEnd = endOfMonth(date);
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
     return daysInMonth.map(day => {
         const salesForDay = monthlyInvoices
@@ -73,7 +76,7 @@ export default function Dashboard() {
             Sales: salesForDay,
         };
     });
-  }, [monthlyInvoices, monthStart, monthEnd]);
+  }, [monthlyInvoices, date]);
   
   const topSellingProductsData = useMemo(() => {
       const productSales: { [key: string]: { name: string, quantity: number } } = {};
