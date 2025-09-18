@@ -23,11 +23,11 @@ export function LiveClock() {
   }, []);
 
   if (currentTime === null) {
-    return <div className="hidden sm:flex items-center justify-center p-2 rounded-md w-[110px] h-9">&nbsp;</div>;
+    return <div className="flex items-center justify-center p-2 rounded-md w-[110px] h-9">&nbsp;</div>;
   }
 
   return (
-    <div className="hidden sm:flex items-center justify-center p-2 rounded-md border bg-background text-foreground font-mono text-sm shadow-inner">
+    <div className="flex items-center justify-center p-2 rounded-md border bg-background text-foreground font-mono text-sm shadow-inner">
         {currentTime}
     </div>
   );

@@ -227,7 +227,7 @@ export default function InvoicePage() {
   }
 
   const customerInfoCard = (
-    <Card>
+    <Card className="h-full">
         <CardHeader>
             <CardTitle>{activeDraft.label}</CardTitle>
             <CardDescription>{t('invoice_no_label')}: {typeof draftId === 'number' ? draftId : '...'}</CardDescription>
@@ -252,7 +252,7 @@ export default function InvoicePage() {
   );
 
   const addProductsCard = (
-    <Card className="flex-1 flex flex-col min-h-0">
+    <Card className="flex-1 flex flex-col min-h-0 h-full">
         <CardHeader>
             <CardTitle>{t('add_products_label')}</CardTitle>
             <RadioGroup

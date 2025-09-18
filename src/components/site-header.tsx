@@ -95,15 +95,15 @@ export function SiteHeader() {
         {/* Left Section: Logo and Title */}
         <Link href="/dashboard" className="flex items-center gap-2">
             <StockPilotLogo className="w-8 h-8" />
-            <h1 className="hidden sm:block text-xl font-semibold">
+            <h1 className="text-base sm:text-xl font-semibold">
                 <span className="text-foreground">Mahmud Engineering Shop</span>
             </h1>
         </Link>
         
         {/* Right Section: Status, Clock, and User Menu */}
-        <div className="flex items-center gap-4">
-            <DatabaseStatus />
-            <LiveClock />
+        <div className="flex items-center gap-2 sm:gap-4">
+            <div className="hidden sm:flex"><DatabaseStatus /></div>
+            <div className="hidden sm:flex"><LiveClock /></div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">

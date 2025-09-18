@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 
-const MOBILE_BREAKPOINT = 768;
+const MOBILE_BREAKPOINT = 1024; // Changed to lg breakpoint
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -10,6 +10,7 @@ export function useIsMobile() {
     const checkIsMobile = () => {
         setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     }
+    
     // Set the initial value
     checkIsMobile();
     
@@ -18,7 +19,7 @@ export function useIsMobile() {
     
     // Cleanup event listener on component unmount
     return () => window.removeEventListener("resize", checkIsMobile);
-  }, []); // Empty dependency array ensures this effect runs only once on mount
+  }, []);
 
   return isMobile;
 }
