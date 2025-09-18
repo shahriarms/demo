@@ -13,8 +13,6 @@ const defaultSettings: AppSettings = {
     posPrinterType: 'disabled',
     posPrinterHost: '',
     posPrinterPort: 9100,
-    materialProfitMargin: 15, // Default margin for materials
-    hardwareProfitMargin: 25, // Default margin for hardware
 };
 
 interface SettingsContextType {
@@ -76,5 +74,3 @@ export function useSettings() {
   }
   return context;
 }
-
-    

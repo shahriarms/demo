@@ -356,9 +356,10 @@ export default function InvoicePage() {
                                     <Input 
                                         id='paidAmount' 
                                         type="number" 
-                                        value={paidAmount} 
+                                        value={paidAmount || ''} 
                                         onChange={e => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || 0 })} 
                                         className="h-8 pl-5 text-right font-medium"
+                                        placeholder='0'
                                     />
                                </div>
                            </div>

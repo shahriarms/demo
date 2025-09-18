@@ -192,7 +192,7 @@ export default function SalariesPage() {
                         )}
                         
                         <Button className="w-full" disabled={!canProcessPayment} onClick={handleAddPayment}>
-                            {t('pay_button', { amount: typeof paymentAmount === 'number' ? `৳${paymentAmount.toFixed(2)}` : '৳0.00' })}
+                            {t('pay_button', { amount: typeof paymentAmount === 'number' ? `৳${paymentAmount.toFixed(2)}` : '' })}
                         </Button>
                     </div>
 

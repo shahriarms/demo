@@ -27,7 +27,6 @@ import type { Product } from '@/lib/types';
 import { useEffect } from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useTranslation } from '@/hooks/use-translation';
-import { useSettings } from '@/hooks/use-settings';
 
 const productSchema = z.object({
   name: z.string().min(2, { message: 'Product name must be at least 2 characters.' }),
@@ -60,10 +59,10 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
       mainCategory: product?.mainCategory || 'Material',
       category: product?.category || '',
       subCategory: product?.subCategory || '',
-      buyingPrice: product?.buyingPrice || 0,
-      profitMargin: product?.profitMargin || 0,
-      sellingPrice: product?.sellingPrice || 0,
-      stock: product?.stock || 0,
+      buyingPrice: product?.buyingPrice || undefined,
+      profitMargin: product?.profitMargin || undefined,
+      sellingPrice: product?.sellingPrice || undefined,
+      stock: product?.stock || undefined,
     },
   });
 
@@ -78,10 +77,10 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
       mainCategory: product?.mainCategory || 'Material',
       category: product?.category || '',
       subCategory: product?.subCategory || '',
-      buyingPrice: product?.buyingPrice || 0,
-      profitMargin: product?.profitMargin || 0,
-      sellingPrice: product?.sellingPrice || 0,
-      stock: product?.stock || 0,
+      buyingPrice: product?.buyingPrice || undefined,
+      profitMargin: product?.profitMargin || undefined,
+      sellingPrice: product?.sellingPrice || undefined,
+      stock: product?.stock || undefined,
     });
   }, [product, form]);
 
@@ -92,6 +91,8 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     if (isFinite(bp) && isFinite(pm)) {
         const calculatedPrice = bp + (bp * pm / 100);
         form.setValue('sellingPrice', parseFloat(calculatedPrice.toFixed(2)));
+    } else {
+        form.setValue('sellingPrice', undefined);
     }
   }, [buyingPrice, profitMargin, form]);
 
@@ -117,7 +118,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
              <FormField
               control={form.control}
               name="mainCategory"
@@ -246,7 +247,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                     <FormItem className="col-span-2">
                         <FormLabel>{t('selling_price_label')}</FormLabel>
                         <FormControl>
-                             <Input type="number" {...field} readOnly className="bg-muted font-bold" />
+                             <Input type="number" {...field} readOnly className="bg-muted font-bold" value={field.value ?? ''}/>
                         </FormControl>
                         <FormMessage />
                     </FormItem>

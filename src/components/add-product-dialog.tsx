@@ -26,7 +26,6 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { Product } from '@/lib/types';
 import { useTranslation } from '@/hooks/use-translation';
-import { useSettings } from '@/hooks/use-settings';
 import { useEffect } from 'react';
 
 const productSchema = z.object({
@@ -50,7 +49,6 @@ interface AddProductDialogProps {
 
 export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) {
   const { addProduct } = useAppData();
-  const { settings } = useSettings();
   const { t } = useTranslation();
   
   const form = useForm<ProductFormValues>({
@@ -61,10 +59,10 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       mainCategory: 'Material',
       category: '',
       subCategory: '',
-      buyingPrice: 0,
-      profitMargin: settings.materialProfitMargin,
-      sellingPrice: 0,
-      stock: 0,
+      buyingPrice: undefined,
+      profitMargin: 4,
+      sellingPrice: undefined,
+      stock: undefined,
     },
   });
 
@@ -73,9 +71,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
   const profitMargin = useWatch({ control: form.control, name: 'profitMargin' });
 
   useEffect(() => {
-    const newMargin = mainCategory === 'Material' ? settings.materialProfitMargin : settings.hardwareProfitMargin;
+    const newMargin = mainCategory === 'Material' ? 4 : 15;
     form.setValue('profitMargin', newMargin);
-  }, [mainCategory, settings.materialProfitMargin, settings.hardwareProfitMargin, form]);
+  }, [mainCategory, form]);
 
   useEffect(() => {
     const bp = parseFloat(String(buyingPrice));
@@ -84,13 +82,14 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     if (isFinite(bp) && isFinite(pm)) {
       const calculatedPrice = bp + (bp * pm / 100);
       form.setValue('sellingPrice', parseFloat(calculatedPrice.toFixed(2)));
+    } else {
+      form.setValue('sellingPrice', undefined);
     }
   }, [buyingPrice, profitMargin, form]);
 
 
   const onSubmit = (data: ProductFormValues) => {
     addProduct(data);
-    form.reset();
     onOpenChange(false);
   };
   
@@ -102,10 +101,10 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
         mainCategory: 'Material',
         category: '',
         subCategory: '',
-        buyingPrice: 0,
-        profitMargin: settings.materialProfitMargin,
-        sellingPrice: 0,
-        stock: 0,
+        buyingPrice: undefined,
+        profitMargin: 4,
+        sellingPrice: undefined,
+        stock: undefined,
       });
     }
     onOpenChange(isOpen);
@@ -121,7 +120,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <FormField
               control={form.control}
               name="mainCategory"
@@ -250,7 +249,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <FormItem className="col-span-2">
                         <FormLabel>{t('selling_price_label')}</FormLabel>
                         <FormControl>
-                             <Input type="number" {...field} readOnly className="bg-muted font-bold" />
+                             <Input type="number" {...field} readOnly className="bg-muted font-bold" value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

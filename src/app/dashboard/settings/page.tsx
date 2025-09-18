@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useSettings } from '@/hooks/use-settings';
 import type { PrintFormat, Locale, POSPrinterType } from '@/lib/types';
-import { Printer, Receipt, Usb, Wifi, Ban, Percent } from 'lucide-react';
+import { Printer, Receipt, Usb, Wifi, Ban } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { Input } from '@/components/ui/input';
 
@@ -30,35 +30,6 @@ export default function SettingsPage() {
         <div className="space-y-6">
             <h1 className="text-2xl font-semibold">{t('settings_page_title')}</h1>
             
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Percent /> Default Profit Margins</CardTitle>
-                    <CardDescription>Set the default profit margins for different product categories.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid sm:grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                        <Label htmlFor="material-margin">Material Profit Margin (%)</Label>
-                        <Input 
-                            id="material-margin" 
-                            type="number"
-                            placeholder="e.g., 15"
-                            value={settings.materialProfitMargin}
-                            onChange={(e) => updateSettings({ materialProfitMargin: parseFloat(e.target.value) || 0 })}
-                        />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="hardware-margin">Hardware Profit Margin (%)</Label>
-                        <Input 
-                            id="hardware-margin" 
-                            type="number"
-                            placeholder="e.g., 25"
-                            value={settings.hardwareProfitMargin}
-                            onChange={(e) => updateSettings({ hardwareProfitMargin: parseFloat(e.target.value) || 0 })}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-
             <Card>
                 <CardHeader>
                     <CardTitle>{t('print_settings_title')}</CardTitle>
@@ -178,5 +149,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
-    
