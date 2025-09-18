@@ -55,7 +55,7 @@ export default function BuyersPage() {
   const filteredInvoices = useMemo(() => {
     if (!invoiceSearchTerm) return invoices;
     return invoices.filter(invoice => 
-        invoice.id.toLowerCase().includes(invoiceSearchTerm.toLowerCase()) ||
+        String(invoice.id).toLowerCase().includes(invoiceSearchTerm.toLowerCase()) ||
         new Date(invoice.date).toLocaleDateString().toLowerCase().includes(invoiceSearchTerm.toLowerCase())
     );
   }, [invoices, invoiceSearchTerm]);
@@ -150,7 +150,7 @@ export default function BuyersPage() {
                             selectedInvoice?.id === invoice.id ? 'bg-muted' : ''
                           }`}
                         >
-                            <div className="font-medium">{t('inv_short')}: {invoice.id.slice(-6)}</div>
+                            <div className="font-medium">{t('inv_short')}: {invoice.id}</div>
                             <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                                 <Calendar className="w-3.5 h-3.5"/>
                                 <span>{new Date(invoice.date).toLocaleDateString()}</span>

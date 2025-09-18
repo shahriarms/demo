@@ -84,71 +84,65 @@ export default function InvoicePage() {
   
   const handleSaveAndPrint = async () => {
      if (!validateInvoice() || !activeDraft) return;
-
      setIsPrinting(true);
-     // The actual saving logic is now in `handleAfterPrint`
   };
 
   useEffect(() => {
+    let printInitiated = false;
+
     const handleBeforePrint = () => {
-        setIsPrinting(true);
-        // Set a timer to detect print cancellation
-        printCancelTimer.current = setTimeout(() => {
-            if (isPrinting) {
-                toast({ variant: 'destructive', title: 'Print Cancelled', description: 'Invoice was not saved.' });
-                setIsPrinting(false);
-            }
-        }, 1000); 
+      printInitiated = true;
+      printCancelTimer.current = setTimeout(() => {
+        if (isPrinting && printInitiated) {
+          toast({ variant: 'destructive', title: 'Print Cancelled', description: 'Invoice was not saved.' });
+          setIsPrinting(false);
+          printInitiated = false;
+        }
+      }, 1000);
     };
 
     const handleAfterPrint = async () => {
-        if (printCancelTimer.current) {
-            clearTimeout(printCancelTimer.current);
+      if (printCancelTimer.current) {
+        clearTimeout(printCancelTimer.current);
+      }
+      
+      if (isPrinting && activeDraft && printInitiated) {
+        try {
+          const newInvoiceId = await saveAndPrintInvoice(activeDraft);
+          if (newInvoiceId) {
+            toast({
+              title: t('invoice_saved_toast_title'),
+              description: t('invoice_saved_toast_description', { invoiceId: newInvoiceId }),
+            });
+            resetActiveDraft(newInvoiceId);
+          }
+        } catch (error: any) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message || 'Failed to save or print the invoice.',
+          });
+        } finally {
+          setIsPrinting(false);
+          printInitiated = false;
         }
-        
-        if (isPrinting && activeDraft) {
-            try {
-                const printSuccess = await saveAndPrintInvoice(activeDraft);
-                if (printSuccess) {
-                    toast({
-                        title: t('invoice_saved_toast_title'),
-                        description: t('invoice_saved_toast_description', { invoiceId: activeDraft.id.slice(-6) }),
-                    });
-                    resetActiveDraft();
-                } else {
-                    // This case might happen if printNormalReceipt fails, which is rare.
-                    // For POS, error is thrown and caught below.
-                     toast({
-                        variant: 'destructive',
-                        title: 'Print Failed',
-                        description: 'The invoice was saved, but printing failed.',
-                    });
-                }
-            } catch (error: any) {
-                 toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: error.message || 'Failed to save or print the invoice.',
-                });
-            } finally {
-                setIsPrinting(false);
-            }
-        }
+      } else if (isPrinting) {
+          setIsPrinting(false);
+      }
     };
     
-    // Attach listeners only when printing is initiated
     if (isPrinting) {
-        window.addEventListener('beforeprint', handleBeforePrint);
-        window.addEventListener('afterprint', handleAfterPrint);
-        window.print();
+      window.addEventListener('beforeprint', handleBeforePrint);
+      window.addEventListener('afterprint', handleAfterPrint);
+      window.print();
     }
 
     return () => {
-        window.removeEventListener('beforeprint', handleBeforePrint);
-        window.removeEventListener('afterprint', handleAfterPrint);
-        if (printCancelTimer.current) {
-            clearTimeout(printCancelTimer.current);
-        }
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+      if (printCancelTimer.current) {
+        clearTimeout(printCancelTimer.current);
+      }
     };
   }, [isPrinting, activeDraft, saveAndPrintInvoice, resetActiveDraft, toast, t]);
 
@@ -235,8 +229,8 @@ export default function InvoicePage() {
   const customerInfoCard = (
     <Card>
         <CardHeader>
-            <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
-            <CardDescription>{t('invoice_no_label')}: {draftId ? draftId.slice(-6) : '...'}</CardDescription>
+            <CardTitle>{activeDraft.label}</CardTitle>
+            <CardDescription>{t('invoice_no_label')}: {typeof draftId === 'number' ? draftId : '...'}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -369,7 +363,7 @@ export default function InvoicePage() {
             <div className="w-full md:w-80 ml-auto space-y-2">
                <div className="flex justify-between items-center text-sm">
                    <span className='text-muted-foreground'>{t('subtotal_label')}</span>
-                   <span className="font-medium">৳{subtotal.toFixed(2)}</span>
+                   <span className="font-medium">৳{(subtotal ?? 0).toFixed(2)}</span>
                </div>
                <div className="flex justify-between items-center">
                    <Label htmlFor='paidAmount' className="shrink-0 text-muted-foreground text-sm">{t('paid_label')}</Label>
@@ -388,7 +382,7 @@ export default function InvoicePage() {
                </div>
                <div className="flex justify-between items-center font-bold text-base border-t pt-2 mt-2">
                    <span>{t('due_label')}</span>
-                   <span>৳{dueAmount.toFixed(2)}</span>
+                   <span>৳{(dueAmount ?? 0).toFixed(2)}</span>
                </div>
             </div>
         </CardFooter>
@@ -471,7 +465,7 @@ export default function InvoicePage() {
                         onClick={() => setActiveDraftIndex(index)}
                         className="pr-8"
                     >
-                        Memo {index + 1}
+                        {draft.label}
                     </Button>
                     <Button 
                         variant="ghost" 

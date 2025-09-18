@@ -21,14 +21,14 @@ export interface InvoiceItem {
 
 export interface Payment {
     id: string;
-    invoiceId: string;
+    invoiceId: number;
     buyerId: string;
     amount: number;
     date: string; // ISO 8601 date string
 }
 
 export interface Invoice {
-  id: string;
+  id: number;
   buyerId?: string;
   customerName: string;
   customerAddress: string;

@@ -8,7 +8,7 @@ import { translations } from '@/lib/i18n/all';
 import type { DraftInvoiceItem } from '@/hooks/use-invoice-form';
 
 interface InvoicePrintLayoutProps {
-    invoiceId: string;
+    invoiceId: number | string;
     currentDate: string;
     customerName: string;
     customerAddress: string;
@@ -152,7 +152,7 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
                          <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('customer_phone_label')}:</strong> {customerPhone || '..................'}</p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                        <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('invoice_no_label')}:</strong> {invoiceId ? invoiceId.slice(-6) : '...'}</p>
+                        <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('invoice_no_label')}:</strong> {invoiceId ? invoiceId : '...'}</p>
                         <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('date_label')}:</strong> {currentDate || '...'}</p>
                     </div>
                 </div>

@@ -10,7 +10,6 @@ import { useSettings } from './use-settings';
 import * as productActions from '@/lib/actions/product-actions';
 
 const STORAGE_KEYS = {
-    // Products are no longer in local storage
     invoices: 'stockpilot-invoices',
     buyers: 'stockpilot-buyers',
     expenses: 'stockpilot-expenses',
@@ -18,6 +17,7 @@ const STORAGE_KEYS = {
     attendance: 'stockpilot-attendance',
     salaryPayments: 'stockpilot-salary-payments',
     payments: 'stockpilot-payments',
+    lastInvoiceNumber: 'stockpilot-last-invoice-number',
 };
 
 interface AppDataContextType {
@@ -31,6 +31,7 @@ interface AppDataContextType {
     payments: Payment[];
     isAppDataLoading: boolean;
     isDbConnected: boolean;
+    lastInvoiceNumber: number;
     
     // Product Functions
     addProduct: (product: Omit<Product, 'id' | 'sellingPrice'>) => Promise<void>;
@@ -40,7 +41,7 @@ interface AppDataContextType {
     getProductById: (productId: string) => Product | undefined;
 
     // Invoice & Buyer Functions
-    saveAndPrintInvoice: (draftInvoice: DraftInvoice) => Promise<boolean>;
+    saveAndPrintInvoice: (draftInvoice: DraftInvoice) => Promise<number | null>;
     getBuyerById: (buyerId: string) => Buyer | undefined;
     getInvoicesForBuyer: (buyerId: string) => Invoice[];
     getInvoicesForDateRange: (startDate: Date, endDate: Date) => Invoice[];
@@ -49,7 +50,7 @@ interface AppDataContextType {
 
     // Payment Functions
     addPayment: (payment: Omit<Payment, 'id' | 'date'>) => Promise<void>;
-    getPaymentsForInvoice: (invoiceId: string) => Payment[];
+    getPaymentsForInvoice: (invoiceId: number) => Payment[];
 
     // Expense Functions
     addExpense: (expense: Omit<Expense, 'id'>) => void;
@@ -93,17 +94,6 @@ async function printPosReceipt(settings: any, orderData: any) {
     }
 }
 
-function printNormalReceipt(): Promise<boolean> {
-    return new Promise(resolve => {
-        const handleAfterPrint = () => {
-            window.removeEventListener('afterprint', handleAfterPrint);
-            resolve(true);
-        };
-        window.addEventListener('afterprint', handleAfterPrint);
-        window.print();
-    });
-}
-
 export function DataProvider({ children }: { children: ReactNode }) {
     const { toast } = useToast();
     const { settings } = useSettings();
@@ -116,6 +106,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [attendance, setAttendance] = useState<Attendance[]>([]);
     const [salaryPayments, setSalaryPayments] = useState<SalaryPayment[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
+    const [lastInvoiceNumber, setLastInvoiceNumber] = useState<number>(0);
     const [isAppDataLoading, setIsAppDataLoading] = useState(true);
     const [isDbConnected, setIsDbConnected] = useState(false);
 
@@ -142,7 +133,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
                 const localDataKeys: (keyof typeof STORAGE_KEYS)[] = [
                     'invoices', 'buyers', 'expenses', 'employees', 'attendance', 
-                    'salaryPayments', 'payments'
+                    'salaryPayments', 'payments', 'lastInvoiceNumber'
                 ];
                 
                 localDataKeys.forEach(key => {
@@ -158,6 +149,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
                                 case 'attendance': setAttendance(parsedData || []); break;
                                 case 'salaryPayments': setSalaryPayments(parsedData || []); break;
                                 case 'payments': setPayments(parsedData || []); break;
+                                case 'lastInvoiceNumber': setLastInvoiceNumber(parsedData || 0); break;
                             }
                         } catch (e) {
                              console.error(`Failed to parse ${key} from localStorage`, e);
@@ -190,6 +182,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     usePersistedState('attendance', attendance);
     usePersistedState('salaryPayments', salaryPayments);
     usePersistedState('payments', payments);
+    usePersistedState('lastInvoiceNumber', lastInvoiceNumber);
 
     const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {
         try {
@@ -236,22 +229,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const getProductById = useCallback((productId: string) => products.find(p => p.id === productId), [products]);
 
-    const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice): Promise<boolean> => {
-        const newId = `INV-${Date.now()}`;
+    const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice): Promise<number | null> => {
+        const newInvoiceNumber = lastInvoiceNumber + 1;
+        setLastInvoiceNumber(newInvoiceNumber);
         
         let buyerId = draftInvoice.buyerId || '';
         const existingBuyer = buyers.find(b => b.name === draftInvoice.customerName && b.phone === draftInvoice.customerPhone);
         if (existingBuyer) {
             buyerId = existingBuyer.id;
-            setBuyers(prev => prev.map(b => b.id === buyerId ? { ...b, invoiceIds: [...b.invoiceIds, newId] } : b));
+            setBuyers(prev => prev.map(b => b.id === buyerId ? { ...b, invoiceIds: [...b.invoiceIds, String(newInvoiceNumber)] } : b));
         } else if (draftInvoice.customerName) {
             buyerId = `buyer-${Date.now()}`;
-            const newBuyer: Buyer = { id: buyerId, name: draftInvoice.customerName, address: draftInvoice.customerAddress, phone: draftInvoice.customerPhone, invoiceIds: [newId] };
+            const newBuyer: Buyer = { id: buyerId, name: draftInvoice.customerName, address: draftInvoice.customerAddress, phone: draftInvoice.customerPhone, invoiceIds: [String(newInvoiceNumber)] };
             setBuyers(prev => [...prev, newBuyer]);
         }
 
         const invoiceToSave: Invoice = {
-          id: newId,
+          id: newInvoiceNumber,
           buyerId: buyerId,
           customerName: draftInvoice.customerName,
           customerAddress: draftInvoice.customerAddress,
@@ -278,22 +272,28 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 console.error("Failed to update product stock after invoice creation:", error);
             }
         }
-
+        
         if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
-            const orderData = { orderId: newId, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
-            await printPosReceipt(settings, orderData);
-            return true;
-        } else {
-            return await printNormalReceipt();
+            const orderData = { orderId: newInvoiceNumber, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
+            try {
+                await printPosReceipt(settings, orderData);
+            } catch(e) {
+                // POS print fail should not stop the invoice from being saved.
+                // Error will be thrown to be caught by the caller UI to show a toast.
+                console.error("POS printing failed:", e);
+                throw e;
+            }
         }
-    }, [settings, buyers, loadServerData, isDbConnected]);
+        
+        return newInvoiceNumber;
+    }, [buyers, isDbConnected, lastInvoiceNumber, loadServerData, settings]);
     
     const getBuyerById = useCallback((buyerId: string) => buyers.find(b => b.id === buyerId), [buyers]);
 
     const getInvoicesForBuyer = useCallback((buyerId: string) => {
         const buyer = buyers.find(b => b.id === buyerId);
         if (!buyer) return [];
-        return invoices.filter(inv => buyer.invoiceIds.includes(inv.id)).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return invoices.filter(inv => buyer.invoiceIds.includes(String(inv.id))).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [buyers, invoices]);
 
     const getInvoicesForDateRange = useCallback((startDate: Date, endDate: Date) => {
@@ -337,7 +337,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     }, []);
 
-    const getPaymentsForInvoice = useCallback((invoiceId: string) => {
+    const getPaymentsForInvoice = useCallback((invoiceId: number) => {
         return payments.filter(p => p.invoiceId === invoiceId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [payments]);
 
@@ -433,7 +433,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [getPaymentsForMonth]);
 
     const value = useMemo(() => ({
-        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
+        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected, lastInvoiceNumber,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
         saveAndPrintInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
@@ -441,7 +441,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate,
         addSalaryPayment, getPaymentsForMonth, getSalaryPaymentsForDateRange, getDueSalaryForMonth,
     }), [
-        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
+        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected, lastInvoiceNumber,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
         saveAndPrintInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,

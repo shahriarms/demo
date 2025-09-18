@@ -101,7 +101,7 @@ export default function BuyersDuePage() {
             setPaymentStatus('success');
             toast({
                 title: t('payment_received_toast_title'),
-                description: t('payment_received_toast_description', { amount: pendingPayment.amount.toFixed(2), invoiceId: pendingPayment.invoiceId.slice(-6) }),
+                description: t('payment_received_toast_description', { amount: pendingPayment.amount.toFixed(2), invoiceId: pendingPayment.invoiceId }),
             });
             
             // Clean up
@@ -135,7 +135,7 @@ export default function BuyersDuePage() {
   const buyersWithDue = useMemo(() => buyers.filter(b => getInvoicesForBuyer(b.id).some(inv => inv.dueAmount > 0)), [buyers, getInvoicesForBuyer]);
   const filteredBuyersWithDue = useMemo(() => buyerSearchTerm ? buyersWithDue.filter(b => b.name.toLowerCase().includes(buyerSearchTerm.toLowerCase()) || (b.phone && b.phone.toLowerCase().includes(buyerSearchTerm.toLowerCase()))) : buyersWithDue, [buyersWithDue, buyerSearchTerm]);
   const dueInvoicesForSelectedBuyer = useMemo(() => selectedBuyer ? getInvoicesForBuyer(selectedBuyer.id).filter(inv => inv.dueAmount > 0) : [], [selectedBuyer, getInvoicesForBuyer]);
-  const filteredDueInvoices = useMemo(() => invoiceSearchTerm ? dueInvoicesForSelectedBuyer.filter(inv => inv.id.toLowerCase().includes(invoiceSearchTerm.toLowerCase()) || new Date(inv.date).toLocaleDateString().toLowerCase().includes(invoiceSearchTerm.toLowerCase())) : dueInvoicesForSelectedBuyer, [dueInvoicesForSelectedBuyer, invoiceSearchTerm]);
+  const filteredDueInvoices = useMemo(() => invoiceSearchTerm ? dueInvoicesForSelectedBuyer.filter(inv => String(inv.id).toLowerCase().includes(invoiceSearchTerm.toLowerCase()) || new Date(inv.date).toLocaleDateString().toLowerCase().includes(invoiceSearchTerm.toLowerCase())) : dueInvoicesForSelectedBuyer, [dueInvoicesForSelectedBuyer, invoiceSearchTerm]);
   const paymentHistory = useMemo(() => selectedInvoice ? getPaymentsForInvoice(selectedInvoice.id) : [], [selectedInvoice, getPaymentsForInvoice]);
 
   const handleSelectBuyer = (buyer: Buyer) => {
@@ -231,7 +231,7 @@ export default function BuyersDuePage() {
                     filteredDueInvoices.map((invoice) => (
                       <button key={invoice.id} onClick={() => handleSelectInvoice(invoice)} className={`w-full text-left p-4 hover:bg-muted transition-colors ${selectedInvoice?.id === invoice.id ? 'bg-muted' : '' }`}>
                         <div className="flex justify-between font-medium">
-                            <span>{t('inv_short')}: {invoice.id.slice(-6)}</span>
+                            <span>{t('inv_short')}: {invoice.id}</span>
                             <span className="text-destructive">৳{invoice.dueAmount.toFixed(2)}</span>
                         </div>
                         <div className="text-sm text-muted-foreground">{new Date(invoice.date).toLocaleDateString()}</div>
@@ -258,7 +258,7 @@ export default function BuyersDuePage() {
                     <>
                         <div className="flex justify-between items-start">
                            <div>
-                              <p>{t('invoice_label')}: <span className="font-mono">{selectedInvoice.id.slice(-6)}</span></p>
+                              <p>{t('invoice_label')}: <span className="font-mono">{selectedInvoice.id}</span></p>
                               <p>{t('due_amount_label')}: <span className="font-bold text-destructive">৳{selectedInvoice.dueAmount.toFixed(2)}</span></p>
                            </div>
                         </div>

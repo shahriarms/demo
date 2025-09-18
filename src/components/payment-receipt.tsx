@@ -36,7 +36,7 @@ export const PaymentReceipt = React.forwardRef<HTMLDivElement, PaymentReceiptPro
               <p className="text-xs">Email: engmahmud.mm@gmail.com</p>
             </div>
             <div className="flex justify-between border-b pb-2 mb-4">
-              <span>ক্রঃ নং (Inv No): {invoice.id.slice(-6)}</span>
+              <span>ক্রঃ নং (Inv No): {invoice.id}</span>
               <span>তারিখ (Date): {new Date().toLocaleDateString()}</span>
             </div>
             <div className="mb-4">
