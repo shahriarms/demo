@@ -55,7 +55,6 @@ import 'jspdf-autotable';
 import { useTranslation } from '@/hooks/use-translation';
 
 
-const expenseCategories = ["Rent", "Utility", "Salary", "Equipment", "Misc"];
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 interface SummaryStats {
@@ -105,7 +104,7 @@ export default function ExpensesPage() {
     const filteredAndSortedExpenses = useMemo(() => {
         let result = expenses
             .filter(e => searchTerm ? e.description.toLowerCase().includes(searchTerm.toLowerCase()) : true)
-            .filter(e => categoryFilter ? e.category === categoryFilter : true);
+            .filter(e => categoryFilter ? e.mainCategory === categoryFilter : true);
 
         result.sort((a, b) => {
             let valA, valB;
@@ -116,8 +115,8 @@ export default function ExpensesPage() {
                 valA = a.amount;
                 valB = b.amount;
             } else { // category
-                valA = a.category;
-                valB = b.category;
+                valA = a.subCategory;
+                valB = b.subCategory;
             }
 
             if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
@@ -153,9 +152,9 @@ export default function ExpensesPage() {
         }));
         setMonthChartData(newMonthChartData);
         
-        const todayCategoryData = expenseCategories.map(cat => ({
-            name: t(`expense_category_${cat.toLowerCase()}` as any),
-            value: todayExpenses.filter(e => e.category === cat).reduce((sum, e) => sum + e.amount, 0)
+        const todayCategoryData = ['Shop', 'Owner'].map(cat => ({
+            name: cat,
+            value: todayExpenses.filter(e => e.mainCategory === cat).reduce((sum, e) => sum + e.amount, 0)
         })).filter(d => d.value > 0);
         
         setSummaryStats({ todayTotal, monthTotal, todayCategoryData });
@@ -170,10 +169,11 @@ export default function ExpensesPage() {
             const doc = new jsPDF();
             doc.text(t('expense_report_title'), 14, 16);
             (doc as any).autoTable({
-                head: [[t('date_header'), t('category_header'), t('description_header'), t('amount_header'), t('payment_method_header')]],
+                head: [[t('date_header'), 'Main Category', 'Sub Category', t('description_header'), t('amount_header'), t('payment_method_header')]],
                 body: filteredAndSortedExpenses.map(e => [
                     format(new Date(e.date), 'yyyy-MM-dd'),
-                    t(`expense_category_${e.category.toLowerCase()}` as any),
+                    e.mainCategory,
+                    e.subCategory,
                     e.description,
                     `৳${e.amount.toFixed(2)}`,
                     e.paymentMethod
@@ -183,7 +183,8 @@ export default function ExpensesPage() {
         } else {
             const worksheet = XLSX.utils.json_to_sheet(filteredAndSortedExpenses.map(e => ({
                 [t('date_header')]: format(new Date(e.date), 'yyyy-MM-dd'),
-                [t('category_header')]: t(`expense_category_${e.category.toLowerCase()}` as any),
+                'Main Category': e.mainCategory,
+                'Sub Category': e.subCategory,
                 [t('description_header')]: e.description,
                 [t('amount_header')]: e.amount,
                 [t('payment_method_header')]: e.paymentMethod,
@@ -288,11 +289,12 @@ export default function ExpensesPage() {
                     </div>
                     <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value === 'all' ? '' : value)}>
                         <SelectTrigger className="w-full md:w-48">
-                            <SelectValue placeholder={t('filter_by_category_placeholder')} />
+                            <SelectValue placeholder="Filter by Main Category" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">{t('all_categories')}</SelectItem>
-                            {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{t(`expense_category_${cat.toLowerCase()}` as any)}</SelectItem>)}
+                            <SelectItem value="all">All Categories</SelectItem>
+                            <SelectItem value="Shop">Shop Expense</SelectItem>
+                            <SelectItem value="Owner">Owner Expense</SelectItem>
                         </SelectContent>
                     </Select>
                  </div>
@@ -301,7 +303,7 @@ export default function ExpensesPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>{t('description_header')}</TableHead>
-                                <TableHead className="hidden sm:table-cell">{t('category_header')}</TableHead>
+                                <TableHead className="hidden sm:table-cell">Sub-Category</TableHead>
                                 <TableHead className="hidden md:table-cell">{t('date_header')}</TableHead>
                                 <TableHead className="text-right">{t('amount_header')}</TableHead>
                                 <TableHead className="w-12"></TableHead>
@@ -313,9 +315,9 @@ export default function ExpensesPage() {
                                     <TableRow key={expense.id}>
                                         <TableCell>
                                             <p className="font-medium">{expense.description}</p>
-                                            <p className="text-sm text-muted-foreground sm:hidden">{t(`expense_category_${expense.category.toLowerCase()}` as any)} - {format(new Date(expense.date), 'PP')}</p>
+                                            <p className="text-sm text-muted-foreground sm:hidden">{expense.subCategory} - {format(new Date(expense.date), 'PP')}</p>
                                         </TableCell>
-                                        <TableCell className="hidden sm:table-cell"><span className="font-medium">{t(`expense_category_${expense.category.toLowerCase()}` as any)}</span></TableCell>
+                                        <TableCell className="hidden sm:table-cell"><span className="font-medium">{expense.subCategory}</span></TableCell>
                                         <TableCell className="hidden md:table-cell">{format(new Date(expense.date), 'PP')}</TableCell>
                                         <TableCell className="text-right font-mono">৳{expense.amount.toFixed(2)}</TableCell>
                                         <TableCell>

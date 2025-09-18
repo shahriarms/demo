@@ -43,9 +43,11 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useTranslation } from '@/hooks/use-translation';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 const expenseSchema = z.object({
-  category: z.string({ required_error: "Please select a category." }),
+  mainCategory: z.enum(['Shop', 'Owner'], { required_error: "Please select a main category."}),
+  subCategory: z.string().min(2, { message: 'Sub-category must be at least 2 characters.'}),
   description: z.string().min(3, "Description must be at least 3 characters.").max(100, "Description is too long."),
   amount: z.coerce.number().positive("Amount must be greater than 0."),
   date: z.date({ required_error: "Please select a date." }),
@@ -70,7 +72,8 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
         defaultValues: isEditMode
             ? { ...expense, date: new Date(expense.date) }
             : {
-                category: '',
+                mainCategory: 'Shop',
+                subCategory: '',
                 description: '',
                 amount: 0,
                 date: new Date(),
@@ -81,7 +84,8 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
     useEffect(() => {
         if (open) {
             form.reset(isEditMode ? { ...expense, date: new Date(expense.date) } : {
-                category: '',
+                mainCategory: 'Shop',
+                subCategory: '',
                 description: '',
                 amount: 0,
                 date: new Date(),
@@ -117,24 +121,43 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
                             control={form.control}
-                            name="category"
+                            name="mainCategory"
+                            render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                <FormLabel>Main Category</FormLabel>
+                                <FormControl>
+                                    <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex space-x-4"
+                                    >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl>
+                                        <RadioGroupItem value="Shop" />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">Shop Expense</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl>
+                                        <RadioGroupItem value="Owner" />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">Owner Expense</FormLabel>
+                                    </FormItem>
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="subCategory"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>{t('category_label')}</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={t('select_expense_category_placeholder')} />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="Rent">{t('expense_category_rent')}</SelectItem>
-                                            <SelectItem value="Utility">{t('expense_category_utility')}</SelectItem>
-                                            <SelectItem value="Salary">{t('expense_category_salary')}</SelectItem>
-                                            <SelectItem value="Equipment">{t('expense_category_equipment')}</SelectItem>
-                                            <SelectItem value="Misc">{t('expense_category_misc')}</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <FormLabel>Sub-Category</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., Rent, Utility Bill, Salary" {...field} />
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -229,5 +252,3 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
         </Dialog>
     );
 }
-
-    

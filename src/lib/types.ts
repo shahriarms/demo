@@ -50,7 +50,8 @@ export interface Buyer {
 
 export interface Expense {
     id: string;
-    category: 'Rent' | 'Utility' | 'Salary' | 'Equipment' | 'Misc' | string;
+    mainCategory: 'Shop' | 'Owner';
+    subCategory: string;
     description: string;
     amount: number;
     date: string; // ISO 8601 date string
