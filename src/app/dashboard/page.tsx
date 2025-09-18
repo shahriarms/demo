@@ -160,7 +160,7 @@ export default function Dashboard() {
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold">৳{todayStats.totalSales.toFixed(2)}</div>
+                      <div className="text-2xl font-bold text-green-600">৳{todayStats.totalSales.toFixed(2)}</div>
                       <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
                   </CardContent>
                 </Card>
@@ -170,7 +170,7 @@ export default function Dashboard() {
                       <Receipt className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold">৳{todayStats.totalExpenses.toFixed(2)}</div>
+                      <div className="text-2xl font-bold text-green-600">৳{todayStats.totalExpenses.toFixed(2)}</div>
                       <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
                   </CardContent>
                 </Card>
@@ -180,7 +180,7 @@ export default function Dashboard() {
                       <HandCoins className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold">৳{todayStats.totalDue.toFixed(2)}</div>
+                      <div className="text-2xl font-bold text-green-600">৳{todayStats.totalDue.toFixed(2)}</div>
                       <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
                   </CardContent>
                 </Card>
@@ -190,7 +190,7 @@ export default function Dashboard() {
                       <Package className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold">{todayStats.unitsSold}</div>
+                      <div className="text-2xl font-bold text-green-600">{todayStats.unitsSold}</div>
                       <p className="text-xs text-muted-foreground">{t('total_items_footer')}</p>
                   </CardContent>
                 </Card>
@@ -218,7 +218,7 @@ export default function Dashboard() {
                   <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">৳{monthlyStats.totalSales.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-green-600">৳{monthlyStats.totalSales.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">{monthlyInvoices.length} invoices this month</p>
                 </CardContent>
               </Card>
@@ -228,7 +228,7 @@ export default function Dashboard() {
                   <TrendingDown className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">৳{monthlyStats.totalExpenses.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-green-600">৳{monthlyStats.totalExpenses.toFixed(2)}</div>
                    <p className="text-xs text-muted-foreground">{monthlyExpenses.length} entries this month</p>
                 </CardContent>
               </Card>
@@ -238,7 +238,7 @@ export default function Dashboard() {
                   <Wallet className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">৳{monthlyStats.totalSalaryPaid.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-green-600">৳{monthlyStats.totalSalaryPaid.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">{monthlySalaries.length} salary payments</p>
                 </CardContent>
               </Card>
@@ -248,7 +248,7 @@ export default function Dashboard() {
                   <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">৳{monthlyStats.totalDue.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-green-600">৳{monthlyStats.totalDue.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">Total outstanding from this month</p>
                 </CardContent>
               </Card>
@@ -258,7 +258,7 @@ export default function Dashboard() {
                   <Container className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{monthlyStats.unitsSold}</div>
+                  <div className="text-2xl font-bold text-green-600">{monthlyStats.unitsSold}</div>
                   <p className="text-xs text-muted-foreground">Total items sold this month</p>
                 </CardContent>
               </Card>
