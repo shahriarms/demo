@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useMe
 import type { Product, Invoice, Buyer, Expense, Employee, Attendance, SalaryPayment, Payment, AttendanceStatus } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import type { DraftInvoice } from './use-invoice-form';
-import { isSameDay, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { isSameDay, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { useSettings } from './use-settings';
 import * as productActions from '@/lib/actions/product-actions';
 
@@ -297,15 +297,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [buyers, invoices]);
 
     const getInvoicesForDateRange = useCallback((startDate: Date, endDate: Date) => {
-        const start = startOfMonth(startDate);
-        const end = endOfMonth(endDate);
+        const start = startOfDay(startDate);
+        const end = endOfDay(endDate);
         return invoices.filter(inv => {
             const invDate = new Date(inv.date);
-            // If checking for a single day, check if it's the same day.
-            if (isSameDay(start, end)) {
-                return isSameDay(invDate, start);
-            }
-            // Otherwise, check if it's within the month range.
             return isWithinInterval(invDate, { start, end });
         });
     }, [invoices]);
@@ -337,13 +332,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [toast]);
     
     const getExpensesForDateRange = useCallback((startDate: Date, endDate: Date) => {
-        const start = startOfMonth(startDate);
-        const end = endOfMonth(endDate);
+        const start = startOfDay(startDate);
+        const end = endOfDay(endDate);
         return expenses.filter(exp => {
             const expDate = new Date(exp.date);
-             if (isSameDay(start, end)) {
-                return isSameDay(expDate, start);
-            }
             return isWithinInterval(expDate, { start, end });
         });
     }, [expenses]);
@@ -394,13 +386,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const getPaymentsForMonth = useCallback((employeeId: string, date: Date) => {
-        const monthStart = startOfMonth(date);
-        const monthEnd = endOfMonth(date);
+        const monthStart = startOfDay(date);
+        const monthEnd = endOfDay(date);
         return salaryPayments.filter(p => p.employeeId === employeeId && isWithinInterval(new Date(p.date), { start: monthStart, end: monthEnd }));
     }, [salaryPayments]);
     
     const getSalaryPaymentsForDateRange = useCallback((startDate: Date, endDate: Date) => {
-        return salaryPayments.filter(p => isWithinInterval(new Date(p.date), { start: startDate, end: endDate }));
+        const start = startOfDay(startDate);
+        const end = endOfDay(endDate);
+        return salaryPayments.filter(p => isWithinInterval(new Date(p.date), { start, end }));
     }, [salaryPayments]);
 
     const getDueSalaryForMonth = useCallback((employee: Employee, date: Date) => {

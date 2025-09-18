@@ -22,17 +22,18 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileDown } from 'lucide-react';
 import type { Invoice } from '@/lib/types';
-import { format } from 'date-fns';
+import { format, isSameDay, startOfMonth, endOfMonth } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useTranslation } from '@/hooks/use-translation';
+import type { DateRange } from 'react-day-picker';
 
 interface MonthlySalesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoices: Invoice[];
-  month: Date;
+  dateRange?: DateRange;
 }
 
 interface ReportItem {
@@ -44,8 +45,22 @@ interface ReportItem {
   total: number;
 }
 
-export function MonthlySalesDialog({ open, onOpenChange, invoices, month }: MonthlySalesDialogProps) {
+export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: MonthlySalesDialogProps) {
     const { t } = useTranslation();
+
+    const rangeTitle = useMemo(() => {
+        if (!dateRange?.from) return "Report";
+        const from = dateRange.from;
+        const to = dateRange.to || from;
+
+        if (isSameDay(from, startOfMonth(from)) && isSameDay(to, endOfMonth(from))) {
+            return `Sales Report (${format(from, 'MMMM yyyy')})`;
+        }
+        if (isSameDay(from, to)) {
+            return `Sales Report (${format(from, 'PPP')})`;
+        }
+        return `Sales Report (${format(from, 'PP')} - ${format(to, 'PP')})`;
+    }, [dateRange]);
 
     const reportData = useMemo((): ReportItem[] => {
         if (!invoices) return [];
@@ -71,13 +86,13 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, month }: Mont
             "Total": item.total,
         })));
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Monthly Sales");
-        XLSX.writeFile(workbook, `monthly_sales_${format(month, 'yyyy-MM')}.xlsx`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sales Report");
+        XLSX.writeFile(workbook, `sales_report.xlsx`);
     };
 
     const handleExportPdf = () => {
         const doc = new jsPDF();
-        doc.text(`Monthly Sales Report - ${format(month, 'MMMM yyyy')}`, 14, 16);
+        doc.text(rangeTitle, 14, 16);
         (doc as any).autoTable({
             head: [['Date', 'Customer Name', 'Item Name', 'Quantity', 'Rate', 'Total']],
             body: reportData.map(item => [
@@ -90,7 +105,7 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, month }: Mont
             ]),
             startY: 22,
         });
-        doc.save(`monthly_sales_${format(month, 'yyyy-MM')}.pdf`);
+        doc.save(`sales_report.pdf`);
     };
 
     const totalSales = useMemo(() => reportData.reduce((sum, item) => sum + item.total, 0), [reportData]);
@@ -99,9 +114,9 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, month }: Mont
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Monthly Sales Report ({format(month, 'MMMM yyyy')})</DialogTitle>
+          <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A detailed list of all items sold this month. Total Sales: <strong>৳{totalSales.toFixed(2)}</strong>
+            A detailed list of all items sold in the selected date range. Total Sales: <strong>৳{totalSales.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -137,7 +152,7 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, month }: Mont
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center">
-                    No sales recorded for this month.
+                    No sales recorded for this date range.
                   </TableCell>
                 </TableRow>
               )}

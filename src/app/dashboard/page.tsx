@@ -15,7 +15,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, differenceInDays } from 'date-fns';
 import { useTranslation } from '@/hooks/use-translation';
 import { DailySalesDialog } from '@/components/daily-sales-report-dialog';
 import { DailyExpensesReportDialog } from '@/components/daily-expenses-report-dialog';
@@ -26,17 +26,22 @@ import { MonthlyExpensesDialog } from '@/components/monthly-expenses-report-dial
 import { MonthlyDueDialog } from '@/components/monthly-due-report-dialog';
 import { MonthlyUnitsSoldDialog } from '@/components/monthly-units-sold-report-dialog';
 import { MonthlySalaryReportDialog } from '@/components/monthly-salary-report-dialog';
+import type { DateRange } from 'react-day-picker';
 
+const initialDateRange: DateRange = {
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
+};
 
 export default function Dashboard() {
   const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, isAppDataLoading: isLoading } = useAppData();
   const { t } = useTranslation();
 
-  const [date, setDate] = useState<Date>(new Date());
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(initialDateRange);
   
-  const [monthlyInvoices, setMonthlyInvoices] = useState<any[]>([]);
-  const [monthlyExpenses, setMonthlyExpenses] = useState<any[]>([]);
-  const [monthlySalaries, setMonthlySalaries] = useState<any[]>([]);
+  const [rangeInvoices, setRangeInvoices] = useState<any[]>([]);
+  const [rangeExpenses, setRangeExpenses] = useState<any[]>([]);
+  const [rangeSalaries, setRangeSalaries] = useState<any[]>([]);
   const [todayInvoices, setTodayInvoices] = useState<any[]>([]);
   const [todayExpenses, setTodayExpenses] = useState<any[]>([]);
   
@@ -52,29 +57,27 @@ export default function Dashboard() {
   const [isMonthlySalaryReportOpen, setMonthlySalaryReportOpen] = useState(false);
 
   useEffect(() => {
-    if (!isLoading) {
-      const monthStart = startOfMonth(date);
-      const monthEnd = endOfMonth(date);
-      setMonthlyInvoices(getInvoicesForDateRange(monthStart, monthEnd));
-      setMonthlyExpenses(getExpensesForDateRange(monthStart, monthEnd));
-      setMonthlySalaries(getSalaryPaymentsForDateRange(monthStart, monthEnd));
+    if (!isLoading && dateRange?.from && dateRange?.to) {
+      setRangeInvoices(getInvoicesForDateRange(dateRange.from, dateRange.to));
+      setRangeExpenses(getExpensesForDateRange(dateRange.from, dateRange.to));
+      setRangeSalaries(getSalaryPaymentsForDateRange(dateRange.from, dateRange.to));
       
       const today = new Date();
       setTodayInvoices(getInvoicesForDateRange(today, today));
       setTodayExpenses(getExpensesForDateRange(today, today));
     }
-  }, [isLoading, date, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange]);
+  }, [isLoading, dateRange, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange]);
 
 
-  const monthlyStats = useMemo(() => {
-    const totalSales = monthlyInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
-    const totalExpenses = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const totalSalaryPaid = monthlySalaries.reduce((sum, sal) => sum + sal.amount, 0);
+  const rangeStats = useMemo(() => {
+    const totalSales = rangeInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
+    const totalExpenses = rangeExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const totalSalaryPaid = rangeSalaries.reduce((sum, sal) => sum + sal.amount, 0);
     const profit = totalSales - totalExpenses - totalSalaryPaid;
-    const totalDue = monthlyInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
-    const unitsSold = monthlyInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+    const totalDue = rangeInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
+    const unitsSold = rangeInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
     return { totalSales, totalExpenses, totalSalaryPaid, profit, totalDue, unitsSold };
-  }, [monthlyInvoices, monthlyExpenses, monthlySalaries]);
+  }, [rangeInvoices, rangeExpenses, rangeSalaries]);
   
   const todayStats = useMemo(() => {
       const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
@@ -85,33 +88,47 @@ export default function Dashboard() {
       return { totalSales, totalExpenses, profit, totalDue, unitsSold };
   }, [todayInvoices, todayExpenses]);
   
-  const { dailySalesChartData, dailyExpensesChartData } = useMemo(() => {
-    const monthStart = startOfMonth(date);
-    const monthEnd = endOfMonth(date);
-    const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const { salesChartData, expensesChartData } = useMemo(() => {
+    if (!dateRange?.from || !dateRange?.to) return { salesChartData: [], expensesChartData: [] };
+
+    const daysInRange = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
     
-    const salesData = daysInMonth.map(day => ({
+    const salesData = daysInRange.map(day => ({
         name: format(day, 'd'),
-        Sales: monthlyInvoices
+        Sales: rangeInvoices
             .filter(inv => isSameDay(new Date(inv.date), day))
             .reduce((sum, inv) => sum + inv.subtotal, 0),
     }));
 
-    const expensesData = daysInMonth.map(day => ({
+    const expensesData = daysInRange.map(day => ({
         name: format(day, 'd'),
-        Expense: monthlyExpenses
+        Expense: rangeExpenses
             .filter(exp => isSameDay(new Date(exp.date), day))
             .reduce((sum, exp) => sum + exp.amount, 0),
     }));
 
-    return { dailySalesChartData: salesData, dailyExpensesChartData: expensesData };
-  }, [monthlyInvoices, monthlyExpenses, date]);
+    return { salesChartData: salesData, expensesChartData: expensesData };
+  }, [rangeInvoices, rangeExpenses, dateRange]);
 
 
   const chartConfig: ChartConfig = {
     Sales: { label: t('sales_label'), color: "hsl(var(--primary))" },
     Expense: { label: t('expense_label'), color: "hsl(var(--destructive))" },
   };
+
+  const rangeTitle = useMemo(() => {
+    if (!dateRange?.from) return "This Month";
+    if (dateRange.to) {
+        if (isSameDay(dateRange.from, startOfMonth(dateRange.from)) && isSameDay(dateRange.to, endOfMonth(dateRange.from))) {
+            return format(dateRange.from, 'MMMM yyyy');
+        }
+        if (isSameDay(dateRange.from, dateRange.to)) {
+            return format(dateRange.from, 'PPP');
+        }
+        return `${format(dateRange.from, 'PP')} - ${format(dateRange.to, 'PP')}`;
+    }
+    return format(dateRange.from, 'PPP');
+  }, [dateRange]);
 
   if (isLoading) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -126,27 +143,37 @@ export default function Dashboard() {
               <p className="text-muted-foreground">{t('welcome_back_header')}</p>
           </div>
           <Popover>
-              <PopoverTrigger asChild>
+            <PopoverTrigger asChild>
               <Button
-                  id="date"
-                  variant={"outline"}
-                  className="w-full sm:w-[280px] justify-start text-left font-normal"
+                id="date"
+                variant={"outline"}
+                className="w-full sm:w-auto justify-start text-left font-normal"
               >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(date, "MMMM yyyy")}
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "LLL dd, y")} -{" "}
+                      {format(dateRange.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Pick a date</span>
+                )}
               </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
               <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(day) => setDate(day || new Date())}
-                  initialFocus
-                  captionLayout="dropdown-buttons" 
-                  fromYear={2020} 
-                  toYear={new Date().getFullYear() + 1}
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
               />
-              </PopoverContent>
+            </PopoverContent>
           </Popover>
         </div>
         
@@ -210,7 +237,7 @@ export default function Dashboard() {
         </div>
 
         <div>
-            <h2 className="text-lg font-semibold mb-4">This Month's Summary ({format(date, "MMMM")})</h2>
+            <h2 className="text-lg font-semibold mb-4">Date Range Summary ({rangeTitle})</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
               <Card as="button" onClick={() => setMonthlySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -218,8 +245,8 @@ export default function Dashboard() {
                   <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">৳{monthlyStats.totalSales.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">{monthlyInvoices.length} invoices this month</p>
+                  <div className="text-2xl font-bold text-green-600">৳{rangeStats.totalSales.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">{rangeInvoices.length} invoices in range</p>
                 </CardContent>
               </Card>
               <Card as="button" onClick={() => setMonthlyExpensesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
@@ -228,38 +255,38 @@ export default function Dashboard() {
                   <TrendingDown className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">৳{monthlyStats.totalExpenses.toFixed(2)}</div>
-                   <p className="text-xs text-muted-foreground">{monthlyExpenses.length} entries this month</p>
+                  <div className="text-2xl font-bold text-green-600">৳{rangeStats.totalExpenses.toFixed(2)}</div>
+                   <p className="text-xs text-muted-foreground">{rangeExpenses.length} entries in range</p>
                 </CardContent>
               </Card>
                <Card as="button" onClick={() => setMonthlySalaryReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Monthly Salary Paid</CardTitle>
+                  <CardTitle className="text-sm font-medium">Salary Paid</CardTitle>
                   <Wallet className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">৳{monthlyStats.totalSalaryPaid.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">{monthlySalaries.length} salary payments</p>
+                  <div className="text-2xl font-bold text-green-600">৳{rangeStats.totalSalaryPaid.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">{rangeSalaries.length} salary payments</p>
                 </CardContent>
               </Card>
                <Card as="button" onClick={() => setMonthlyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Monthly Due</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Due</CardTitle>
                   <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">৳{monthlyStats.totalDue.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">Total outstanding from this month</p>
+                  <div className="text-2xl font-bold text-green-600">৳{rangeStats.totalDue.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">Outstanding from this range</p>
                 </CardContent>
               </Card>
                <Card as="button" onClick={() => setMonthlyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Monthly Units Sold</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Units Sold</CardTitle>
                   <Container className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{monthlyStats.unitsSold}</div>
-                  <p className="text-xs text-muted-foreground">Total items sold this month</p>
+                  <div className="text-2xl font-bold text-green-600">{rangeStats.unitsSold}</div>
+                  <p className="text-xs text-muted-foreground">Total items sold in range</p>
                 </CardContent>
               </Card>
               <Card>
@@ -268,8 +295,8 @@ export default function Dashboard() {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${monthlyStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ৳{monthlyStats.profit.toFixed(2)}
+                  <div className={`text-2xl font-bold ${rangeStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      ৳{rangeStats.profit.toFixed(2)}
                   </div>
                   <p className="text-xs text-muted-foreground">Sales - (Expenses + Salaries)</p>
                 </CardContent>
@@ -280,12 +307,12 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
               <CardHeader>
-              <CardTitle>{t('daily_sales_chart_title', { month: format(date, 'MMMM') })}</CardTitle>
+              <CardTitle>Daily Sales for {rangeTitle}</CardTitle>
               <CardDescription>{t('daily_sales_chart_description')}</CardDescription>
               </CardHeader>
               <CardContent>
               <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
-                  <BarChart data={dailySalesChartData}>
+                  <BarChart data={salesChartData}>
                   <CartesianGrid vertical={false} />
                   <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
                   <YAxis />
@@ -300,12 +327,12 @@ export default function Dashboard() {
           </Card>
           <Card>
               <CardHeader>
-                  <CardTitle>Daily Expenses for {format(date, 'MMMM')}</CardTitle>
-                  <CardDescription>Showing expense data for each day of the month.</CardDescription>
+                  <CardTitle>Daily Expenses for {rangeTitle}</CardTitle>
+                  <CardDescription>Showing expense data for each day of the range.</CardDescription>
               </CardHeader>
               <CardContent>
                   <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
-                      <BarChart data={dailyExpensesChartData}>
+                      <BarChart data={expensesChartData}>
                           <CartesianGrid vertical={false} />
                           <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
                           <YAxis />
@@ -345,34 +372,34 @@ export default function Dashboard() {
       <MonthlySalesDialog
         open={isMonthlySalesReportOpen}
         onOpenChange={setMonthlySalesReportOpen}
-        invoices={monthlyInvoices}
-        month={date}
+        invoices={rangeInvoices}
+        dateRange={dateRange}
       />
       <MonthlyExpensesDialog
         open={isMonthlyExpensesReportOpen}
         onOpenChange={setMonthlyExpensesReportOpen}
-        expenses={monthlyExpenses}
-        month={date}
+        expenses={rangeExpenses}
+        month={dateRange?.from || new Date()}
       />
       <MonthlyDueDialog
         open={isMonthlyDueReportOpen}
         onOpenChange={setMonthlyDueReportOpen}
-        invoices={monthlyInvoices}
-        month={date}
+        invoices={rangeInvoices}
+        month={dateRange?.from || new Date()}
       />
       <MonthlyUnitsSoldDialog
         open={isMonthlyUnitsSoldReportOpen}
         onOpenChange={setMonthlyUnitsSoldReportOpen}
-        invoices={monthlyInvoices}
+        invoices={rangeInvoices}
         products={products}
-        month={date}
+        month={dateRange?.from || new Date()}
       />
       <MonthlySalaryReportDialog
         open={isMonthlySalaryReportOpen}
         onOpenChange={setMonthlySalaryReportOpen}
-        salaryPayments={monthlySalaries}
+        salaryPayments={rangeSalaries}
         employees={employees}
-        month={date}
+        month={dateRange?.from || new Date()}
       />
     </>
   );
