@@ -66,6 +66,7 @@ interface AppDataContextType {
     // Salary Functions
     addSalaryPayment: (payment: Omit<SalaryPayment, 'id'>) => void;
     getPaymentsForMonth: (employeeId: string, date: Date) => SalaryPayment[];
+    getSalaryPaymentsForDateRange: (startDate: Date, endDate: Date) => SalaryPayment[];
     getDueSalaryForMonth: (employee: Employee, date: Date) => number;
 }
 
@@ -382,6 +383,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const monthEnd = endOfMonth(date);
         return salaryPayments.filter(p => p.employeeId === employeeId && isWithinInterval(new Date(p.date), { start: monthStart, end: monthEnd }));
     }, [salaryPayments]);
+    
+    const getSalaryPaymentsForDateRange = useCallback((startDate: Date, endDate: Date) => {
+        return salaryPayments.filter(p => isWithinInterval(new Date(p.date), { start: startDate, end: endDate }));
+    }, [salaryPayments]);
 
     const getDueSalaryForMonth = useCallback((employee: Employee, date: Date) => {
         if (!employee) return 0;
@@ -396,7 +401,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate,
-        addSalaryPayment, getPaymentsForMonth, getDueSalaryForMonth,
+        addSalaryPayment, getPaymentsForMonth, getSalaryPaymentsForDateRange, getDueSalaryForMonth,
     }), [
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
@@ -404,7 +409,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate,
-        addSalaryPayment, getPaymentsForMonth, getDueSalaryForMonth
+        addSalaryPayment, getPaymentsForMonth, getSalaryPaymentsForDateRange, getDueSalaryForMonth
     ]);
 
     return (

@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/chart';
 import { useAppData } from '@/hooks/use-app-data';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, Package, HandCoins, Receipt, Loader2, BadgeIndianRupee, Container } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, Package, HandCoins, Receipt, Loader2, BadgeIndianRupee, Container, Wallet } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -28,13 +28,14 @@ import { MonthlyUnitsSoldDialog } from '@/components/monthly-units-sold-report-d
 
 
 export default function Dashboard() {
-  const { products, getInvoicesForDateRange, getExpensesForDateRange, isAppDataLoading: isLoading } = useAppData();
+  const { products, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, isAppDataLoading: isLoading } = useAppData();
   const { t } = useTranslation();
 
   const [date, setDate] = useState<Date>(new Date());
   
   const [monthlyInvoices, setMonthlyInvoices] = useState<any[]>([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState<any[]>([]);
+  const [monthlySalaries, setMonthlySalaries] = useState<any[]>([]);
   const [todayInvoices, setTodayInvoices] = useState<any[]>([]);
   const [todayExpenses, setTodayExpenses] = useState<any[]>([]);
   
@@ -54,22 +55,24 @@ export default function Dashboard() {
       const monthEnd = endOfMonth(date);
       setMonthlyInvoices(getInvoicesForDateRange(monthStart, monthEnd));
       setMonthlyExpenses(getExpensesForDateRange(monthStart, monthEnd));
+      setMonthlySalaries(getSalaryPaymentsForDateRange(monthStart, monthEnd));
       
       const today = new Date();
       setTodayInvoices(getInvoicesForDateRange(today, today));
       setTodayExpenses(getExpensesForDateRange(today, today));
     }
-  }, [isLoading, date, getInvoicesForDateRange, getExpensesForDateRange]);
+  }, [isLoading, date, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange]);
 
 
   const monthlyStats = useMemo(() => {
     const totalSales = monthlyInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
     const totalExpenses = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const profit = totalSales - totalExpenses;
+    const totalSalaryPaid = monthlySalaries.reduce((sum, sal) => sum + sal.amount, 0);
+    const profit = totalSales - totalExpenses - totalSalaryPaid;
     const totalDue = monthlyInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
     const unitsSold = monthlyInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-    return { totalSales, totalExpenses, profit, totalDue, unitsSold };
-  }, [monthlyInvoices, monthlyExpenses]);
+    return { totalSales, totalExpenses, totalSalaryPaid, profit, totalDue, unitsSold };
+  }, [monthlyInvoices, monthlyExpenses, monthlySalaries]);
   
   const todayStats = useMemo(() => {
       const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
@@ -206,7 +209,7 @@ export default function Dashboard() {
 
         <div>
             <h2 className="text-lg font-semibold mb-4">This Month's Summary ({format(date, "MMMM")})</h2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
               <Card as="button" onClick={() => setMonthlySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('monthly_sales_card_title')}</CardTitle>
@@ -225,6 +228,16 @@ export default function Dashboard() {
                 <CardContent>
                   <div className="text-2xl font-bold">৳{monthlyStats.totalExpenses.toFixed(2)}</div>
                    <p className="text-xs text-muted-foreground">{monthlyExpenses.length} entries this month</p>
+                </CardContent>
+              </Card>
+               <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Monthly Salary Paid</CardTitle>
+                  <Wallet className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">৳{monthlyStats.totalSalaryPaid.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">{monthlySalaries.length} salary payments</p>
                 </CardContent>
               </Card>
                <Card as="button" onClick={() => setMonthlyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
@@ -256,7 +269,7 @@ export default function Dashboard() {
                   <div className={`text-2xl font-bold ${monthlyStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       ৳{monthlyStats.profit.toFixed(2)}
                   </div>
-                  <p className="text-xs text-muted-foreground">Total Profit for {format(date, "MMMM")}</p>
+                  <p className="text-xs text-muted-foreground">Sales - (Expenses + Salaries)</p>
                 </CardContent>
               </Card>
             </div>
