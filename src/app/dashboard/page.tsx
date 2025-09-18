@@ -20,10 +20,11 @@ import { useTranslation } from '@/hooks/use-translation';
 import { DailySalesDialog } from '@/components/daily-sales-report-dialog';
 import { DailyExpensesReportDialog } from '@/components/daily-expenses-report-dialog';
 import { DailyDueReportDialog } from '@/components/daily-due-report-dialog';
+import { DailyUnitsSoldReportDialog } from '@/components/daily-units-sold-report-dialog';
 
 
 export default function Dashboard() {
-  const { getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate, isAppDataLoading: isLoading } = useAppData();
+  const { products, getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate, isAppDataLoading: isLoading } = useAppData();
   const { t } = useTranslation();
 
   const [date, setDate] = useState<Date>(new Date());
@@ -37,6 +38,7 @@ export default function Dashboard() {
   const [isSalesReportDialogOpen, setSalesReportDialogOpen] = useState(false);
   const [isExpensesReportDialogOpen, setExpensesReportDialogOpen] = useState(false);
   const [isDueReportDialogOpen, setDueReportDialogOpen] = useState(false);
+  const [isUnitsSoldReportDialogOpen, setUnitsSoldReportDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
@@ -165,7 +167,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card as="button" onClick={() => setUnitsSoldReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('units_sold_today_card_title')}</CardTitle>
                   <Package className="h-4 w-4 text-muted-foreground" />
@@ -280,6 +282,14 @@ export default function Dashboard() {
         onOpenChange={setDueReportDialogOpen}
         invoices={todayInvoices}
       />
+      <DailyUnitsSoldReportDialog
+        open={isUnitsSoldReportDialogOpen}
+        onOpenChange={setUnitsSoldReportDialogOpen}
+        invoices={todayInvoices}
+        products={products}
+      />
     </>
   );
 }
+
+    

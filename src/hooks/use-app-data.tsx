@@ -177,7 +177,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             if (!isAppDataLoading) {
                 localStorage.setItem(STORAGE_KEYS[key], JSON.stringify(state));
             }
-        }, [key, state]);
+        }, [state]);
     };
     
     usePersistedState('invoices', invoices);
@@ -418,3 +418,5 @@ export function useAppData() {
     }
     return context;
 }
+
+    
