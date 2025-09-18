@@ -96,7 +96,7 @@ export function DailySalesDialog({ open, onOpenChange, invoices }: DailySalesDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Today's Sales Report</DialogTitle>
           <DialogDescription>
