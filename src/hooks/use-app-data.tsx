@@ -41,7 +41,6 @@ interface AppDataContextType {
 
     // Invoice & Buyer Functions
     saveAndPrintInvoice: (draftInvoice: DraftInvoice) => Promise<boolean>;
-    updateInvoiceDue: (invoiceId: string, amountPaid: number) => void;
     getBuyerById: (buyerId: string) => Buyer | undefined;
     getInvoicesForBuyer: (buyerId: string) => Invoice[];
     getInvoicesForDateRange: (startDate: Date, endDate: Date) => Invoice[];
@@ -288,10 +287,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
             return await printNormalReceipt();
         }
     }, [settings, buyers, loadServerData, isDbConnected]);
-
-    const updateInvoiceDue = useCallback((invoiceId: string, amountPaid: number) => {
-        setInvoices(prev => prev.map(inv => inv.id === invoiceId ? { ...inv, paidAmount: inv.paidAmount + amountPaid, dueAmount: inv.dueAmount - amountPaid } : inv));
-    }, []);
     
     const getBuyerById = useCallback((buyerId: string) => buyers.find(b => b.id === buyerId), [buyers]);
 
@@ -330,7 +325,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const addPayment = useCallback(async (paymentData: Omit<Payment, 'id' | 'date'>) => {
         const newPayment: Payment = { ...paymentData, id: `pay-${Date.now()}`, date: new Date().toISOString() };
         
-        // This is a functional update to ensure we're working with the latest state
         setPayments(prev => [...prev, newPayment]);
         
         setInvoices(prev => prev.map(inv => 
@@ -339,10 +333,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
             : inv
         ));
 
-        // After updating local state, we need to ensure the parent component (BuyersDuePage)
-        // gets a fresh copy of the buyer data to re-evaluate due invoices.
-        // We do this by triggering a state update in the `buyers` list.
-        // A simple but effective way is to create a new array.
         setBuyers(prev => [...prev]);
 
     }, []);
@@ -445,7 +435,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const value = useMemo(() => ({
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
-        saveAndPrintInvoice, updateInvoiceDue, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
+        saveAndPrintInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate,
@@ -453,7 +443,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }), [
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
-        saveAndPrintInvoice, updateInvoiceDue, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
+        saveAndPrintInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate,
@@ -474,4 +464,3 @@ export function useAppData() {
     }
     return context;
 }
-
