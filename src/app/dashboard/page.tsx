@@ -9,7 +9,7 @@ import {
   ChartConfig,
 } from '@/components/ui/chart';
 import { useAppData } from '@/hooks/use-app-data';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, UserCheck, Package, HandCoins, Receipt, Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,6 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from '
 import { useTranslation } from '@/hooks/use-translation';
 import { DailySalesDialog } from '@/components/daily-sales-report-dialog';
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 export default function Dashboard() {
   const { getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate, isAppDataLoading: isLoading } = useAppData();
@@ -66,42 +65,32 @@ export default function Dashboard() {
       return { totalSales, totalExpenses, totalDue, unitsSold, presentEmployees };
   }, [todayInvoices, todayExpenses, todayAttendanceSummary]);
   
-  const dailySalesChartData = useMemo(() => {
+  const { dailySalesChartData, dailyExpensesChartData } = useMemo(() => {
     const monthStart = startOfMonth(date);
     const monthEnd = endOfMonth(date);
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-    return daysInMonth.map(day => {
-        const salesForDay = monthlyInvoices
+    
+    const salesData = daysInMonth.map(day => ({
+        name: format(day, 'd'),
+        Sales: monthlyInvoices
             .filter(inv => isSameDay(new Date(inv.date), day))
-            .reduce((sum, inv) => sum + inv.subtotal, 0);
-        return {
-            name: format(day, 'd'),
-            Sales: salesForDay,
-        };
-    });
-  }, [monthlyInvoices, date]);
-  
-  const topSellingProductsData = useMemo(() => {
-      const productSales: { [key: string]: { name: string, quantity: number } } = {};
-      monthlyInvoices.forEach(invoice => {
-          invoice.items.forEach(item => {
-              if (productSales[item.id]) {
-                  productSales[item.id].quantity += item.quantity;
-              } else {
-                  productSales[item.id] = { name: item.name, quantity: item.quantity };
-              }
-          });
-      });
-      return Object.values(productSales)
-          .sort((a, b) => b.quantity - a.quantity)
-          .slice(0, 5);
-  }, [monthlyInvoices]);
+            .reduce((sum, inv) => sum + inv.subtotal, 0),
+    }));
+
+    const expensesData = daysInMonth.map(day => ({
+        name: format(day, 'd'),
+        Expense: monthlyExpenses
+            .filter(exp => isSameDay(new Date(exp.date), day))
+            .reduce((sum, exp) => sum + exp.amount, 0),
+    }));
+
+    return { dailySalesChartData: salesData, dailyExpensesChartData: expensesData };
+  }, [monthlyInvoices, monthlyExpenses, date]);
 
 
   const chartConfig: ChartConfig = {
     Sales: { label: t('sales_label'), color: "hsl(var(--primary))" },
-    Profit: { label: t('profit_label'), color: "hsl(var(--chart-2))" },
-    quantity: { label: t('quantity_label') },
+    Expense: { label: t('expense_label'), color: "hsl(var(--destructive))" },
   };
 
   if (isLoading) {
@@ -194,7 +183,7 @@ export default function Dashboard() {
             </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('monthly_sales_card_title')}</CardTitle>
@@ -229,8 +218,8 @@ export default function Dashboard() {
           </Card>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <Card className="lg:col-span-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
               <CardHeader>
               <CardTitle>{t('daily_sales_chart_title', { month: format(date, 'MMMM') })}</CardTitle>
               <CardDescription>{t('daily_sales_chart_description')}</CardDescription>
@@ -250,48 +239,24 @@ export default function Dashboard() {
               </ChartContainer>
               </CardContent>
           </Card>
-          <Card className="lg:col-span-2">
+          <Card>
               <CardHeader>
-                  <CardTitle>{t('top_selling_products_chart_title')}</CardTitle>
-                  <CardDescription>{format(date, "MMMM yyyy")}</CardDescription>
+                  <CardTitle>Daily Expenses for {format(date, 'MMMM')}</CardTitle>
+                  <CardDescription>Showing expense data for each day of the month.</CardDescription>
               </CardHeader>
               <CardContent>
-                  {topSellingProductsData.length > 0 ? (
-                      <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
-                          <PieChart>
-                              <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                              <Pie
-                                  data={topSellingProductsData}
-                                  dataKey="quantity"
-                                  nameKey="name"
-                                  cx="50%"
-                                  cy="50%"
-                                  outerRadius={80}
-                                  labelLine={false}
-                                  label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
-                                      const RADIAN = Math.PI / 180;
-                                      const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                                      const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                                      const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-                                      return (
-                                          <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" className="text-xs font-bold">
-                                              {`${(percent * 100).toFixed(0)}%`}
-                                          </text>
-                                      );
-                                  }}
-                              >
-                                  {topSellingProductsData.map((entry, index) => (
-                                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                  ))}
-                              </Pie>
-                          </PieChart>
-                      </ChartContainer>
-                  ) : (
-                      <div className="flex justify-center items-center min-h-[250px] text-muted-foreground">
-                          {t('no_sales_data_for_month')}
-                      </div>
-                  )}
+                  <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
+                      <BarChart data={dailyExpensesChartData}>
+                          <CartesianGrid vertical={false} />
+                          <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
+                          <YAxis />
+                          <ChartTooltip
+                              cursor={false}
+                              content={<ChartTooltipContent indicator="dot" />}
+                          />
+                          <Bar dataKey="Expense" fill="var(--color-Expense)" radius={4} />
+                      </BarChart>
+                  </ChartContainer>
               </CardContent>
           </Card>
         </div>
@@ -304,3 +269,4 @@ export default function Dashboard() {
     </>
   );
 }
+
