@@ -19,7 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Users, ChevronRight, DollarSign, Wallet, History, AlertCircle, ShieldCheck, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { useTranslation } from '@/hooks/use-translation';
 
 export default function SalariesPage() {
@@ -40,9 +40,13 @@ export default function SalariesPage() {
     if (!selectedEmployee) {
       return { dueSalary: 0, paidThisMonth: 0, paymentsThisMonth: [] };
     }
-    const payments = getPaymentsForMonth(selectedEmployee.id, new Date());
+    const currentDate = new Date();
+    const firstDay = startOfMonth(currentDate);
+    const lastDay = endOfMonth(currentDate);
+    
+    const payments = getPaymentsForMonth(selectedEmployee.id, firstDay, lastDay);
     const paid = payments.reduce((acc, p) => acc + p.amount, 0);
-    const due = getDueSalaryForMonth(selectedEmployee, new Date());
+    const due = getDueSalaryForMonth(selectedEmployee, currentDate);
 
     return {
       dueSalary: due,

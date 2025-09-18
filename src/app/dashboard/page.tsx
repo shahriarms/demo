@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [rangeSalaries, setRangeSalaries] = useState<any[]>([]);
   const [todayInvoices, setTodayInvoices] = useState<any[]>([]);
   const [todayExpenses, setTodayExpenses] = useState<any[]>([]);
+  const [todaySalaries, setTodaySalaries] = useState<any[]>([]);
   
   const [isDailySalesReportOpen, setDailySalesReportOpen] = useState(false);
   const [isDailyExpensesReportOpen, setDailyExpensesReportOpen] = useState(false);
@@ -66,6 +67,7 @@ export default function Dashboard() {
       const today = new Date();
       setTodayInvoices(getInvoicesForDateRange(today, today));
       setTodayExpenses(getExpensesForDateRange(today, today));
+      setTodaySalaries(getSalaryPaymentsForDateRange(today, today));
      }
   }, [isLoading, dateRange, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange]);
 
@@ -83,11 +85,12 @@ export default function Dashboard() {
   const todayStats = useMemo(() => {
       const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
       const totalExpenses = todayExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-      const profit = totalSales - totalExpenses;
+      const totalSalaryPaid = todaySalaries.reduce((sum, sal) => sum + sal.amount, 0);
+      const profit = totalSales - totalExpenses - totalSalaryPaid;
       const totalDue = todayInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
       const unitsSold = todayInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
       return { totalSales, totalExpenses, profit, totalDue, unitsSold };
-  }, [todayInvoices, todayExpenses]);
+  }, [todayInvoices, todayExpenses, todaySalaries]);
   
   const { salesChartData, expensesChartData } = useMemo(() => {
     if (!dateRange?.from || !dateRange?.to) return { salesChartData: [], expensesChartData: [] };
@@ -244,7 +247,7 @@ export default function Dashboard() {
                       <div className={`text-2xl font-bold ${todayStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           ৳{todayStats.profit.toFixed(2)}
                       </div>
-                      <p className="text-xs text-muted-foreground">Sales minus Expenses</p>
+                      <p className="text-xs text-muted-foreground">Sales - (Expenses + Salaries)</p>
                   </CardContent>
                 </Card>
             </div>

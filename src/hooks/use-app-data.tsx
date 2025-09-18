@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useMe
 import type { Product, Invoice, Buyer, Expense, Employee, Attendance, SalaryPayment, Payment, AttendanceStatus } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import type { DraftInvoice } from './use-invoice-form';
-import { isSameDay, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { isSameDay, isWithinInterval, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { useSettings } from './use-settings';
 import * as productActions from '@/lib/actions/product-actions';
 
@@ -65,7 +65,7 @@ interface AppDataContextType {
 
     // Salary Functions
     addSalaryPayment: (payment: Omit<SalaryPayment, 'id'>) => void;
-    getPaymentsForMonth: (employeeId: string, date: Date) => SalaryPayment[];
+    getPaymentsForMonth: (employeeId: string, startDate: Date, endDate: Date) => SalaryPayment[];
     getSalaryPaymentsForDateRange: (startDate: Date, endDate: Date) => SalaryPayment[];
     getDueSalaryForMonth: (employee: Employee, date: Date) => number;
 }
@@ -385,10 +385,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setSalaryPayments(prev => [newPayment, ...prev]);
     }, []);
 
-    const getPaymentsForMonth = useCallback((employeeId: string, date: Date) => {
-        const monthStart = startOfDay(date);
-        const monthEnd = endOfDay(date);
-        return salaryPayments.filter(p => p.employeeId === employeeId && isWithinInterval(new Date(p.date), { start: monthStart, end: monthEnd }));
+    const getPaymentsForMonth = useCallback((employeeId: string, startDate: Date, endDate: Date) => {
+        return salaryPayments.filter(p => 
+            p.employeeId === employeeId && 
+            isWithinInterval(new Date(p.date), { start: startOfMonth(startDate), end: endOfMonth(endDate) })
+        );
     }, [salaryPayments]);
     
     const getSalaryPaymentsForDateRange = useCallback((startDate: Date, endDate: Date) => {
@@ -399,7 +400,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const getDueSalaryForMonth = useCallback((employee: Employee, date: Date) => {
         if (!employee) return 0;
-        const totalPaid = getPaymentsForMonth(employee.id, date).reduce((sum, p) => sum + p.amount, 0);
+        const monthStart = startOfMonth(date);
+        const monthEnd = endOfMonth(date);
+        const totalPaid = getPaymentsForMonth(employee.id, monthStart, monthEnd).reduce((sum, p) => sum + p.amount, 0);
         return employee.salary - totalPaid;
     }, [getPaymentsForMonth]);
 
