@@ -15,6 +15,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Users, ChevronRight, DollarSign, Wallet, History, AlertCircle, ShieldCheck, Loader2 } from 'lucide-react';
@@ -30,6 +40,7 @@ export default function SalariesPage() {
 
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
+  const [isConfirmingPayment, setConfirmingPayment] = useState(false);
   
   const handleSelectEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
@@ -105,11 +116,23 @@ export default function SalariesPage() {
 
   }, [selectedEmployee, paymentAmount, isOverpayment, user, addSalaryPayment, toast, employees, t]);
 
+  const handlePaymentConfirmation = () => {
+    if (canProcessPayment) {
+        setConfirmingPayment(true);
+    }
+  }
+
+  const confirmPayment = () => {
+    handleAddPayment();
+    setConfirmingPayment(false);
+  }
+
   if (isAppDataLoading) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   return (
+    <>
     <div className="flex flex-col h-full gap-4">
       <h1 className="text-2xl font-semibold flex items-center gap-2">
         <Wallet className="w-6 h-6" />
@@ -195,7 +218,7 @@ export default function SalariesPage() {
                             </div>
                         )}
                         
-                        <Button className="w-full" disabled={!canProcessPayment} onClick={handleAddPayment}>
+                        <Button className="w-full" disabled={!canProcessPayment} onClick={handlePaymentConfirmation}>
                             {t('pay_button', { amount: typeof paymentAmount === 'number' ? `৳${paymentAmount.toFixed(2)}` : '' })}
                         </Button>
                     </div>
@@ -236,5 +259,22 @@ export default function SalariesPage() {
         </Card>
       </div>
     </div>
+    <AlertDialog open={isConfirmingPayment} onOpenChange={setConfirmingPayment}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>{t('are_you_sure_title')}</AlertDialogTitle>
+                <AlertDialogDescription>
+                    You are about to pay <strong>৳{typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00'}</strong> to <strong>{selectedEmployee?.name}</strong>. This action cannot be undone.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmPayment}>
+                    Confirm Payment
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
