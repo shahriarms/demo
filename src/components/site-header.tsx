@@ -1,7 +1,7 @@
 
 'use client';
 import { Button } from '@/components/ui/button';
-import { UserCircle, LogOut, Settings, LifeBuoy, KeyRound, Languages } from 'lucide-react';
+import { UserCircle, LogOut, Settings, KeyRound, Languages, Camera } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/hooks/use-user';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { RedeemAdminCodeDialog } from './redeem-admin-code-dialog';
 import { ShowAdminCodeDialog } from './show-admin-code-dialog';
 import dynamic from 'next/dynamic';
@@ -27,6 +27,7 @@ import type { Locale } from '@/lib/types';
 import Link from 'next/link';
 import { StockPilotLogo } from './stock-pilot-logo';
 import { DatabaseStatus } from './database-status';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const LiveClock = dynamic(() => import('./live-clock').then(mod => mod.LiveClock), {
   ssr: false,
@@ -34,13 +35,14 @@ const LiveClock = dynamic(() => import('./live-clock').then(mod => mod.LiveClock
 
 
 export function SiteHeader() {
-  const { user, logout, generateAdminCode, adminCode } = useUser();
+  const { user, logout, generateAdminCode, adminCode, updateProfilePicture } = useUser();
   const { t } = useTranslation();
   const { settings, updateSettings } = useSettings();
 
   const [isRedeemDialogOpen, setRedeemDialogOpen] = useState(false);
   const [isShowCodeDialogOpen, setShowCodeDialogOpen] = useState(false);
-
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleShowCode = () => {
     generateAdminCode();
@@ -49,6 +51,22 @@ export function SiteHeader() {
 
   const handleLocaleChange = (value: string) => {
     updateSettings({ locale: value as Locale });
+  }
+
+  const handlePictureChangeClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      updateProfilePicture(file);
+    }
+  };
+  
+  const getInitials = (email: string | null) => {
+    if (!email) return 'U';
+    return email.substring(0, 2).toUpperCase();
   }
 
   if (!user) {
@@ -67,6 +85,13 @@ export function SiteHeader() {
 
   return (
     <>
+      <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          accept="image/png, image/jpeg"
+        />
       <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 sm:px-6">
         {/* Left Section: Logo and Title */}
         <Link href="/dashboard" className="flex items-center gap-2">
@@ -84,8 +109,10 @@ export function SiteHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
-                  <UserCircle className="h-6 w-6" />
-                  <span className="sr-only">Toggle user menu</span>
+                    <Avatar>
+                        <AvatarImage src={user.photoURL || undefined} alt="User profile picture" />
+                        <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+                    </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -94,6 +121,10 @@ export function SiteHeader() {
                   <div className="text-xs font-normal text-muted-foreground">{user.email} ({t(`role_${user.role}` as any)})</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                 <DropdownMenuItem onClick={handlePictureChangeClick}>
+                    <Camera className="mr-2 h-4 w-4" />
+                    <span>Change Picture</span>
+                </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <Languages className="mr-2 h-4 w-4" />
@@ -127,10 +158,6 @@ export function SiteHeader() {
                     {t('settings_label')}
                   </DropdownMenuItem>
                 </Link>
-                <DropdownMenuItem>
-                  <LifeBuoy className="mr-2 h-4 w-4" />
-                  {t('support_label')}
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />

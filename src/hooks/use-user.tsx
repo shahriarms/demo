@@ -14,6 +14,7 @@ interface User {
   uid: string;
   email: string | null;
   role: Role;
+  photoURL: string | null;
 }
 
 interface UserContextType {
@@ -23,12 +24,14 @@ interface UserContextType {
   generateAdminCode: () => void;
   redeemAdminCode: (code: string) => boolean;
   adminCode: string | null;
+  updateProfilePicture: (file: File) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 const ADMIN_EMAIL = "shahriar.ms1k@gmail.com";
 const ADMIN_CODE_STORAGE_KEY = 'stockpilot-admin-code';
+const PROFILE_PIC_STORAGE_KEY = 'stockpilot-profile-pic';
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -52,10 +55,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
             userRole = sessionRole;
         }
 
+        const storedPhoto = localStorage.getItem(PROFILE_PIC_STORAGE_KEY);
+
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           role: userRole,
+          photoURL: storedPhoto,
         });
         
         if (isUserAdmin) {
@@ -72,6 +78,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null);
         sessionStorage.removeItem('user-role');
+        // Clear profile picture on logout for privacy
+        // localStorage.removeItem(PROFILE_PIC_STORAGE_KEY); 
         if (pathname !== '/login' && pathname !== '/signup') {
             router.replace('/login');
         }
@@ -135,8 +143,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
     return false;
   }, [user, toast]);
   
+  const updateProfilePicture = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      localStorage.setItem(PROFILE_PIC_STORAGE_KEY, dataUrl);
+      if (user) {
+        setUser({ ...user, photoURL: dataUrl });
+      }
+      toast({
+        title: 'Profile Picture Updated',
+        description: 'Your new picture has been saved.',
+      });
+    };
+    reader.readAsDataURL(file);
+  }, [user, toast]);
 
-  const value = useMemo(() => ({ user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode }), [user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode]);
+  const value = useMemo(() => ({ user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode, updateProfilePicture }), [user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode, updateProfilePicture]);
 
   if (isLoading) {
     return (
