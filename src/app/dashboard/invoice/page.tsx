@@ -40,12 +40,13 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 
 export default function InvoicePage() {
-  const { products, saveAndPrintInvoice } = useAppData();
+  const { saveAndPrintInvoice } = useAppData();
   const { settings } = useSettings();
   const { toast } = useToast();
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const componentToPrintRef = useRef<HTMLDivElement>(null);
+  const printCancelTimer = useRef<NodeJS.Timeout | null>(null);
 
   const {
     drafts,
@@ -59,11 +60,13 @@ export default function InvoicePage() {
     removeInvoiceItem,
     addInvoiceItem,
     resetActiveDraft,
-    isFormLoading
+    isFormLoading,
+    products
   } = useInvoiceForm();
   
   const [draftToDelete, setDraftToDelete] = useState<DraftInvoice | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [pendingPrint, setPendingPrint] = useState(false);
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -91,27 +94,68 @@ export default function InvoicePage() {
      if (!validateInvoice() || !activeDraft) return;
 
      setIsPrinting(true);
-     try {
-       const printSuccess = await saveAndPrintInvoice(activeDraft);
-
-       if (printSuccess) {
-          toast({
-           title: t('invoice_saved_toast_title'),
-           description: t('invoice_saved_toast_description', { invoiceId: activeDraft.id.slice(-6) }),
-          });
-          resetActiveDraft();
-       }
-       
-     } catch (error: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Print Error',
-            description: error.message || 'Failed to print the invoice.',
-        });
-     } finally {
-        setIsPrinting(false);
-     }
+     setPendingPrint(true);
+     // Trigger the print dialog via state change and useEffect
   };
+  
+  useEffect(() => {
+    if (pendingPrint) {
+        window.print();
+        setPendingPrint(false); // Reset pending state
+    }
+  }, [pendingPrint]);
+
+
+  useEffect(() => {
+    const handleBeforePrint = () => {
+        setIsPrinting(true);
+        printCancelTimer.current = setTimeout(() => {
+            if (isPrinting) {
+                toast({ variant: 'destructive', title: 'Print Cancelled', description: 'Invoice was not saved.' });
+                setIsPrinting(false);
+            }
+        }, 1000); // 1-second timer to detect cancellation
+    };
+
+    const handleAfterPrint = async () => {
+        if (printCancelTimer.current) {
+            clearTimeout(printCancelTimer.current);
+        }
+        
+        if (isPrinting && activeDraft) {
+            try {
+                const printSuccess = await saveAndPrintInvoice(activeDraft);
+                if (printSuccess) {
+                    toast({
+                        title: t('invoice_saved_toast_title'),
+                        description: t('invoice_saved_toast_description', { invoiceId: activeDraft.id.slice(-6) }),
+                    });
+                    resetActiveDraft();
+                }
+            } catch (error: any) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: error.message || 'Failed to save or print the invoice.',
+                });
+            } finally {
+                setIsPrinting(false);
+            }
+        }
+    };
+    
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    return () => {
+        window.removeEventListener('beforeprint', handleBeforePrint);
+        window.removeEventListener('afterprint', handleAfterPrint);
+        if (printCancelTimer.current) {
+            clearTimeout(printCancelTimer.current);
+        }
+    };
+  }, [isPrinting, activeDraft, saveAndPrintInvoice, resetActiveDraft, toast, t]);
+
 
   const resetFilters = () => {
     setCategoryFilter('');
@@ -465,3 +509,5 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    

@@ -35,6 +35,7 @@ interface InvoiceFormContextType {
     removeInvoiceItem: (itemId: string) => void;
     resetActiveDraft: () => void;
     isFormLoading: boolean;
+    products: Product[];
 }
 
 const InvoiceFormContext = createContext<InvoiceFormContextType | undefined>(undefined);
@@ -62,7 +63,7 @@ const STORAGE_KEYS = {
 };
 
 const useInvoiceFormData = (): InvoiceFormContextType => {
-    const { isAppDataLoading } = useAppData();
+    const { isAppDataLoading, products } = useAppData();
     const { toast } = useToast();
     
     const [drafts, setDrafts] = useState<DraftInvoice[]>([createNewDraft()]);
@@ -210,7 +211,8 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         removeInvoiceItem,
         resetActiveDraft,
         isFormLoading: isAppDataLoading,
-    }), [drafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, resetActiveDraft, isAppDataLoading]);
+        products,
+    }), [drafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, resetActiveDraft, isAppDataLoading, products]);
 }
 
 export function InvoiceFormProvider({ children }: { children: ReactNode }) {
@@ -229,3 +231,5 @@ export function useInvoiceForm() {
     }
     return context;
 }
+
+    
