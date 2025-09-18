@@ -66,21 +66,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
          // If user is on login/signup page, redirect to dashboard
         if (pathname === '/login' || pathname === '/signup') {
-            router.push('/dashboard');
+            router.replace('/dashboard');
         }
 
       } else {
         setUser(null);
         sessionStorage.removeItem('user-role');
         if (pathname !== '/login' && pathname !== '/signup') {
-            router.push('/login');
+            router.replace('/login');
         }
       }
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [auth, pathname, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth]);
 
   const logout = useCallback(async () => {
     setIsLoading(true);
@@ -137,22 +138,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({ user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode }), [user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode]);
 
-  // If loading and not on an auth page, show a global loader.
-  // This prevents content flashing on initial load or after logout.
-  if (isLoading && pathname !== '/login' && pathname !== '/signup') {
+  if (isLoading) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
             <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-    );
-  }
-
-  // On auth pages, we want to show the page content while checking auth state in background
-  if (isLoading && (pathname === '/login' || pathname === '/signup')) {
-     return (
-        <UserContext.Provider value={value}>
-            {children}
-        </UserContext.Provider>
     );
   }
 

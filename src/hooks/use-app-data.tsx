@@ -17,21 +17,7 @@ const STORAGE_KEYS = {
     attendance: 'stockpilot-attendance',
     salaryPayments: 'stockpilot-salary-payments',
     payments: 'stockpilot-payments',
-    invoiceDrafts: 'stockpilot-invoice-drafts',
-    activeInvoiceDraftIndex: 'stockpilot-active-invoice-draft-index'
 };
-
-const createNewDraft = (): DraftInvoice => ({
-    id: `draft-${Date.now()}`,
-    items: [],
-    customerName: '',
-    customerAddress: '',
-    customerPhone: '',
-    paidAmount: 0,
-    subtotal: 0,
-    dueAmount: 0,
-});
-
 
 interface AppDataContextType {
     products: Product[];
@@ -42,8 +28,6 @@ interface AppDataContextType {
     attendance: Attendance[];
     salaryPayments: SalaryPayment[];
     payments: Payment[];
-    invoiceDrafts: DraftInvoice[];
-    activeInvoiceDraftIndex: number;
     isAppDataLoading: boolean;
     
     // Product Functions
@@ -81,10 +65,6 @@ interface AppDataContextType {
     addSalaryPayment: (payment: Omit<SalaryPayment, 'id'>) => void;
     getPaymentsForMonth: (employeeId: string, date: Date) => SalaryPayment[];
     getDueSalaryForMonth: (employee: Employee, date: Date) => number;
-
-    // Invoice Form Functions
-    setInvoiceDrafts: React.Dispatch<React.SetStateAction<DraftInvoice[]>>;
-    setActiveInvoiceDraftIndex: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
@@ -110,9 +90,7 @@ async function printPosReceipt(settings: any, orderData: any) {
 
 function printNormalReceipt(): Promise<boolean> {
     return new Promise(resolve => {
-        document.body.classList.add('printing');
         const handleAfterPrint = () => {
-            document.body.classList.remove('printing');
             window.removeEventListener('afterprint', handleAfterPrint);
             resolve(true);
         };
@@ -133,8 +111,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [attendance, setAttendance] = useState<Attendance[]>([]);
     const [salaryPayments, setSalaryPayments] = useState<SalaryPayment[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
-    const [invoiceDrafts, setInvoiceDrafts] = useState<DraftInvoice[]>([]);
-    const [activeInvoiceDraftIndex, setActiveInvoiceDraftIndex] = useState(0);
     const [isAppDataLoading, setIsAppDataLoading] = useState(true);
 
     const loadServerData = useCallback(async () => {
@@ -145,35 +121,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
             console.error("Failed to load products from server:", error);
             toast({ variant: 'destructive', title: 'Database Error', description: 'Could not connect to the database.' });
         }
-    }, []);
+    }, [toast]);
 
     useEffect(() => {
         async function loadAllData() {
             setIsAppDataLoading(true);
             try {
-                // Load DB data
+                // Load DB data first
                 await loadServerData();
 
-                // Load localStorage data
+                // Then load non-critical data from localStorage
                 const localDataKeys: (keyof typeof STORAGE_KEYS)[] = [
                     'invoices', 'buyers', 'expenses', 'employees', 'attendance', 
-                    'salaryPayments', 'payments', 'invoiceDrafts', 'activeInvoiceDraftIndex'
+                    'salaryPayments', 'payments'
                 ];
                 
-                const data: { [key: string]: any } = {};
                 localDataKeys.forEach(key => {
-                    data[key] = JSON.parse(localStorage.getItem(STORAGE_KEYS[key]) || 'null');
+                    const savedData = localStorage.getItem(STORAGE_KEYS[key]);
+                    if (savedData) {
+                        const parsedData = JSON.parse(savedData);
+                        switch (key) {
+                            case 'invoices': setInvoices(parsedData || []); break;
+                            case 'buyers': setBuyers(parsedData || []); break;
+                            case 'expenses': setExpenses(parsedData || []); break;
+                            case 'employees': setEmployees(parsedData || []); break;
+                            case 'attendance': setAttendance(parsedData || []); break;
+                            case 'salaryPayments': setSalaryPayments(parsedData || []); break;
+                            case 'payments': setPayments(parsedData || []); break;
+                        }
+                    }
                 });
-
-                setInvoices(data.invoices || []);
-                setBuyers(data.buyers || []);
-                setExpenses(data.expenses || []);
-                setEmployees(data.employees || []);
-                setAttendance(data.attendance || []);
-                setSalaryPayments(data.salaryPayments || []);
-                setPayments(data.payments || []);
-                setInvoiceDrafts(data.invoiceDrafts && data.invoiceDrafts.length > 0 ? data.invoiceDrafts : [createNewDraft()]);
-                setActiveInvoiceDraftIndex(data.activeInvoiceDraftIndex || 0);
 
             } catch (error) {
                 console.error("Failed to load app data", error);
@@ -183,7 +160,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             }
         }
         loadAllData();
-    }, [toast, loadServerData]);
+    }, [loadServerData, toast]);
 
     useEffect(() => {
         if (!isAppDataLoading) {
@@ -194,15 +171,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
             localStorage.setItem(STORAGE_KEYS.attendance, JSON.stringify(attendance));
             localStorage.setItem(STORAGE_KEYS.salaryPayments, JSON.stringify(salaryPayments));
             localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(payments));
-            localStorage.setItem(STORAGE_KEYS.invoiceDrafts, JSON.stringify(invoiceDrafts));
-            localStorage.setItem(STORAGE_KEYS.activeInvoiceDraftIndex, JSON.stringify(activeInvoiceDraftIndex));
         }
-    }, [invoices, buyers, expenses, employees, attendance, salaryPayments, payments, invoiceDrafts, activeInvoiceDraftIndex, isAppDataLoading]);
+    }, [invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading]);
 
     const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {
         try {
             await productActions.addProduct(productData);
-            await loadServerData();
+            await loadServerData(); // Refetch data
             toast({ title: "Product Added", description: `${productData.name} has been added.` });
         } catch (error) {
             console.error("Failed to add product:", error);
@@ -213,8 +188,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const addMultipleProducts = useCallback(async (productsData: Omit<Product, 'id' | 'sellingPrice'>[]) => {
         try {
             await productActions.addMultipleProducts(productsData);
-            await loadServerData();
-            toast({ title: "Upload Successful", description: `${productsData.length} products have been added.` });
+            await loadServerData(); // Refetch data
         } catch (error) {
              console.error("Failed to add multiple products:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to add products in bulk.' });
@@ -224,7 +198,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const updateProduct = useCallback(async (productId: string, updatedData: Omit<Product, 'id' | 'sellingPrice'>) => {
         try {
             await productActions.updateProduct(productId, updatedData);
-            await loadServerData();
+            await loadServerData(); // Refetch data
             toast({ title: "Product Updated", description: `Details for ${updatedData.name} have been updated.` });
         } catch (error) {
             console.error("Failed to update product:", error);
@@ -235,7 +209,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const deleteProduct = useCallback(async (productId: string) => {
         try {
             await productActions.deleteProduct(productId);
-            await loadServerData();
+            await loadServerData(); // Refetch data
             toast({ title: "Product Deleted", description: `The product has been removed.` });
         } catch (error) {
              console.error("Failed to delete product:", error);
@@ -284,9 +258,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             await loadServerData(); // Refresh product list with new stock
         } catch (error) {
             console.error("Failed to update product stock after invoice creation:", error);
-            // Optionally revert invoice creation or show a warning
         }
-
 
         if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
             const orderData = { orderId: newId, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
@@ -399,23 +371,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [getPaymentsForMonth]);
 
     const value = useMemo(() => ({
-        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, invoiceDrafts, activeInvoiceDraftIndex, isAppDataLoading,
+        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
         saveAndPrintInvoice, updateInvoiceDue, getInvoicesForBuyer, getInvoicesForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate,
         addSalaryPayment, getPaymentsForMonth, getDueSalaryForMonth,
-        setInvoiceDrafts, setActiveInvoiceDraftIndex
     }), [
-        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, invoiceDrafts, activeInvoiceDraftIndex, isAppDataLoading,
+        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
         saveAndPrintInvoice, updateInvoiceDue, getInvoicesForBuyer, getInvoicesForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate,
-        addSalaryPayment, getPaymentsForMonth, getDueSalaryForMonth,
-        setInvoiceDrafts, setActiveInvoiceDraftIndex
+        addSalaryPayment, getPaymentsForMonth, getDueSalaryForMonth
     ]);
 
     return (
