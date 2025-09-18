@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/chart';
 import { useAppData } from '@/hooks/use-app-data';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, UserCheck, Package, HandCoins, Receipt, Loader2 } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, Package, HandCoins, Receipt, Loader2, BadgeIndianRupee, Container } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -24,7 +24,7 @@ import { DailyUnitsSoldReportDialog } from '@/components/daily-units-sold-report
 
 
 export default function Dashboard() {
-  const { products, getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate, isAppDataLoading: isLoading } = useAppData();
+  const { products, getInvoicesForDateRange, getExpensesForDateRange, isAppDataLoading: isLoading } = useAppData();
   const { t } = useTranslation();
 
   const [date, setDate] = useState<Date>(new Date());
@@ -33,7 +33,6 @@ export default function Dashboard() {
   const [monthlyExpenses, setMonthlyExpenses] = useState<any[]>([]);
   const [todayInvoices, setTodayInvoices] = useState<any[]>([]);
   const [todayExpenses, setTodayExpenses] = useState<any[]>([]);
-  const [todayAttendanceSummary, setTodayAttendanceSummary] = useState({ present: 0, total: 0 });
   
   const [isSalesReportDialogOpen, setSalesReportDialogOpen] = useState(false);
   const [isExpensesReportDialogOpen, setExpensesReportDialogOpen] = useState(false);
@@ -42,34 +41,35 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!isLoading) {
-      const currentMonthStart = startOfMonth(date);
-      const currentMonthEnd = endOfMonth(date);
-      setMonthlyInvoices(getInvoicesForDateRange(currentMonthStart, currentMonthEnd));
-      setMonthlyExpenses(getExpensesForDateRange(currentMonthStart, currentMonthEnd));
+      const monthStart = startOfMonth(date);
+      const monthEnd = endOfMonth(date);
+      setMonthlyInvoices(getInvoicesForDateRange(monthStart, monthEnd));
+      setMonthlyExpenses(getExpensesForDateRange(monthStart, monthEnd));
       
       const today = new Date();
       setTodayInvoices(getInvoicesForDateRange(today, today));
       setTodayExpenses(getExpensesForDateRange(today, today));
-      setTodayAttendanceSummary(getAttendanceSummaryForDate(today));
     }
-  }, [isLoading, date, getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate]);
+  }, [isLoading, date, getInvoicesForDateRange, getExpensesForDateRange]);
 
 
   const monthlyStats = useMemo(() => {
     const totalSales = monthlyInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
     const totalExpenses = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
     const profit = totalSales - totalExpenses;
-    return { totalSales, totalExpenses, profit };
+    const totalDue = monthlyInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
+    const unitsSold = monthlyInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+    return { totalSales, totalExpenses, profit, totalDue, unitsSold };
   }, [monthlyInvoices, monthlyExpenses]);
   
   const todayStats = useMemo(() => {
       const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
       const totalExpenses = todayExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+      const profit = totalSales - totalExpenses;
       const totalDue = todayInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
       const unitsSold = todayInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-      const presentEmployees = todayAttendanceSummary.present;
-      return { totalSales, totalExpenses, totalDue, unitsSold, presentEmployees };
-  }, [todayInvoices, todayExpenses, todayAttendanceSummary]);
+      return { totalSales, totalExpenses, profit, totalDue, unitsSold };
+  }, [todayInvoices, todayExpenses]);
   
   const { dailySalesChartData, dailyExpensesChartData } = useMemo(() => {
     const monthStart = startOfMonth(date);
@@ -114,6 +114,7 @@ export default function Dashboard() {
           <Popover>
               <PopoverTrigger asChild>
               <Button
+                  id="date"
                   variant={"outline"}
                   className="w-full sm:w-[280px] justify-start text-left font-normal"
               >
@@ -136,92 +137,120 @@ export default function Dashboard() {
         </div>
         
         {/* Today's Summary Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-            <Card as="button" onClick={() => setSalesReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{t('todays_sales_card_title')}</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">৳{todayStats.totalSales.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
-              </CardContent>
-            </Card>
-            <Card as="button" onClick={() => setExpensesReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{"Today's Expenses"}</CardTitle>
-                  <Receipt className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">৳{todayStats.totalExpenses.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
-              </CardContent>
-            </Card>
-            <Card as="button" onClick={() => setDueReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{t('todays_due_card_title')}</CardTitle>
-                  <HandCoins className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">৳{todayStats.totalDue.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
-              </CardContent>
-            </Card>
-            <Card as="button" onClick={() => setUnitsSoldReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{t('units_sold_today_card_title')}</CardTitle>
-                  <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">{todayStats.unitsSold}</div>
-                  <p className="text-xs text-muted-foreground">{t('total_items_footer')}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{t('present_employees_card_title')}</CardTitle>
-                  <UserCheck className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">{todayStats.presentEmployees}</div>
-                  <p className="text-xs text-muted-foreground">{t('out_of_total_employees_footer', { total: todayAttendanceSummary.total })}</p>
-              </CardContent>
-            </Card>
+        <div>
+            <h2 className="text-lg font-semibold mb-4">Today's Summary</h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                <Card as="button" onClick={() => setSalesReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">{t('todays_sales_card_title')}</CardTitle>
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold">৳{todayStats.totalSales.toFixed(2)}</div>
+                      <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
+                  </CardContent>
+                </Card>
+                <Card as="button" onClick={() => setExpensesReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">{"Today's Expenses"}</CardTitle>
+                      <Receipt className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold">৳{todayStats.totalExpenses.toFixed(2)}</div>
+                      <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
+                  </CardContent>
+                </Card>
+                <Card as="button" onClick={() => setDueReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">{t('todays_due_card_title')}</CardTitle>
+                      <HandCoins className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold">৳{todayStats.totalDue.toFixed(2)}</div>
+                      <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
+                  </CardContent>
+                </Card>
+                <Card as="button" onClick={() => setUnitsSoldReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">{t('units_sold_today_card_title')}</CardTitle>
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold">{todayStats.unitsSold}</div>
+                      <p className="text-xs text-muted-foreground">{t('total_items_footer')}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Today's Profit</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className={`text-2xl font-bold ${todayStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          ৳{todayStats.profit.toFixed(2)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Sales minus Expenses</p>
+                  </CardContent>
+                </Card>
+            </div>
         </div>
 
-        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('monthly_sales_card_title')}</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">৳{monthlyStats.totalSales.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('monthly_expenses_card_title')}</CardTitle>
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">৳{monthlyStats.totalExpenses.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('profit_card_title')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${monthlyStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  ৳{monthlyStats.profit.toFixed(2)}
-              </div>
-              <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
-            </CardContent>
-          </Card>
+        <div>
+            <h2 className="text-lg font-semibold mb-4">This Month's Summary ({format(date, "MMMM")})</h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{t('monthly_sales_card_title')}</CardTitle>
+                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">৳{monthlyStats.totalSales.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">{monthlyInvoices.length} invoices this month</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{t('monthly_expenses_card_title')}</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">৳{monthlyStats.totalExpenses.toFixed(2)}</div>
+                   <p className="text-xs text-muted-foreground">{monthlyExpenses.length} entries this month</p>
+                </CardContent>
+              </Card>
+               <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Monthly Due</CardTitle>
+                  <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">৳{monthlyStats.totalDue.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">Total outstanding from this month</p>
+                </CardContent>
+              </Card>
+               <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Monthly Units Sold</CardTitle>
+                  <Container className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{monthlyStats.unitsSold}</div>
+                  <p className="text-xs text-muted-foreground">Total items sold this month</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{t('profit_card_title')}</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${monthlyStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      ৳{monthlyStats.profit.toFixed(2)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Total Profit for {format(date, "MMMM")}</p>
+                </CardContent>
+              </Card>
+            </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -291,5 +320,3 @@ export default function Dashboard() {
     </>
   );
 }
-
-    

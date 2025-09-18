@@ -296,7 +296,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [buyers, invoices]);
 
     const getInvoicesForDateRange = useCallback((startDate: Date, endDate: Date) => {
-        return invoices.filter(inv => isWithinInterval(new Date(inv.date), { start: startDate, end: endDate }));
+        return invoices.filter(inv => {
+            const invDate = new Date(inv.date);
+            return invDate >= startOfMonth(startDate) && invDate <= endOfMonth(endDate);
+        });
     }, [invoices]);
 
     const addPayment = useCallback((paymentData: Omit<Payment, 'id' | 'date'>) => {
@@ -418,5 +421,3 @@ export function useAppData() {
     }
     return context;
 }
-
-    
