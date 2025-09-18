@@ -22,11 +22,11 @@ export function DatabaseStatus() {
         <div className="hidden sm:flex items-center justify-center gap-2 p-2 rounded-md border bg-background text-foreground text-sm shadow-inner">
           <span
             className={`h-2.5 w-2.5 rounded-full ${
-              isDbConnected ? 'bg-green-500' : 'bg-gray-400'
+              isDbConnected ? 'bg-green-500' : 'bg-yellow-500'
             }`}
           />
           <span className="font-mono text-xs font-semibold">
-            {isDbConnected ? 'Online' : 'Offline'}
+            {isDbConnected ? 'Online' : 'Local'}
           </span>
         </div>
       </TooltipTrigger>
@@ -34,7 +34,7 @@ export function DatabaseStatus() {
         <p>
           {isDbConnected
             ? 'Connected to PostgreSQL database.'
-            : 'Running in offline mode (using local storage).'}
+            : 'Running in local storage mode.'}
         </p>
       </TooltipContent>
     </Tooltip>
