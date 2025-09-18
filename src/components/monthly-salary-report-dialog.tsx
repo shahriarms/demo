@@ -22,18 +22,19 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileDown } from 'lucide-react';
 import type { SalaryPayment, Employee } from '@/lib/types';
-import { format } from 'date-fns';
+import { format, isSameDay, startOfMonth, endOfMonth } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useTranslation } from '@/hooks/use-translation';
+import type { DateRange } from 'react-day-picker';
 
 interface MonthlySalaryReportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   salaryPayments: SalaryPayment[];
   employees: Employee[];
-  month: Date;
+  dateRange?: DateRange;
 }
 
 interface ReportItem {
@@ -43,8 +44,22 @@ interface ReportItem {
     paidBy: string;
 }
 
-export function MonthlySalaryReportDialog({ open, onOpenChange, salaryPayments, employees, month }: MonthlySalaryReportDialogProps) {
+export function MonthlySalaryReportDialog({ open, onOpenChange, salaryPayments, employees, dateRange }: MonthlySalaryReportDialogProps) {
     const { t } = useTranslation();
+
+    const rangeTitle = useMemo(() => {
+        if (!dateRange?.from) return "Salary Payments Report";
+        const from = dateRange.from;
+        const to = dateRange.to || from;
+
+        if (isSameDay(from, startOfMonth(from)) && isSameDay(to, endOfMonth(from))) {
+            return `Salary Payments Report (${format(from, 'MMMM yyyy')})`;
+        }
+        if (isSameDay(from, to)) {
+            return `Salary Payments Report (${format(from, 'PPP')})`;
+        }
+        return `Salary Payments Report (${format(from, 'PP')} - ${format(to, 'PP')})`;
+    }, [dateRange]);
 
     const reportData = useMemo((): ReportItem[] => {
         if (!salaryPayments || !employees) return [];
@@ -67,13 +82,13 @@ export function MonthlySalaryReportDialog({ open, onOpenChange, salaryPayments, 
             "Paid By": item.paidBy,
         })));
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Monthly Salary Payments");
-        XLSX.writeFile(workbook, `monthly_salary_payments_${format(month, 'yyyy-MM')}.xlsx`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Salary Payments Report");
+        XLSX.writeFile(workbook, `salary_payments_report.xlsx`);
     };
 
     const handleExportPdf = () => {
         const doc = new jsPDF();
-        doc.text(`Monthly Salary Payments Report - ${format(month, 'MMMM yyyy')}`, 14, 16);
+        doc.text(rangeTitle, 14, 16);
         (doc as any).autoTable({
             head: [['Date', 'Employee Name', 'Amount Paid', 'Paid By']],
             body: reportData.map(item => [
@@ -84,7 +99,7 @@ export function MonthlySalaryReportDialog({ open, onOpenChange, salaryPayments, 
             ]),
             startY: 22,
         });
-        doc.save(`monthly_salary_payments_${format(month, 'yyyy-MM')}.pdf`);
+        doc.save(`salary_payments_report.pdf`);
     };
 
     const totalPaid = useMemo(() => reportData.reduce((sum, item) => sum + item.amount, 0), [reportData]);
@@ -93,9 +108,9 @@ export function MonthlySalaryReportDialog({ open, onOpenChange, salaryPayments, 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Monthly Salary Payments Report ({format(month, 'MMMM yyyy')})</DialogTitle>
+          <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A detailed list of all salary payments made this month. Total Paid: <strong>৳{totalPaid.toFixed(2)}</strong>
+            A detailed list of all salary payments made in this range. Total Paid: <strong>৳{totalPaid.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -127,7 +142,7 @@ export function MonthlySalaryReportDialog({ open, onOpenChange, salaryPayments, 
               ) : (
                 <TableRow>
                   <TableCell colSpan={4} className="h-24 text-center">
-                    No salary payments recorded for this month.
+                    No salary payments recorded for this date range.
                   </TableCell>
                 </TableRow>
               )}

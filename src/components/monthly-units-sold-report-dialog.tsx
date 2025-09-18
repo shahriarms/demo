@@ -22,18 +22,19 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileDown } from 'lucide-react';
 import type { Invoice, Product } from '@/lib/types';
-import { format } from 'date-fns';
+import { format, isSameDay, startOfMonth, endOfMonth } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useTranslation } from '@/hooks/use-translation';
+import type { DateRange } from 'react-day-picker';
 
 interface MonthlyUnitsSoldDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoices: Invoice[];
   products: Product[];
-  month: Date;
+  dateRange?: DateRange;
 }
 
 interface ReportItem {
@@ -43,8 +44,22 @@ interface ReportItem {
     unit: 'kg' | 'pcs';
 }
 
-export function MonthlyUnitsSoldDialog({ open, onOpenChange, invoices, products, month }: MonthlyUnitsSoldDialogProps) {
+export function MonthlyUnitsSoldDialog({ open, onOpenChange, invoices, products, dateRange }: MonthlyUnitsSoldDialogProps) {
     const { t } = useTranslation();
+
+    const rangeTitle = useMemo(() => {
+        if (!dateRange?.from) return "Units Sold Report";
+        const from = dateRange.from;
+        const to = dateRange.to || from;
+
+        if (isSameDay(from, startOfMonth(from)) && isSameDay(to, endOfMonth(from))) {
+            return `Units Sold Report (${format(from, 'MMMM yyyy')})`;
+        }
+        if (isSameDay(from, to)) {
+            return `Units Sold Report (${format(from, 'PPP')})`;
+        }
+        return `Units Sold Report (${format(from, 'PP')} - ${format(to, 'PP')})`;
+    }, [dateRange]);
 
     const reportData = useMemo((): ReportItem[] => {
         if (!invoices || !products) return [];
@@ -76,13 +91,13 @@ export function MonthlyUnitsSoldDialog({ open, onOpenChange, invoices, products,
             "Unit": item.unit,
         })));
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Monthly Units Sold");
-        XLSX.writeFile(workbook, `monthly_units_sold_${format(month, 'yyyy-MM')}.xlsx`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Units Sold Report");
+        XLSX.writeFile(workbook, `units_sold_report.xlsx`);
     };
 
     const handleExportPdf = () => {
         const doc = new jsPDF();
-        doc.text(`Monthly Units Sold Report - ${format(month, 'MMMM yyyy')}`, 14, 16);
+        doc.text(rangeTitle, 14, 16);
         (doc as any).autoTable({
             head: [['Item Name', 'Total Quantity Sold', 'Unit']],
             body: reportData.map(item => [
@@ -92,7 +107,7 @@ export function MonthlyUnitsSoldDialog({ open, onOpenChange, invoices, products,
             ]),
             startY: 22,
         });
-        doc.save(`monthly_units_sold_${format(month, 'yyyy-MM')}.pdf`);
+        doc.save(`units_sold_report.pdf`);
     };
     
     const totalUnits = useMemo(() => reportData.reduce((sum, item) => sum + item.totalQuantity, 0), [reportData]);
@@ -101,9 +116,9 @@ export function MonthlyUnitsSoldDialog({ open, onOpenChange, invoices, products,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Monthly Units Sold Report ({format(month, 'MMMM yyyy')})</DialogTitle>
+          <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A summary of total quantities sold for each item this month. Total Units: <strong>{totalUnits}</strong>
+            A summary of total quantities sold for each item in this range. Total Units: <strong>{totalUnits}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -133,7 +148,7 @@ export function MonthlyUnitsSoldDialog({ open, onOpenChange, invoices, products,
               ) : (
                 <TableRow>
                   <TableCell colSpan={3} className="h-24 text-center">
-                    No units sold this month.
+                    No units sold in this date range.
                   </TableCell>
                 </TableRow>
               )}

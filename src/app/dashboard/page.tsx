@@ -10,8 +10,8 @@ import {
 } from '@/components/ui/chart';
 import { useAppData } from '@/hooks/use-app-data';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, Package, HandCoins, Receipt, Loader2, BadgeIndianRupee, Container, Wallet } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, Package, HandCoins, Receipt, Loader2, BadgeIndianRupee, Container, Wallet, RotateCw } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -111,6 +111,10 @@ export default function Dashboard() {
     return { salesChartData: salesData, expensesChartData: expensesData };
   }, [rangeInvoices, rangeExpenses, dateRange]);
 
+  const handleReset = useCallback(() => {
+    setDateRange(initialDateRange);
+  }, []);
+
 
   const chartConfig: ChartConfig = {
     Sales: { label: t('sales_label'), color: "hsl(var(--primary))" },
@@ -143,41 +147,48 @@ export default function Dashboard() {
               <h1 className="text-2xl font-bold">{t('dashboard_sidebar')}</h1>
               <p className="text-muted-foreground">{t('welcome_back_header')}</p>
           </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                id="date"
-                variant={"outline"}
-                className="w-full sm:w-auto justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "LLL dd, y")} -{" "}
-                      {format(dateRange.to, "LLL dd, y")}
-                    </>
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="date"
+                  variant={"outline"}
+                  className="w-full sm:w-auto justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                        {format(dateRange.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "LLL dd, y")
+                    )
                   ) : (
-                    format(dateRange.from, "LLL dd, y")
-                  )
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange?.from}
-                selected={dateRange}
-                onSelect={setDateRange}
-                captionLayout="dropdown-buttons"
-                fromYear={2019}
-                toYear={new Date().getFullYear() + 5}
-              />
-            </PopoverContent>
-          </Popover>
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={1}
+                  captionLayout="dropdown-buttons"
+                  fromYear={2019}
+                  toYear={new Date().getFullYear() + 5}
+                />
+              </PopoverContent>
+            </Popover>
+            <Button variant="outline" size="icon" onClick={handleReset}>
+                <RotateCw className="h-4 w-4" />
+                <span className="sr-only">Reset Date</span>
+            </Button>
+          </div>
         </div>
         
         {/* Today's Summary Cards */}
@@ -382,27 +393,27 @@ export default function Dashboard() {
         open={isMonthlyExpensesReportOpen}
         onOpenChange={setMonthlyExpensesReportOpen}
         expenses={rangeExpenses}
-        month={dateRange?.from || new Date()}
+        dateRange={dateRange}
       />
       <MonthlyDueDialog
         open={isMonthlyDueReportOpen}
         onOpenChange={setMonthlyDueReportOpen}
         invoices={rangeInvoices}
-        month={dateRange?.from || new Date()}
+        dateRange={dateRange}
       />
       <MonthlyUnitsSoldDialog
         open={isMonthlyUnitsSoldReportOpen}
         onOpenChange={setMonthlyUnitsSoldReportOpen}
         invoices={rangeInvoices}
         products={products}
-        month={dateRange?.from || new Date()}
+        dateRange={dateRange}
       />
       <MonthlySalaryReportDialog
         open={isMonthlySalaryReportOpen}
         onOpenChange={setMonthlySalaryReportOpen}
         salaryPayments={rangeSalaries}
         employees={employees}
-        month={dateRange?.from || new Date()}
+        dateRange={dateRange}
       />
     </>
   );

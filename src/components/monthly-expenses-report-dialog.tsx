@@ -22,21 +22,36 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileDown } from 'lucide-react';
 import type { Expense } from '@/lib/types';
-import { format } from 'date-fns';
+import { format, isSameDay, startOfMonth, endOfMonth } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useTranslation } from '@/hooks/use-translation';
+import type { DateRange } from 'react-day-picker';
 
 interface MonthlyExpensesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   expenses: Expense[];
-  month: Date;
+  dateRange?: DateRange;
 }
 
-export function MonthlyExpensesDialog({ open, onOpenChange, expenses, month }: MonthlyExpensesDialogProps) {
+export function MonthlyExpensesDialog({ open, onOpenChange, expenses, dateRange }: MonthlyExpensesDialogProps) {
     const { t } = useTranslation();
+
+    const rangeTitle = useMemo(() => {
+        if (!dateRange?.from) return "Expenses Report";
+        const from = dateRange.from;
+        const to = dateRange.to || from;
+
+        if (isSameDay(from, startOfMonth(from)) && isSameDay(to, endOfMonth(from))) {
+            return `Expenses Report (${format(from, 'MMMM yyyy')})`;
+        }
+        if (isSameDay(from, to)) {
+            return `Expenses Report (${format(from, 'PPP')})`;
+        }
+        return `Expenses Report (${format(from, 'PP')} - ${format(to, 'PP')})`;
+    }, [dateRange]);
 
     const reportData = useMemo(() => {
         if (!expenses) return [];
@@ -52,13 +67,13 @@ export function MonthlyExpensesDialog({ open, onOpenChange, expenses, month }: M
             "Payment Method": item.paymentMethod,
         })));
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Monthly Expenses");
-        XLSX.writeFile(workbook, `monthly_expenses_${format(month, 'yyyy-MM')}.xlsx`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses Report");
+        XLSX.writeFile(workbook, `expenses_report.xlsx`);
     };
 
     const handleExportPdf = () => {
         const doc = new jsPDF();
-        doc.text(`Monthly Expenses Report - ${format(month, 'MMMM yyyy')}`, 14, 16);
+        doc.text(rangeTitle, 14, 16);
         (doc as any).autoTable({
             head: [['Date', 'Category', 'Description', 'Amount', 'Payment Method']],
             body: reportData.map(item => [
@@ -70,7 +85,7 @@ export function MonthlyExpensesDialog({ open, onOpenChange, expenses, month }: M
             ]),
             startY: 22,
         });
-        doc.save(`monthly_expenses_${format(month, 'yyyy-MM')}.pdf`);
+        doc.save(`expenses_report.pdf`);
     };
 
     const totalExpenses = useMemo(() => reportData.reduce((sum, item) => sum + item.amount, 0), [reportData]);
@@ -79,9 +94,9 @@ export function MonthlyExpensesDialog({ open, onOpenChange, expenses, month }: M
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Monthly Expenses Report ({format(month, 'MMMM yyyy')})</DialogTitle>
+          <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A detailed list of all expenses recorded this month. Total Expenses: <strong>৳{totalExpenses.toFixed(2)}</strong>
+            A detailed list of all expenses recorded in this range. Total Expenses: <strong>৳{totalExpenses.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -115,7 +130,7 @@ export function MonthlyExpensesDialog({ open, onOpenChange, expenses, month }: M
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">
-                    No expenses recorded for this month.
+                    No expenses recorded for this date range.
                   </TableCell>
                 </TableRow>
               )}

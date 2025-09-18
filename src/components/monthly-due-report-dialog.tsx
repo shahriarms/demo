@@ -22,21 +22,36 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileDown } from 'lucide-react';
 import type { Invoice } from '@/lib/types';
-import { format } from 'date-fns';
+import { format, isSameDay, startOfMonth, endOfMonth } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useTranslation } from '@/hooks/use-translation';
+import type { DateRange } from 'react-day-picker';
 
 interface MonthlyDueDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoices: Invoice[];
-  month: Date;
+  dateRange?: DateRange;
 }
 
-export function MonthlyDueDialog({ open, onOpenChange, invoices, month }: MonthlyDueDialogProps) {
+export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: MonthlyDueDialogProps) {
     const { t } = useTranslation();
+
+    const rangeTitle = useMemo(() => {
+        if (!dateRange?.from) return "Due Report";
+        const from = dateRange.from;
+        const to = dateRange.to || from;
+
+        if (isSameDay(from, startOfMonth(from)) && isSameDay(to, endOfMonth(from))) {
+            return `Due Report (${format(from, 'MMMM yyyy')})`;
+        }
+        if (isSameDay(from, to)) {
+            return `Due Report (${format(from, 'PPP')})`;
+        }
+        return `Due Report (${format(from, 'PP')} - ${format(to, 'PP')})`;
+    }, [dateRange]);
 
     const reportData = useMemo(() => {
         if (!invoices) return [];
@@ -55,13 +70,13 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, month }: Monthl
             "Due Amount": item.dueAmount,
         })));
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Monthly Due Invoices");
-        XLSX.writeFile(workbook, `monthly_due_${format(month, 'yyyy-MM')}.xlsx`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Due Invoices Report");
+        XLSX.writeFile(workbook, `due_report.xlsx`);
     };
 
     const handleExportPdf = () => {
         const doc = new jsPDF();
-        doc.text(`Monthly Due Invoices Report - ${format(month, 'MMMM yyyy')}`, 14, 16);
+        doc.text(rangeTitle, 14, 16);
         (doc as any).autoTable({
             head: [['Date', 'Inv No', 'Customer Name', 'Total', 'Paid', 'Due']],
             body: reportData.map(item => [
@@ -74,7 +89,7 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, month }: Monthl
             ]),
             startY: 22,
         });
-        doc.save(`monthly_due_${format(month, 'yyyy-MM')}.pdf`);
+        doc.save(`due_report.pdf`);
     };
 
     const totalDue = useMemo(() => reportData.reduce((sum, item) => sum + item.dueAmount, 0), [reportData]);
@@ -83,9 +98,9 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, month }: Monthl
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Monthly Due Report ({format(month, 'MMMM yyyy')})</DialogTitle>
+          <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A detailed list of all invoices from this month with an outstanding balance. Total Due: <strong>৳{totalDue.toFixed(2)}</strong>
+            A detailed list of all invoices from this range with an outstanding balance. Total Due: <strong>৳{totalDue.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -121,7 +136,7 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, month }: Monthl
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center">
-                    No due invoices recorded for this month.
+                    No due invoices recorded for this date range.
                   </TableCell>
                 </TableRow>
               )}
