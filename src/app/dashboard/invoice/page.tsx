@@ -37,6 +37,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Separator } from '@/components/ui/separator';
 
 
 export default function InvoicePage() {
@@ -67,7 +68,7 @@ export default function InvoicePage() {
   const [draftToDelete, setDraftToDelete] = useState<DraftInvoice | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
   
-  const { id: draftId, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount, items } = activeDraft || {};
+  const { id: draftId, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount, items, cashReceived, changeAmount } = activeDraft || {};
 
   const validateInvoice = () => {
     if (!customerName) {
@@ -85,7 +86,7 @@ export default function InvoicePage() {
      if (!validateInvoice() || !activeDraft) return;
 
      setIsPrinting(true);
-     window.print();
+     // The actual saving logic is now in `handleAfterPrint`
   };
 
   useEffect(() => {
@@ -114,6 +115,14 @@ export default function InvoicePage() {
                         description: t('invoice_saved_toast_description', { invoiceId: activeDraft.id.slice(-6) }),
                     });
                     resetActiveDraft();
+                } else {
+                    // This case might happen if printNormalReceipt fails, which is rare.
+                    // For POS, error is thrown and caught below.
+                     toast({
+                        variant: 'destructive',
+                        title: 'Print Failed',
+                        description: 'The invoice was saved, but printing failed.',
+                    });
                 }
             } catch (error: any) {
                  toast({
@@ -127,8 +136,12 @@ export default function InvoicePage() {
         }
     };
     
-    window.addEventListener('beforeprint', handleBeforePrint);
-    window.addEventListener('afterprint', handleAfterPrint);
+    // Attach listeners only when printing is initiated
+    if (isPrinting) {
+        window.addEventListener('beforeprint', handleBeforePrint);
+        window.addEventListener('afterprint', handleAfterPrint);
+        window.print();
+    }
 
     return () => {
         window.removeEventListener('beforeprint', handleBeforePrint);
@@ -352,7 +365,7 @@ export default function InvoicePage() {
                 </Table>
             </ScrollArea>
         </CardContent>
-        <CardFooter className="flex-col items-stretch space-y-2 pt-4">
+        <CardFooter className="flex-col items-stretch space-y-4 pt-4">
             <div className="w-full md:w-80 ml-auto space-y-2">
                <div className="flex justify-between items-center text-sm">
                    <span className='text-muted-foreground'>{t('subtotal_label')}</span>
@@ -376,6 +389,29 @@ export default function InvoicePage() {
                <div className="flex justify-between items-center font-bold text-base border-t pt-2 mt-2">
                    <span>{t('due_label')}</span>
                    <span>৳{dueAmount.toFixed(2)}</span>
+               </div>
+            </div>
+            <Separator />
+            <div className="w-full md:w-80 ml-auto space-y-2">
+                <h4 className="text-sm font-medium text-center text-muted-foreground">Change Calculator</h4>
+                <div className="flex justify-between items-center text-sm">
+                   <Label htmlFor='cashReceived' className="shrink-0 text-muted-foreground">Cash Received</Label>
+                   <div className="relative w-32">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
+                        <Input 
+                            id='cashReceived' 
+                            type="text"
+                            inputMode='decimal'
+                            value={cashReceived || ''} 
+                            onChange={e => updateActiveDraft({ cashReceived: parseFloat(e.target.value) || undefined })} 
+                            className="h-9 pl-5 text-right font-medium"
+                            placeholder='0'
+                        />
+                   </div>
+               </div>
+                <div className="flex justify-between items-center font-bold text-base pt-2 mt-2">
+                   <span>Change</span>
+                   <span className="text-green-600">৳{(changeAmount ?? 0).toFixed(2)}</span>
                </div>
             </div>
         </CardFooter>

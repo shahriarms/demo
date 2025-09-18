@@ -38,6 +38,8 @@ export interface Invoice {
   paidAmount: number;
   dueAmount: number;
   date: string; // ISO 8601 date string
+  cashReceived?: number;
+  changeAmount?: number;
 }
 
 export interface Buyer {
