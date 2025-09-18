@@ -57,7 +57,7 @@ const calculateTotals = (items: DraftInvoiceItem[], paidAmount: number) => {
 }
 
 const useInvoiceFormData = (): InvoiceFormContextType => {
-    const { invoiceDrafts, setInvoiceDrafts, activeDraftIndex, setActiveInvoiceDraftIndex, isAppDataLoading } = useAppData();
+    const { invoiceDrafts, setInvoiceDrafts, activeDraftIndex, setActiveDraftIndex, isAppDataLoading } = useAppData();
     const { toast } = useToast();
     
     const activeDraft = useMemo(() => invoiceDrafts[activeDraftIndex] || null, [invoiceDrafts, activeDraftIndex]);
@@ -73,18 +73,18 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         }
         const newDraft = createNewDraft();
         setInvoiceDrafts(prev => [...prev, newDraft]);
-        setActiveInvoiceDraftIndex(invoiceDrafts.length);
-    }, [invoiceDrafts.length, toast, setInvoiceDrafts, setActiveInvoiceDraftIndex]);
+        setActiveDraftIndex(invoiceDrafts.length);
+    }, [invoiceDrafts.length, toast, setInvoiceDrafts, setActiveDraftIndex]);
     
     const removeDraft = useCallback((draftId: string) => {
         setInvoiceDrafts(prev => {
             const newDrafts = prev.filter(d => d.id !== draftId);
             if (newDrafts.length === 0) {
-                setActiveInvoiceDraftIndex(0);
+                setActiveDraftIndex(0);
                 return [createNewDraft()];
             }
-            // Use a functional update to get the latest activeDraftIndex
-            setActiveInvoiceDraftIndex(currentActiveIndex => {
+            
+            setActiveDraftIndex(currentActiveIndex => {
                 if (currentActiveIndex >= newDrafts.length) {
                     return newDrafts.length - 1;
                 }
@@ -92,7 +92,7 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
             });
             return newDrafts;
         });
-    }, [setInvoiceDrafts, setActiveInvoiceDraftIndex]);
+    }, [setInvoiceDrafts, setActiveDraftIndex]);
 
     const updateActiveDraft = useCallback((update: Partial<Omit<DraftInvoice, 'id' | 'subtotal' | 'dueAmount'>>) => {
         setInvoiceDrafts(prev => prev.map((draft, index) => {
@@ -171,7 +171,7 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         removeInvoiceItem,
         resetActiveDraft,
         isFormLoading: isAppDataLoading,
-    }), [invoiceDrafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveInvoiceDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, resetActiveDraft, isAppDataLoading]);
+    }), [invoiceDrafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceİtem, resetActiveDraft, isAppDataLoading]);
 }
 
 export function InvoiceFormProvider({ children }: { children: ReactNode }) {
