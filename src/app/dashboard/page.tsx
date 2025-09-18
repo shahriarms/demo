@@ -25,10 +25,11 @@ import { MonthlySalesDialog } from '@/components/monthly-sales-report-dialog';
 import { MonthlyExpensesDialog } from '@/components/monthly-expenses-report-dialog';
 import { MonthlyDueDialog } from '@/components/monthly-due-report-dialog';
 import { MonthlyUnitsSoldDialog } from '@/components/monthly-units-sold-report-dialog';
+import { MonthlySalaryReportDialog } from '@/components/monthly-salary-report-dialog';
 
 
 export default function Dashboard() {
-  const { products, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, isAppDataLoading: isLoading } = useAppData();
+  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, isAppDataLoading: isLoading } = useAppData();
   const { t } = useTranslation();
 
   const [date, setDate] = useState<Date>(new Date());
@@ -48,6 +49,7 @@ export default function Dashboard() {
   const [isMonthlyExpensesReportOpen, setMonthlyExpensesReportOpen] = useState(false);
   const [isMonthlyDueReportOpen, setMonthlyDueReportOpen] = useState(false);
   const [isMonthlyUnitsSoldReportOpen, setMonthlyUnitsSoldReportOpen] = useState(false);
+  const [isMonthlySalaryReportOpen, setMonthlySalaryReportOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
@@ -230,7 +232,7 @@ export default function Dashboard() {
                    <p className="text-xs text-muted-foreground">{monthlyExpenses.length} entries this month</p>
                 </CardContent>
               </Card>
-               <Card>
+               <Card as="button" onClick={() => setMonthlySalaryReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Monthly Salary Paid</CardTitle>
                   <Wallet className="h-4 w-4 text-muted-foreground" />
@@ -363,6 +365,13 @@ export default function Dashboard() {
         onOpenChange={setMonthlyUnitsSoldReportOpen}
         invoices={monthlyInvoices}
         products={products}
+        month={date}
+      />
+      <MonthlySalaryReportDialog
+        open={isMonthlySalaryReportOpen}
+        onOpenChange={setMonthlySalaryReportOpen}
+        salaryPayments={monthlySalaries}
+        employees={employees}
         month={date}
       />
     </>

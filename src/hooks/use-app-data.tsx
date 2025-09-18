@@ -297,9 +297,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [buyers, invoices]);
 
     const getInvoicesForDateRange = useCallback((startDate: Date, endDate: Date) => {
+        const start = startOfMonth(startDate);
+        const end = endOfMonth(endDate);
         return invoices.filter(inv => {
             const invDate = new Date(inv.date);
-            return invDate >= startOfMonth(startDate) && invDate <= endOfMonth(endDate);
+            // If checking for a single day, check if it's the same day.
+            if (isSameDay(start, end)) {
+                return isSameDay(invDate, start);
+            }
+            // Otherwise, check if it's within the month range.
+            return isWithinInterval(invDate, { start, end });
         });
     }, [invoices]);
 
@@ -330,7 +337,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [toast]);
     
     const getExpensesForDateRange = useCallback((startDate: Date, endDate: Date) => {
-        return expenses.filter(exp => isWithinInterval(new Date(exp.date), { start: startDate, end: endDate }));
+        const start = startOfMonth(startDate);
+        const end = endOfMonth(endDate);
+        return expenses.filter(exp => {
+            const expDate = new Date(exp.date);
+             if (isSameDay(start, end)) {
+                return isSameDay(expDate, start);
+            }
+            return isWithinInterval(expDate, { start, end });
+        });
     }, [expenses]);
 
     const addEmployee = useCallback((employeeData: Omit<Employee, 'id'>) => {
