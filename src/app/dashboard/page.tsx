@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/chart';
 import { useAppData } from '@/hooks/use-app-data';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, UserCheck, Package, HandCoins, Loader2 } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, UserCheck, Package, HandCoins, Receipt, Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [monthlyInvoices, setMonthlyInvoices] = useState<any[]>([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState<any[]>([]);
   const [todayInvoices, setTodayInvoices] = useState<any[]>([]);
+  const [todayExpenses, setTodayExpenses] = useState<any[]>([]);
   const [todayAttendanceSummary, setTodayAttendanceSummary] = useState({ present: 0, total: 0 });
 
   useEffect(() => {
@@ -39,9 +40,10 @@ export default function Dashboard() {
       setMonthlyExpenses(getExpensesForDateRange(monthStart, monthEnd));
       const today = new Date();
       setTodayInvoices(getInvoicesForDateRange(today, today));
+      setTodayExpenses(getExpensesForDateRange(today, today));
       setTodayAttendanceSummary(getAttendanceSummaryForDate(today));
     }
-  }, [isLoading, getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate, date]);
+  }, [isLoading, getInvoicesForDateRange, getExpensesForDateRange, getAttendanceSummaryForDate, date, monthStart, monthEnd]);
 
 
   const monthlyStats = useMemo(() => {
@@ -53,11 +55,12 @@ export default function Dashboard() {
   
   const todayStats = useMemo(() => {
       const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
+      const totalExpenses = todayExpenses.reduce((sum, exp) => sum + exp.amount, 0);
       const totalDue = todayInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
       const unitsSold = todayInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
       const presentEmployees = todayAttendanceSummary.present;
-      return { totalSales, totalDue, unitsSold, presentEmployees };
-  }, [todayInvoices, todayAttendanceSummary]);
+      return { totalSales, totalExpenses, totalDue, unitsSold, presentEmployees };
+  }, [todayInvoices, todayExpenses, todayAttendanceSummary]);
   
   const dailySalesChartData = useMemo(() => {
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -131,7 +134,7 @@ export default function Dashboard() {
       </div>
       
       {/* Today's Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{t('todays_sales_card_title')}</CardTitle>
@@ -140,6 +143,16 @@ export default function Dashboard() {
             <CardContent>
                 <div className="text-2xl font-bold">৳{todayStats.totalSales.toFixed(2)}</div>
                 <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{"Today's Expenses"}</CardTitle>
+                <Receipt className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">৳{todayStats.totalExpenses.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
             </CardContent>
           </Card>
           <Card>
