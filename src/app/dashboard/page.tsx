@@ -61,11 +61,12 @@ export default function Dashboard() {
       setRangeInvoices(getInvoicesForDateRange(dateRange.from, dateRange.to));
       setRangeExpenses(getExpensesForDateRange(dateRange.from, dateRange.to));
       setRangeSalaries(getSalaryPaymentsForDateRange(dateRange.from, dateRange.to));
-      
+    }
+     if (!isLoading) {
       const today = new Date();
       setTodayInvoices(getInvoicesForDateRange(today, today));
       setTodayExpenses(getExpensesForDateRange(today, today));
-    }
+     }
   }, [isLoading, dateRange, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange]);
 
 
@@ -171,7 +172,9 @@ export default function Dashboard() {
                 defaultMonth={dateRange?.from}
                 selected={dateRange}
                 onSelect={setDateRange}
-                numberOfMonths={2}
+                captionLayout="dropdown-buttons"
+                fromYear={2019}
+                toYear={new Date().getFullYear() + 5}
               />
             </PopoverContent>
           </Popover>
