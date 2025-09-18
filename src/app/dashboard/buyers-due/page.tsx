@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useAppData } from '@/hooks/use-app-data';
 import type { Buyer, Invoice, Payment } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +23,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function BuyersDuePage() {
-  const { buyers, getInvoicesForBuyer, addPayment, getPaymentsForInvoice, isAppDataLoading } = useAppData();
+  const { buyers, getInvoicesForBuyer, addPayment, getPaymentsForInvoice, isAppDataLoading, getBuyerById } = useAppData();
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -32,8 +32,25 @@ export default function BuyersDuePage() {
   const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const componentToPrintRef = useRef(null);
+  
+  // When a buyer is selected, or the main buyers list changes, refresh the selectedBuyer state
+  // to ensure it has the latest invoice/due information.
+  useEffect(() => {
+    if (selectedBuyer) {
+      const refreshedBuyer = getBuyerById(selectedBuyer.id);
+      if (refreshedBuyer) {
+        setSelectedBuyer(refreshedBuyer);
+      } else {
+        // The buyer may have been removed or no longer has dues
+        setSelectedBuyer(null);
+        setSelectedInvoice(null);
+      }
+    }
+  }, [buyers, selectedBuyer?.id, getBuyerById]);
+
 
   const buyersWithDue = useMemo(() => {
     return buyers.filter(buyer => {
@@ -52,7 +69,9 @@ export default function BuyersDuePage() {
 
   const dueInvoicesForSelectedBuyer = useMemo(() => {
     if (!selectedBuyer) return [];
-    return getInvoicesForBuyer(selectedBuyer.id).filter(inv => inv.dueAmount > 0);
+    // Important: Use getInvoicesForBuyer to ensure we have the most up-to-date invoice list.
+    const currentInvoices = getInvoicesForBuyer(selectedBuyer.id);
+    return currentInvoices.filter(inv => inv.dueAmount > 0);
   }, [selectedBuyer, getInvoicesForBuyer]);
 
   const filteredDueInvoices = useMemo(() => {
@@ -79,34 +98,8 @@ export default function BuyersDuePage() {
     setPaymentAmount('');
   };
   
-  const completePaymentTransaction = useCallback(() => {
-    if (!selectedInvoice || !paymentAmount || paymentAmount <= 0) return;
-
-    addPayment({
-      invoiceId: selectedInvoice.id,
-      buyerId: selectedBuyer!.id,
-      amount: paymentAmount as number,
-    });
-    
-    toast({
-        title: t('payment_received_toast_title'),
-        description: t('payment_received_toast_description', { amount: (paymentAmount as number).toFixed(2), invoiceId: selectedInvoice.id.slice(-6) }),
-    });
-
-    setPaymentAmount('');
-    
-    // Refresh data - a bit of a trick to force re-render with updated due amounts
-    const updatedBuyer = buyers.find(b => b.id === selectedBuyer!.id);
-    if(updatedBuyer) {
-        // Find the specific buyer and re-set it to trigger updates
-        const freshBuyerData = JSON.parse(JSON.stringify(buyers.find(b => b.id === selectedBuyer!.id)));
-        setSelectedBuyer(freshBuyerData);
-    }
-  }, [addPayment, paymentAmount, selectedBuyer, selectedInvoice, toast, buyers, t]);
-
-
-  const handleAddPaymentAndPrint = () => {
-    if (!selectedInvoice || !paymentAmount || paymentAmount <= 0) {
+  const handleProcessPayment = async () => {
+    if (!selectedInvoice || !selectedBuyer || typeof paymentAmount !== 'number' || paymentAmount <= 0) {
       toast({
         variant: 'destructive',
         title: t('invalid_amount_toast_title'),
@@ -123,14 +116,34 @@ export default function BuyersDuePage() {
         });
         return;
     }
-    
-    // The transaction is completed first, then we print the new state.
-    completePaymentTransaction();
 
-    // We need to wait for the state to update before printing
-    setTimeout(() => {
-      window.print();
-    }, 100);
+    setIsProcessing(true);
+    
+    // The addPayment function now handles both updating state and refreshing the buyer
+    await addPayment({
+      invoiceId: selectedInvoice.id,
+      buyerId: selectedBuyer.id,
+      amount: paymentAmount,
+    });
+    
+    toast({
+        title: t('payment_received_toast_title'),
+        description: t('payment_received_toast_description', { amount: paymentAmount.toFixed(2), invoiceId: selectedInvoice.id.slice(-6) }),
+    });
+
+    // Wait for state to propagate before printing
+    await new Promise(resolve => setTimeout(resolve, 100));
+    window.print();
+    
+    setPaymentAmount('');
+    setIsProcessing(false);
+
+    // After payment, the invoice might no longer be "due".
+    // We check if it still exists in the due list. If not, clear the selection.
+    const updatedInvoices = getInvoicesForBuyer(selectedBuyer.id).filter(inv => inv.dueAmount > 0);
+    if (!updatedInvoices.some(inv => inv.id === selectedInvoice.id)) {
+        setSelectedInvoice(null);
+    }
   };
 
   const receiptPaymentHistory = useMemo(() => {
@@ -270,9 +283,13 @@ export default function BuyersDuePage() {
                                     className="pl-8"
                                     value={paymentAmount}
                                     onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                    disabled={isProcessing}
                                 />
                             </div>
-                            <Button onClick={handleAddPaymentAndPrint} className="w-full sm:w-auto"><Printer className="mr-2 h-4 w-4"/>{t('receive_and_print_button')}</Button>
+                            <Button onClick={handleProcessPayment} className="w-full sm:w-auto" disabled={isProcessing}>
+                                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}
+                                {isProcessing ? "Processing..." : t('receive_and_print_button')}
+                            </Button>
                         </div>
                     </>
                 ) : (
@@ -309,3 +326,4 @@ export default function BuyersDuePage() {
     </div>
   );
 }
+
