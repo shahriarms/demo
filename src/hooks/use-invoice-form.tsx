@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createContext, useContext, ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import type { InvoiceItem, Product } from '@/lib/types';
 import { useToast } from './use-toast';
 import { useAppData } from './use-app-data';
@@ -60,7 +60,7 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
     const { invoiceDrafts, setInvoiceDrafts, activeDraftIndex, setActiveInvoiceDraftIndex, isAppDataLoading } = useAppData();
     const { toast } = useToast();
     
-    const activeDraft = useMemo(() => invoiceDrafts[activeInvoiceDraftIndex] || null, [invoiceDrafts, activeDraftIndex]);
+    const activeDraft = useMemo(() => invoiceDrafts[activeDraftIndex] || null, [invoiceDrafts, activeDraftIndex]);
     
     const addNewDraft = useCallback(() => {
         if (invoiceDrafts.length >= 10) {
