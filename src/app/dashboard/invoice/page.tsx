@@ -186,7 +186,7 @@ export default function InvoicePage() {
   }
 
   const customerInfoCard = (
-    <Card className="h-full">
+    <Card>
         <CardHeader>
             <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
             <CardDescription>{t('invoice_no_label')}: {draftId ? draftId.slice(-6) : '...'}</CardDescription>
@@ -211,7 +211,7 @@ export default function InvoicePage() {
   );
 
   const addProductsCard = (
-    <Card className="flex-1 flex flex-col min-h-0 h-full">
+    <Card className="flex-1 flex flex-col min-h-0">
         <CardHeader>
             <CardTitle>{t('add_products_label')}</CardTitle>
             <RadioGroup
@@ -379,21 +379,22 @@ export default function InvoicePage() {
   );
 
   const desktopLayout = (
-    <div className="flex flex-col h-full gap-4">
-        {/* Top Row */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4 min-h-0">
-            <div className="lg:col-span-2 flex flex-col gap-4">
-                {customerInfoCard}
-                {invoiceItemsCard}
-            </div>
-            <div className="lg:col-span-3 min-h-[400px] lg:min-h-0">
-                {addProductsCard}
-            </div>
-        </div>
-        {/* Bottom Row */}
-        <div className="flex-1 min-h-0">
-            {livePreviewCard}
-        </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+      {/* Left Column */}
+      <div className="flex flex-col gap-4">
+        {customerInfoCard}
+        {addProductsCard}
+      </div>
+
+      {/* Middle Column */}
+      <div className="lg:col-span-1 h-full">
+        {invoiceItemsCard}
+      </div>
+
+      {/* Right Column */}
+      <div className="lg:col-span-1 h-full">
+        {livePreviewCard}
+      </div>
     </div>
   );
 
