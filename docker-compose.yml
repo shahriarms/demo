@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     build:
@@ -8,34 +6,39 @@ services:
     container_name: stockpilot_app
     ports:
       - "3000:3000"
-    # The application now gets its database URL directly from the 'db' service definition.
-    # It no longer relies on a manual .env.local file for the database connection.
     environment:
-      - POSTGRES_URL=postgresql://user:password@db:5432/stockpilot_db
-    # This ensures the database container is started and ready before the web app starts.
+      POSTGRES_URL: postgresql://user:password@db:5432/stockpilot_db
     depends_on:
       - db
-    restart: unless-stopped
+    restart: always
 
   db:
     image: postgres:15-alpine
     container_name: stockpilot_db
-    # These environment variables configure the PostgreSQL container when it first starts.
-    # It creates a database named 'stockpilot_db' with a 'user' and 'password'.
     environment:
-      - POSTGRES_DB=stockpilot_db
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-    # This volume persists the database data on your host machine in a 'postgres_data' directory,
-    # ensuring your data is not lost when the container stops or is removed.
+      POSTGRES_DB: stockpilot_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # Exposing the port is optional and only needed if you want to connect to the DB
-    # from your host machine with a tool like DBeaver or Postico.
     ports:
       - "5432:5432"
-    restart: unless-stopped
+    restart: always
 
-# This defines the named volume used by the 'db' service for data persistence.
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: stockpilot_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@stockpilot.com"
+      PGADMIN_DEFAULT_PASSWORD: "password"
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: always
+
 volumes:
   postgres_data:
+  pgadmin_data:
