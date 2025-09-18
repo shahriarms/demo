@@ -138,7 +138,7 @@ export default function Dashboard() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">${todayStats.totalSales.toFixed(2)}</div>
+                <div className="text-2xl font-bold">৳{todayStats.totalSales.toFixed(2)}</div>
                 <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
             </CardContent>
           </Card>
@@ -148,7 +148,7 @@ export default function Dashboard() {
                 <HandCoins className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">${todayStats.totalDue.toFixed(2)}</div>
+                <div className="text-2xl font-bold">৳{todayStats.totalDue.toFixed(2)}</div>
                 <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
             </CardContent>
           </Card>
@@ -181,7 +181,7 @@ export default function Dashboard() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${monthlyStats.totalSales.toFixed(2)}</div>
+            <div className="text-2xl font-bold">৳{monthlyStats.totalSales.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
           </CardContent>
         </Card>
@@ -191,7 +191,7 @@ export default function Dashboard() {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${monthlyStats.totalExpenses.toFixed(2)}</div>
+            <div className="text-2xl font-bold">৳{monthlyStats.totalExpenses.toFixed(2)}</div>
              <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
           </CardContent>
         </Card>
@@ -202,7 +202,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${monthlyStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                ${monthlyStats.profit.toFixed(2)}
+                ৳{monthlyStats.profit.toFixed(2)}
             </div>
              <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
           </CardContent>
@@ -278,5 +278,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-    

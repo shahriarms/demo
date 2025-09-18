@@ -230,7 +230,7 @@ export default function BuyersDuePage() {
                       >
                         <div className="flex justify-between font-medium">
                             <span>{t('inv_short')}: {invoice.id.slice(-6)}</span>
-                            <span className="text-destructive">${invoice.dueAmount.toFixed(2)}</span>
+                            <span className="text-destructive">৳{invoice.dueAmount.toFixed(2)}</span>
                         </div>
                         <div className="text-sm text-muted-foreground">{new Date(invoice.date).toLocaleDateString()}</div>
                       </button>
@@ -258,12 +258,12 @@ export default function BuyersDuePage() {
                         <div className="flex justify-between items-start">
                            <div>
                               <p>{t('invoice_label')}: <span className="font-mono">{selectedInvoice.id.slice(-6)}</span></p>
-                              <p>{t('due_amount_label')}: <span className="font-bold text-destructive">${selectedInvoice.dueAmount.toFixed(2)}</span></p>
+                              <p>{t('due_amount_label')}: <span className="font-bold text-destructive">৳{selectedInvoice.dueAmount.toFixed(2)}</span></p>
                            </div>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center gap-2">
                             <div className="relative flex-1 w-full">
-                                <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">৳</span>
                                 <Input 
                                     type="number" 
                                     placeholder={t('enter_amount_placeholder')}
@@ -309,5 +309,3 @@ export default function BuyersDuePage() {
     </div>
   );
 }
-
-    

@@ -163,13 +163,13 @@ export default function SalariesPage() {
                     <div className="space-y-4">
                         <h3 className="font-semibold text-lg">{t('payment_details_title')}</h3>
                         <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-                            <div className="flex justify-between text-sm"><span>{t('monthly_salary_label')}:</span> <span className="font-mono">${selectedEmployee.salary.toFixed(2)}</span></div>
-                            <div className="flex justify-between text-sm"><span>{t('paid_this_month_label')}:</span> <span className="font-mono">${paidThisMonth.toFixed(2)}</span></div>
-                            <div className="flex justify-between font-bold text-base border-t pt-2 mt-2"><span>{t('due_this_month_label')}:</span> <span className="font-mono text-primary">${dueSalary.toFixed(2)}</span></div>
+                            <div className="flex justify-between text-sm"><span>{t('monthly_salary_label')}:</span> <span className="font-mono">৳{selectedEmployee.salary.toFixed(2)}</span></div>
+                            <div className="flex justify-between text-sm"><span>{t('paid_this_month_label')}:</span> <span className="font-mono">৳{paidThisMonth.toFixed(2)}</span></div>
+                            <div className="flex justify-between font-bold text-base border-t pt-2 mt-2"><span>{t('due_this_month_label')}:</span> <span className="font-mono text-primary">৳{dueSalary.toFixed(2)}</span></div>
                         </div>
 
                         <div className="relative">
-                            <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">৳</span>
                             <Input 
                                 type="number" 
                                 placeholder={t('enter_amount_to_pay_placeholder')}
@@ -192,7 +192,7 @@ export default function SalariesPage() {
                         )}
                         
                         <Button className="w-full" disabled={!canProcessPayment} onClick={handleAddPayment}>
-                            {t('pay_button', { amount: typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00' })}
+                            {t('pay_button', { amount: typeof paymentAmount === 'number' ? `৳${paymentAmount.toFixed(2)}` : '৳0.00' })}
                         </Button>
                     </div>
 
@@ -212,7 +212,7 @@ export default function SalariesPage() {
                                         paymentsThisMonth.map(payment => (
                                             <TableRow key={payment.id}>
                                                 <TableCell>{format(new Date(payment.date), 'PP')}</TableCell>
-                                                <TableCell className="text-right font-mono">${payment.amount.toFixed(2)}</TableCell>
+                                                <TableCell className="text-right font-mono">৳{payment.amount.toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))
                                     ) : (
@@ -234,5 +234,3 @@ export default function SalariesPage() {
     </div>
   );
 }
-
-    

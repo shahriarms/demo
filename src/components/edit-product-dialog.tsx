@@ -264,5 +264,3 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     </Dialog>
   );
 }
-
-    

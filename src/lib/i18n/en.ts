@@ -111,10 +111,10 @@ export const en = {
     'subcategory_placeholder': 'e.g., 28',
     'sku_label': 'SKU',
     'sku_placeholder': 'e.g., ANG-1-4',
-    'price_label': 'Price ($)',
-    'buying_price_label': 'Buying Price ($)',
+    'price_label': 'Price',
+    'buying_price_label': 'Buying Price',
     'profit_margin_label': 'Profit Margin (%)',
-    'selling_price_label': 'Selling Price ($)',
+    'selling_price_label': 'Selling Price',
     'initial_stock_label': 'Initial Stock',
 
     // Invoice Page
@@ -191,11 +191,11 @@ export const en = {
     'live_receipt_preview_title': 'Live Receipt Preview',
     'select_invoice_for_preview': 'Select an invoice to see a receipt preview.',
     'payment_received_toast_title': 'Payment Received',
-    'payment_received_toast_description': 'Successfully recorded payment of ${{amount}} for invoice {{invoiceId}}.',
+    'payment_received_toast_description': 'Successfully recorded payment of ৳{{amount}} for invoice {{invoiceId}}.',
     'invalid_amount_toast_title': 'Invalid Amount',
     'invalid_amount_toast_description': 'Please enter a valid payment amount.',
     'overpayment_error_toast_title': 'Overpayment Error',
-    'overpayment_error_toast_description': 'Payment cannot be greater than the due amount of ${{amount}}.',
+    'overpayment_error_toast_description': 'Payment cannot be greater than the due amount of ৳{{amount}}.',
 
     // Expenses Page
     'expenses_page_title': 'Expense Management',
@@ -300,12 +300,12 @@ export const en = {
     'amount_exceeds_due': 'Amount Exceeds Due Salary',
     'authorizing_advance_payment': 'You are authorizing an advance payment.',
     'ask_admin_for_approval': 'Please ask an admin to approve.',
-    'pay_button': 'Pay ${{amount}}',
+    'pay_button': 'Pay {{amount}}',
     'monthly_payment_history_title': 'Monthly Payment History',
     'no_payments_this_month': 'No payments this month.',
     'overpayment_permission_error': 'You do not have permission to pay more than the due amount. Please ask an admin.',
     'payment_successful_toast_title': 'Payment Successful',
-    'payment_successful_toast_description': 'Paid ${{amount}} to {{name}}.',
+    'payment_successful_toast_description': 'Paid ৳{{amount}} to {{name}}.',
 
     // Settings Page
     'settings_page_title': 'Settings',
@@ -316,5 +316,3 @@ export const en = {
     'language_settings_title': 'Language Settings',
     'language_settings_description': 'Choose your preferred language for the application.',
 };
-
-    

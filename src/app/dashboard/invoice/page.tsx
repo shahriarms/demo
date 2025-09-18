@@ -318,18 +318,18 @@ export default function InvoicePage() {
                                         <TableRow key={item.id}>
                                             <TableCell>
                                                 <p className="font-medium">{item.name}</p>
-                                                <p className='text-xs text-muted-foreground'>Suggested: ${(item.originalPrice || 0).toFixed(2)}</p>
+                                                <p className='text-xs text-muted-foreground'>Suggested: ৳{(item.originalPrice || 0).toFixed(2)}</p>
                                             </TableCell>
                                             <TableCell>
                                                 <Input type="number" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
                                             </TableCell>
                                             <TableCell className="hidden sm:table-cell">
                                                  <div className="relative flex items-center">
-                                                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                                                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">৳</span>
                                                      <Input type="number" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium h-9" />
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-right font-semibold">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                                            <TableCell className="text-right font-semibold">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
                                             <TableCell>
                                                  <Button variant="ghost" size="icon" onClick={() => removeInvoiceItem(item.id)} className="h-9 w-9">
                                                     <Trash2 className="w-4 h-4 text-destructive" />
@@ -347,12 +347,12 @@ export default function InvoicePage() {
                         <div className="w-full md:w-64 space-y-2">
                            <div className="flex justify-between text-sm">
                                <span>{t('subtotal_label')}</span>
-                               <span className="font-medium">${subtotal.toFixed(2)}</span>
+                               <span className="font-medium">৳{subtotal.toFixed(2)}</span>
                            </div>
                            <div className="flex justify-between items-center text-sm">
                                <Label htmlFor='paidAmount' className="shrink-0">{t('paid_label')}</Label>
                                <div className="relative w-28">
-                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">৳</span>
                                     <Input 
                                         id='paidAmount' 
                                         type="number" 
@@ -364,7 +364,7 @@ export default function InvoicePage() {
                            </div>
                            <div className="flex justify-between font-bold text-base">
                                <span>{t('due_label')}</span>
-                               <span>${dueAmount.toFixed(2)}</span>
+                               <span>৳{dueAmount.toFixed(2)}</span>
                            </div>
                         </div>
                     </CardFooter>
@@ -415,5 +415,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    

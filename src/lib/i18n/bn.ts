@@ -111,10 +111,10 @@ export const bn = {
     'subcategory_placeholder': 'যেমন, ২৮',
     'sku_label': 'SKU',
     'sku_placeholder': 'যেমন, ANG-1-4',
-    'price_label': 'মূল্য ($)',
-    'buying_price_label': 'ক্রয়মূল্য ($)',
+    'price_label': 'মূল্য',
+    'buying_price_label': 'ক্রয়মূল্য',
     'profit_margin_label': 'লাভের হার (%)',
-    'selling_price_label': 'বিক্রয়মূল্য ($)',
+    'selling_price_label': 'বিক্রয়মূল্য',
     'initial_stock_label': 'প্রাথমিক স্টক',
     
     // Invoice Page
@@ -191,11 +191,11 @@ export const bn = {
     'live_receipt_preview_title': 'লাইভ রশিদ প্রিভিউ',
     'select_invoice_for_preview': 'রশিদ প্রিভিউ দেখতে একটি চালান নির্বাচন করুন।',
     'payment_received_toast_title': 'পেমেন্ট গৃহীত হয়েছে',
-    'payment_received_toast_description': '{{invoiceId}} চালানের জন্য ${{amount}} পেমেন্ট সফলভাবে রেকর্ড করা হয়েছে।',
+    'payment_received_toast_description': '{{invoiceId}} চালানের জন্য ৳{{amount}} পেমেন্ট সফলভাবে রেকর্ড করা হয়েছে।',
     'invalid_amount_toast_title': 'অবৈধ পরিমাণ',
     'invalid_amount_toast_description': 'অনুগ্রহ করে একটি বৈধ পেমেন্ট পরিমাণ লিখুন।',
     'overpayment_error_toast_title': 'অতিরিক্ত পেমেন্ট ত্রুটি',
-    'overpayment_error_toast_description': 'পেমেন্ট বকেয়া পরিমাণ ${{amount}} এর বেশি হতে পারবে না।',
+    'overpayment_error_toast_description': 'পেমেন্ট বকেয়া পরিমাণ ৳{{amount}} এর বেশি হতে পারবে না।',
 
     // Expenses Page
     'expenses_page_title': 'খরচ ব্যবস্থাপনা',
@@ -300,12 +300,12 @@ export const bn = {
     'amount_exceeds_due': 'টাকার পরিমাণ বকেয়া বেতনের বেশি',
     'authorizing_advance_payment': 'আপনি একটি অগ্রিম পেমেন্টের অনুমোদন দিচ্ছেন।',
     'ask_admin_for_approval': 'অনুমোদনের জন্য অ্যাডমিনকে বলুন।',
-    'pay_button': '${{amount}} প্রদান করুন',
+    'pay_button': 'প্রদান করুন {{amount}}',
     'monthly_payment_history_title': 'মাসিক পেমেন্টের ইতিহাস',
     'no_payments_this_month': 'এই মাসে কোনো পেমেন্ট নেই।',
     'overpayment_permission_error': 'আপনার বকেয়া পরিমাণের বেশি অর্থ প্রদানের অনুমতি নেই। অনুগ্রহ করে একজন অ্যাডমিনের সাথে যোগাযোগ করুন।',
     'payment_successful_toast_title': 'পেমেন্ট সফল',
-    'payment_successful_toast_description': '{{name}} কে ${{amount}} প্রদান করা হয়েছে।',
+    'payment_successful_toast_description': '{{name}} কে ৳{{amount}} প্রদান করা হয়েছে।',
 
     // Settings Page
     'settings_page_title': 'সেটিংস',
@@ -316,5 +316,3 @@ export const bn = {
     'language_settings_title': 'ভাষা সেটিংস',
     'language_settings_description': 'অ্যাপ্লিকেশনের জন্য আপনার পছন্দের ভাষা বেছে নিন।',
 };
-
-    

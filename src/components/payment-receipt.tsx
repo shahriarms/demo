@@ -56,7 +56,7 @@ export const PaymentReceipt = React.forwardRef<HTMLDivElement, PaymentReceiptPro
               <TableBody>
                 <TableRow>
                   <TableCell className="text-black font-bold"> চালান মোট (Invoice Total)</TableCell>
-                  <TableCell className="text-black text-right font-bold">${invoice.subtotal.toFixed(2)}</TableCell>
+                  <TableCell className="text-black text-right font-bold">৳{invoice.subtotal.toFixed(2)}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -73,7 +73,7 @@ export const PaymentReceipt = React.forwardRef<HTMLDivElement, PaymentReceiptPro
                 {paymentHistory.length > 0 ? paymentHistory.map(payment => (
                   <TableRow key={payment.id}>
                     <TableCell className="text-black">{new Date(payment.date).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-black text-right">${payment.amount.toFixed(2)}</TableCell>
+                    <TableCell className="text-black text-right">৳{payment.amount.toFixed(2)}</TableCell>
                   </TableRow>
                 )) : (
                   <TableRow>
@@ -87,11 +87,11 @@ export const PaymentReceipt = React.forwardRef<HTMLDivElement, PaymentReceiptPro
               <div className="w-64 space-y-2">
                 <div className="flex justify-between">
                   <span>মোট জমা (Total Paid):</span>
-                  <span>${totalPaid.toFixed(2)}</span>
+                  <span>৳{totalPaid.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold border-t pt-2">
                   <span>বর্তমান বাকী (Current Due):</span>
-                  <span>${currentDue.toFixed(2)}</span>
+                  <span>৳{currentDue.toFixed(2)}</span>
                 </div>
               </div>
             </div>

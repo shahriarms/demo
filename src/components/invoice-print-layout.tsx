@@ -171,8 +171,8 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
                             <tr key={item.id}>
                                 <td style={tdStyles}>{item.name}</td>
                                 <td style={{...tdStyles, textAlign: 'center'}}>{item.quantity}</td>
-                                <td style={{...tdStyles, textAlign: 'right'}}>${item.price.toFixed(2)}</td>
-                                <td style={{...tdStyles, textAlign: 'right', fontWeight: 500}}>${(item.price * item.quantity).toFixed(2)}</td>
+                                <td style={{...tdStyles, textAlign: 'right'}}>৳{item.price.toFixed(2)}</td>
+                                <td style={{...tdStyles, textAlign: 'right', fontWeight: 500}}>৳{(item.price * item.quantity).toFixed(2)}</td>
                             </tr>
                         )) : (
                             <tr>
@@ -187,15 +187,15 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
                         <tbody>
                             <tr>
                                 <td style={{ textAlign: 'right', padding: '0.25rem' }}>{t('subtotal_label')}:</td>
-                                <td style={{ textAlign: 'right', padding: '0.25rem', fontWeight: 600 }}>${subtotal.toFixed(2)}</td>
+                                <td style={{ textAlign: 'right', padding: '0.25rem', fontWeight: 600 }}>৳{subtotal.toFixed(2)}</td>
                             </tr>
                              <tr>
                                 <td style={{ textAlign: 'right', padding: '0.25rem' }}>{t('paid_label')}:</td>
-                                <td style={{ textAlign: 'right', padding: '0.25rem' }}>${paidAmount.toFixed(2)}</td>
+                                <td style={{ textAlign: 'right', padding: '0.25rem' }}>৳{paidAmount.toFixed(2)}</td>
                             </tr>
                              <tr style={totalRowStyles}>
                                 <td style={{ textAlign: 'right', padding: '0.5rem 0.25rem' }}>{t('due_label')}:</td>
-                                <td style={{ textAlign: 'right', padding: '0.5rem 0.25rem' }}>${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</td>
+                                <td style={{ textAlign: 'right', padding: '0.5rem 0.25rem' }}>{dueAmount < 0 ? '(৳' + Math.abs(dueAmount).toFixed(2) + ')' : '৳' + dueAmount.toFixed(2)}</td>
                             </tr>
                         </tbody>
                      </table>

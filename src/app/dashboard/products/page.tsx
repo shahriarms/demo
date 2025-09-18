@@ -274,7 +274,7 @@ export default function ProductsPage() {
                         </TableCell>
                         <TableCell className="hidden md:table-cell">{product.category} / {product.subCategory}</TableCell>
                         <TableCell className="text-right font-semibold hidden sm:table-cell">
-                            ${product.sellingPrice.toFixed(2)}
+                            ৳{product.sellingPrice.toFixed(2)}
                         </TableCell>
                         <TableCell className={`text-right font-medium ${product.stock === 0 ? 'text-destructive' : ''}`}>
                             {product.stock} <span className="text-xs text-muted-foreground">{product.mainCategory === 'Material' ? 'kg' : 'pcs'}</span>
@@ -374,5 +374,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-
-    

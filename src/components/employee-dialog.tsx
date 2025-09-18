@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, DollarSign } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { useAppData } from '@/hooks/use-app-data';
 import type { Employee } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -185,7 +185,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
                                     <FormItem>
                                         <FormLabel>{t('salary_label')}</FormLabel>
                                         <div className="relative">
-                                            <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">৳</span>
                                             <FormControl>
                                                 <Input type="number" placeholder="0.00" className="pl-8" {...field} />
                                             </FormControl>
@@ -234,5 +234,3 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         </Dialog>
     );
 }
-
-    
