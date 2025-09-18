@@ -145,7 +145,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             console.error("Failed to load products from server:", error);
             toast({ variant: 'destructive', title: 'Database Error', description: 'Could not connect to the database.' });
         }
-    }, [toast]);
+    }, []);
 
     useEffect(() => {
         async function loadAllData() {
