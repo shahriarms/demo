@@ -66,15 +66,6 @@ export default function InvoicePage() {
   
   const [draftToDelete, setDraftToDelete] = useState<DraftInvoice | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
-  const [pendingPrint, setPendingPrint] = useState(false);
-
-  const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [subCategoryFilter, setSubCategoryFilter] = useState('');
-
-  const [categorySearch, setCategorySearch] = useState('');
-  const [subCategorySearch, setSubCategorySearch] = useState('');
-  const [productSearch, setProductSearch] = useState('');
   
   const { id: draftId, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount, items } = activeDraft || {};
 
@@ -94,27 +85,19 @@ export default function InvoicePage() {
      if (!validateInvoice() || !activeDraft) return;
 
      setIsPrinting(true);
-     setPendingPrint(true);
-     // Trigger the print dialog via state change and useEffect
+     window.print();
   };
-  
-  useEffect(() => {
-    if (pendingPrint) {
-        window.print();
-        setPendingPrint(false); // Reset pending state
-    }
-  }, [pendingPrint]);
-
 
   useEffect(() => {
     const handleBeforePrint = () => {
         setIsPrinting(true);
+        // Set a timer to detect print cancellation
         printCancelTimer.current = setTimeout(() => {
             if (isPrinting) {
                 toast({ variant: 'destructive', title: 'Print Cancelled', description: 'Invoice was not saved.' });
                 setIsPrinting(false);
             }
-        }, 1000); // 1-second timer to detect cancellation
+        }, 1000); 
     };
 
     const handleAfterPrint = async () => {
@@ -156,7 +139,14 @@ export default function InvoicePage() {
     };
   }, [isPrinting, activeDraft, saveAndPrintInvoice, resetActiveDraft, toast, t]);
 
+  const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [subCategoryFilter, setSubCategoryFilter] = useState('');
 
+  const [categorySearch, setCategorySearch] = useState('');
+  const [subCategorySearch, setSubCategorySearch] = useState('');
+  const [productSearch, setProductSearch] = useState('');
+  
   const resetFilters = () => {
     setCategoryFilter('');
     setSubCategoryFilter('');
@@ -340,12 +330,12 @@ export default function InvoicePage() {
                                     <p className='text-xs text-muted-foreground'>Suggested: ৳{(item.originalPrice || 0).toFixed(2)}</p>
                                 </TableCell>
                                 <TableCell>
-                                    <Input type="number" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
+                                    <Input type="text" inputMode="decimal" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
                                 </TableCell>
                                 <TableCell className="hidden sm:table-cell">
                                      <div className="relative flex items-center">
                                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">৳</span>
-                                         <Input type="number" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium h-9" />
+                                         <Input type="text" inputMode="decimal" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium h-9" />
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-right font-semibold">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
@@ -362,27 +352,28 @@ export default function InvoicePage() {
                 </Table>
             </ScrollArea>
         </CardContent>
-        <CardFooter className="flex-col items-end space-y-2 pt-4">
-            <div className="w-full md:w-64 space-y-2">
-               <div className="flex justify-between text-sm">
-                   <span>{t('subtotal_label')}</span>
+        <CardFooter className="flex-col items-stretch space-y-2 pt-4">
+            <div className="w-full md:w-80 ml-auto space-y-2">
+               <div className="flex justify-between items-center text-sm">
+                   <span className='text-muted-foreground'>{t('subtotal_label')}</span>
                    <span className="font-medium">৳{subtotal.toFixed(2)}</span>
                </div>
                <div className="flex justify-between items-center text-sm">
-                   <Label htmlFor='paidAmount' className="shrink-0">{t('paid_label')}</Label>
-                   <div className="relative w-28">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">৳</span>
+                   <Label htmlFor='paidAmount' className="shrink-0 text-muted-foreground">{t('paid_label')}</Label>
+                   <div className="relative w-32">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
                         <Input 
                             id='paidAmount' 
-                            type="number" 
+                            type="text"
+                            inputMode='decimal'
                             value={paidAmount || ''} 
                             onChange={e => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || 0 })} 
-                            className="h-8 pl-5 text-right font-medium"
+                            className="h-9 pl-5 text-right font-medium"
                             placeholder='0'
                         />
                    </div>
                </div>
-               <div className="flex justify-between font-bold text-base">
+               <div className="flex justify-between items-center font-bold text-base border-t pt-2 mt-2">
                    <span>{t('due_label')}</span>
                    <span>৳{dueAmount.toFixed(2)}</span>
                </div>
@@ -509,5 +500,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    

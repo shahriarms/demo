@@ -265,7 +265,7 @@ export default function BuyersDuePage() {
                         <div className="flex flex-col sm:flex-row items-center gap-2">
                             <div className="relative flex-1 w-full">
                                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">৳</span>
-                                <Input type="number" placeholder={t('enter_amount_placeholder')} className="pl-8" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : parseFloat(e.target.value))} disabled={isProcessing} />
+                                <Input type="text" inputMode="decimal" placeholder={t('enter_amount_placeholder')} className="pl-8" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : parseFloat(e.target.value))} disabled={isProcessing} />
                             </div>
                             <Button onClick={handleProcessPayment} className="w-full sm:w-auto" disabled={isProcessing || buttonState.disabled}>
                                 {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}

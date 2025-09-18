@@ -198,7 +198,8 @@ export default function SalariesPage() {
                         <div className="relative">
                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">৳</span>
                             <Input 
-                                type="number" 
+                                type="text"
+                                inputMode="decimal"
                                 placeholder={t('enter_amount_to_pay_placeholder')}
                                 className="pl-8"
                                 value={paymentAmount}

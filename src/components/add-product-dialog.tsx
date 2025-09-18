@@ -210,7 +210,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   <FormItem>
                     <FormLabel>{t('initial_stock_label')} ({mainCategory === 'Material' ? 'kg' : 'pcs'})</FormLabel>
                     <FormControl>
-                      <Input type="number" step="1" placeholder="100" {...field} value={field.value ?? ''} />
+                      <Input type="text" inputMode="decimal" placeholder="100" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -223,7 +223,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 <FormItem>
                     <FormLabel>{t('buying_price_label')}</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="10.50" {...field} value={field.value ?? ''} />
+                    <Input type="text" inputMode="decimal" placeholder="10.50" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -236,7 +236,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 <FormItem>
                     <FormLabel>{t('profit_margin_label')}</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="15" {...field} value={field.value ?? ''} />
+                    <Input type="text" inputMode="decimal" placeholder="15" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -249,7 +249,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     <FormItem className="col-span-2">
                         <FormLabel>{t('selling_price_label')}</FormLabel>
                         <FormControl>
-                             <Input type="number" {...field} readOnly className="bg-muted font-bold" value={field.value ?? ''} />
+                             <Input type="text" inputMode="decimal" {...field} readOnly className="bg-muted font-bold" value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
