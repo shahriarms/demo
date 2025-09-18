@@ -44,6 +44,8 @@ interface AppDataContextType {
     updateInvoiceDue: (invoiceId: string, amountPaid: number) => void;
     getInvoicesForBuyer: (buyerId: string) => Invoice[];
     getInvoicesForDateRange: (startDate: Date, endDate: Date) => Invoice[];
+    getGrossProfitForDateRange: (invoices: Invoice[]) => number;
+
 
     // Payment Functions
     addPayment: (payment: Omit<Payment, 'id' | 'date'>) => void;
@@ -304,6 +306,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
             return isWithinInterval(invDate, { start, end });
         });
     }, [invoices]);
+    
+    const getGrossProfitForDateRange = useCallback((invoicesInRange: Invoice[]) => {
+        let totalProfit = 0;
+        const productMap = new Map(products.map(p => [p.id, p]));
+
+        for (const invoice of invoicesInRange) {
+            for (const item of invoice.items) {
+                const product = productMap.get(item.id);
+                if (product) {
+                    const profitPerUnit = item.price - product.buyingPrice;
+                    totalProfit += profitPerUnit * item.quantity;
+                }
+            }
+        }
+        return totalProfit;
+    }, [products]);
+
 
     const addPayment = useCallback((paymentData: Omit<Payment, 'id' | 'date'>) => {
         const newPayment: Payment = { ...paymentData, id: `pay-${Date.now()}`, date: new Date().toISOString() };
@@ -409,7 +428,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const value = useMemo(() => ({
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
-        saveAndPrintInvoice, updateInvoiceDue, getInvoicesForBuyer, getInvoicesForDateRange,
+        saveAndPrintInvoice, updateInvoiceDue, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate,
@@ -417,7 +436,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }), [
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
-        saveAndPrintInvoice, updateInvoiceDue, getInvoicesForBuyer, getInvoicesForDateRange,
+        saveAndPrintInvoice, updateInvoiceDue, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate,
@@ -438,3 +457,5 @@ export function useAppData() {
     }
     return context;
 }
+
+    

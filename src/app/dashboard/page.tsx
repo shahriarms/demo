@@ -34,7 +34,7 @@ const initialDateRange: DateRange = {
 };
 
 export default function Dashboard() {
-  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, isAppDataLoading: isLoading } = useAppData();
+  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading } = useAppData();
   const { t } = useTranslation();
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(initialDateRange);
@@ -44,7 +44,6 @@ export default function Dashboard() {
   const [rangeSalaries, setRangeSalaries] = useState<any[]>([]);
   const [todayInvoices, setTodayInvoices] = useState<any[]>([]);
   const [todayExpenses, setTodayExpenses] = useState<any[]>([]);
-  const [todaySalaries, setTodaySalaries] = useState<any[]>([]);
   
   const [isDailySalesReportOpen, setDailySalesReportOpen] = useState(false);
   const [isDailyExpensesReportOpen, setDailyExpensesReportOpen] = useState(false);
@@ -67,7 +66,6 @@ export default function Dashboard() {
       const today = new Date();
       setTodayInvoices(getInvoicesForDateRange(today, today));
       setTodayExpenses(getExpensesForDateRange(today, today));
-      setTodaySalaries(getSalaryPaymentsForDateRange(today, today));
      }
   }, [isLoading, dateRange, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange]);
 
@@ -76,21 +74,24 @@ export default function Dashboard() {
     const totalSales = rangeInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
     const totalExpenses = rangeExpenses.reduce((sum, exp) => sum + exp.amount, 0);
     const totalSalaryPaid = rangeSalaries.reduce((sum, sal) => sum + sal.amount, 0);
-    const profit = totalSales - totalExpenses - totalSalaryPaid;
+    const grossProfit = getGrossProfitForDateRange(rangeInvoices);
+    const profit = grossProfit - totalExpenses - totalSalaryPaid;
     const totalDue = rangeInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
     const unitsSold = rangeInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
     return { totalSales, totalExpenses, totalSalaryPaid, profit, totalDue, unitsSold };
-  }, [rangeInvoices, rangeExpenses, rangeSalaries]);
+  }, [rangeInvoices, rangeExpenses, rangeSalaries, getGrossProfitForDateRange]);
   
   const todayStats = useMemo(() => {
       const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
       const totalExpenses = todayExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-      const totalSalaryPaid = todaySalaries.reduce((sum, sal) => sum + sal.amount, 0);
-      const profit = totalSales - totalExpenses - totalSalaryPaid;
+      const grossProfit = getGrossProfitForDateRange(todayInvoices);
+      // Note: today's salary payments are not typically considered in daily profit, but could be.
+      // For simplicity, we only subtract general expenses for daily profit.
+      const profit = grossProfit - totalExpenses;
       const totalDue = todayInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
       const unitsSold = todayInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
       return { totalSales, totalExpenses, profit, totalDue, unitsSold };
-  }, [todayInvoices, todayExpenses, todaySalaries]);
+  }, [todayInvoices, todayExpenses, getGrossProfitForDateRange]);
   
   const { salesChartData, expensesChartData } = useMemo(() => {
     if (!dateRange?.from || !dateRange?.to) return { salesChartData: [], expensesChartData: [] };
@@ -247,7 +248,7 @@ export default function Dashboard() {
                       <div className={`text-2xl font-bold ${todayStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           ৳{todayStats.profit.toFixed(2)}
                       </div>
-                      <p className="text-xs text-muted-foreground">Sales - (Expenses + Salaries)</p>
+                      <p className="text-xs text-muted-foreground">Sales - Expenses</p>
                   </CardContent>
                 </Card>
             </div>
@@ -315,7 +316,7 @@ export default function Dashboard() {
                   <div className={`text-2xl font-bold ${rangeStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       ৳{rangeStats.profit.toFixed(2)}
                   </div>
-                  <p className="text-xs text-muted-foreground">Sales - (Expenses + Salaries)</p>
+                  <p className="text-xs text-muted-foreground">Gross Profit - (Expenses + Salaries)</p>
                 </CardContent>
               </Card>
             </div>
@@ -421,3 +422,5 @@ export default function Dashboard() {
     </>
   );
 }
+
+    
