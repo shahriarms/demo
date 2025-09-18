@@ -19,6 +19,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from '
 import { useTranslation } from '@/hooks/use-translation';
 import { DailySalesDialog } from '@/components/daily-sales-report-dialog';
 import { DailyExpensesReportDialog } from '@/components/daily-expenses-report-dialog';
+import { DailyDueReportDialog } from '@/components/daily-due-report-dialog';
 
 
 export default function Dashboard() {
@@ -35,6 +36,7 @@ export default function Dashboard() {
   
   const [isSalesReportDialogOpen, setSalesReportDialogOpen] = useState(false);
   const [isExpensesReportDialogOpen, setExpensesReportDialogOpen] = useState(false);
+  const [isDueReportDialogOpen, setDueReportDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
@@ -153,7 +155,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card as="button" onClick={() => setDueReportDialogOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('todays_due_card_title')}</CardTitle>
                   <HandCoins className="h-4 w-4 text-muted-foreground" />
@@ -272,6 +274,11 @@ export default function Dashboard() {
         open={isExpensesReportDialogOpen}
         onOpenChange={setExpensesReportDialogOpen}
         expenses={todayExpenses}
+      />
+      <DailyDueReportDialog
+        open={isDueReportDialogOpen}
+        onOpenChange={setDueReportDialogOpen}
+        invoices={todayInvoices}
       />
     </>
   );
