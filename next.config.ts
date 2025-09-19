@@ -14,8 +14,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
   },
   experimental: {
-    allowedDevOrigins: ["*.cloudworkstations.dev"],
+    // allowedDevOrigins has been moved to top-level
   },
+  allowedDevOrigins: ["*.cloudworkstations.dev"],
 };
 
 export default nextConfig;
