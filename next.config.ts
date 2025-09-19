@@ -13,9 +13,6 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
-  experimental: {
-    // allowedDevOrigins has been moved to top-level
-  },
   allowedDevOrigins: ["*.cloudworkstations.dev"],
 };
 
