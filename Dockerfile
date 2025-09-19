@@ -1,5 +1,6 @@
-
+#
 # 1. Builder stage: Build the Next.js application
+#
 FROM node:18-alpine AS builder
 WORKDIR /app
 
@@ -7,7 +8,7 @@ WORKDIR /app
 COPY package.json ./
 COPY package-lock.json ./
 
-# Install dependencies with retries for network resilience
+# Install dependencies with retries for network reliability
 RUN npm install --fetch-retries=5
 
 # Copy the rest of the application source code
@@ -16,7 +17,9 @@ COPY . .
 # Build the Next.js application for production
 RUN npm run build
 
+#
 # 2. Runner stage: Create the final, optimized image
+#
 FROM node:18-alpine AS runner
 WORKDIR /app
 
@@ -39,6 +42,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Copy the scripts directory needed for db:setup
 COPY --from=builder /app/scripts ./scripts
+
+# Copy node_modules needed for the db:setup script
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 
 # Change ownership of the entire /app directory to the 'nextjs' user
 USER nextjs
