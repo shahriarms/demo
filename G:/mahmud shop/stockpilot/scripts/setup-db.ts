@@ -103,7 +103,8 @@ async function setupDatabase() {
     console.log('✅ Connected to the database successfully.');
 
     for (const query of tableCreationQueries) {
-      const tableName = query.split('TABLE')[1].split('(')[0].trim().replace('IF EXISTS', '').trim();
+      const tableNameMatch = query.match(/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?(\w+)/);
+      const tableName = tableNameMatch ? tableNameMatch[1] : 'unknown table';
       await client.query(query);
       console.log(`✅ Table '${tableName}' created successfully.`);
     }
