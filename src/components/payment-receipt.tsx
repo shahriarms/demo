@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -31,8 +32,8 @@ export const PaymentReceipt = React.forwardRef<HTMLDivElement, PaymentReceiptPro
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold text-primary">পেমেন্ট রশিদ (Payment Receipt)</h1>
               <h2 className="text-xl font-bold">মাহমুদ ইঞ্জিনিয়ারিং শপ</h2>
-              <p className="text-xs">এখানে ওয়েডিং, জিন, শিট সহ সকল প্রকার ওয়র্কশপ এর মালামাল এবং ফার্নিচার সামগ্রি বিক্রয় করা হয়।</p>
-              <p className="text-xs">Email: engmahmud.mm@gmail.com</p>
+              <p className="text-xs">এখানে এঙ্গেল, পাতি, স্কয়ারবার, শিট সহ সর্বপ্রকার ওয়ার্কশপ এর মালামাল এবং গ্রাইভিং মেশিন, ওয়েলডিং মেশিন, ড্রিল মেশিন, হাই স্পিড কাটার ও যন্ত্রপাতি বিক্রয় করা হয়।</p>
+              <p className="text-xs">E-mail: engmahmud.mmm@gmail.com</p>
             </div>
             <div className="flex justify-between border-b pb-2 mb-4">
               <span>ক্রঃ নং (Inv No): {invoice.id}</span>

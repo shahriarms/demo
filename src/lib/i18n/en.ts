@@ -148,7 +148,7 @@ export const en = {
     // Print Layout
     'memo_title': 'Cash Memo',
     'shop_name': 'Mahmud Engineering Shop',
-    'shop_description': 'All kinds of workshop materials and furniture items including wedding, gin, sheet are sold here.',
+    'shop_description': 'We sell all kinds of workshop materials like angles, bars, sheets, and tools like grinding, welding, drill machines. Owner: 01775-163853, Manager: 01874-396158',
     'item_header': 'Item',
     'quantity_header': 'Qty',
     'rate_header': 'Rate',

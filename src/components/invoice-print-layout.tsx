@@ -145,7 +145,7 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
                     <h1 style={h1Styles}>{t('memo_title')}</h1>
                     <h2 style={h2Styles}>{t('shop_name')}</h2>
                     <p className={cn(isBn ? 'font-bangla' : '', isPos ? 'text-xs' : '')} style={{ margin: '0.25rem 0' }}>{t('shop_description')}</p>
-                    <p style={{ margin: '0.25rem 0', fontSize: isPos ? '10px' : '12px' }}>Email: engmahmud.mm@gmail.com</p>
+                    <p style={{ margin: '0.25rem 0', fontSize: isPos ? '10px' : '12px' }}>Email: engmahmud.mmm@gmail.com</p>
                 </header>
                 
                 <div style={customerDetailsStyles}>
@@ -222,5 +222,3 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
 );
 
 InvoicePrintLayout.displayName = 'InvoicePrintLayout';
-
-    
