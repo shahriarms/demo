@@ -191,7 +191,7 @@ export default function BuyersDuePage() {
 
   return (
     <>
-      <div className="flex flex-col h-full gap-4">
+      <div className="flex flex-col h-full gap-4 no-print">
         <h1 className="text-2xl font-semibold flex items-center gap-2 no-print">
           <HandCoins className="w-6 h-6" />
           {t('buyers_due_page_title')}
@@ -311,18 +311,6 @@ export default function BuyersDuePage() {
                   </div>
                   <div className="p-6 pt-2 flex-1">
                       <div className="bg-background">
-                           {/* This div is for printing the last successful transaction */}
-                          <div className="print-source" ref={componentToPrintRef}>
-                            {lastSuccessfulPayment && (
-                                <PaymentReceipt
-                                    buyer={lastSuccessfulPayment.buyer}
-                                    invoice={lastSuccessfulPayment.invoice}
-                                    paymentHistory={paymentHistoryForReceipt}
-                                    newPaymentAmount={lastSuccessfulPayment.payment.amount}
-                                />
-                            )}
-                          </div>
-
                            {/* This is for on-screen preview only */}
                            <div className="no-print">
                             {(selectedBuyer && selectedInvoice) ? (
@@ -345,6 +333,16 @@ export default function BuyersDuePage() {
               </div>
           </Card>
         </div>
+      </div>
+      <div className="print-source">
+        {lastSuccessfulPayment && (
+            <PaymentReceipt
+                buyer={lastSuccessfulPayment.buyer}
+                invoice={lastSuccessfulPayment.invoice}
+                paymentHistory={paymentHistoryForReceipt}
+                newPaymentAmount={lastSuccessfulPayment.payment.amount}
+            />
+        )}
       </div>
       <AlertDialog open={isConfirmingPayment} onOpenChange={setConfirmingPayment}>
           <AlertDialogContent>
@@ -372,4 +370,3 @@ export default function BuyersDuePage() {
     </>
   );
 }
-

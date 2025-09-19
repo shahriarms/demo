@@ -224,7 +224,8 @@ export default function InvoicePage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <>
+    <div className="flex flex-col gap-4 no-print">
         {/* Memo Tabs */}
         <div className="flex items-center gap-2 border-b pb-2 flex-wrap no-print">
             {drafts.map((draft, index) => (
@@ -375,7 +376,7 @@ export default function InvoicePage() {
           </div>
 
           {/* Column 2: Invoice Items */}
-          <Card className="flex flex-col">
+          <Card className="lg:col-span-2 flex flex-col">
             <CardHeader>
                 <CardTitle>Invoice Items</CardTitle>
             </CardHeader>
@@ -447,37 +448,11 @@ export default function InvoicePage() {
                        <span>৳{(dueAmount ?? 0).toFixed(2)}</span>
                    </div>
                 </div>
-            </CardFooter>
-          </Card>
-          
-          {/* Column 3: Live Print Preview */}
-          <Card className="flex flex-col">
-           <CardHeader className="flex-row items-center justify-between no-print">
-               <CardTitle>{t('live_print_preview_title')}</CardTitle>
-               <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isPrinting}>
+                <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isPrinting}>
                     {isPrinting ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
                     {isPrinting ? 'Printing...' : t('save_and_print_button')}
                 </Button>
-           </CardHeader>
-           <CardContent className="flex-1 p-0 sm:p-4 bg-muted/50">
-                <ScrollArea className="h-full">
-                    <div ref={componentToPrintRef} className="print-area">
-                        <InvoicePrintLayout 
-                            invoiceId={draftId}
-                            currentDate={new Date().toLocaleDateString()}
-                            customerName={customerName}
-                            customerAddress={customerAddress}
-                            customerPhone={customerPhone}
-                            invoiceItems={items}
-                            subtotal={subtotal}
-                            paidAmount={paidAmount || 0}
-                            dueAmount={dueAmount}
-                            printFormat={settings.printFormat}
-                            locale={settings.locale}
-                        />
-                    </div>
-                </ScrollArea>
-           </CardContent>
+            </CardFooter>
           </Card>
         </div>
 
@@ -514,5 +489,21 @@ export default function InvoicePage() {
         </AlertDialog>
 
     </div>
+    <div className="print-source">
+        <InvoicePrintLayout 
+            invoiceId={draftId}
+            currentDate={new Date().toLocaleDateString()}
+            customerName={customerName}
+            customerAddress={customerAddress}
+            customerPhone={customerPhone}
+            invoiceItems={items}
+            subtotal={subtotal}
+            paidAmount={paidAmount || 0}
+            dueAmount={dueAmount}
+            printFormat={settings.printFormat}
+            locale={settings.locale}
+        />
+    </div>
+    </>
   );
 }

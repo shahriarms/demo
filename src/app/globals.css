@@ -79,25 +79,22 @@
 @media print {
   body {
     -webkit-print-color-adjust: exact !important;
-    color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
-  .print-area, .print-area * {
-    visibility: visible !important;
+  
+  body > *:not(.print-source) {
+    display: none !important;
   }
-  .print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: auto;
-  }
-  body > *:not(.print-area) {
-    visibility: hidden;
-  }
+  
   .print-source {
-     visibility: visible !important;
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
   }
-  .no-print, .no-print * {
+
+  .no-print {
       display: none !important;
   }
 }
