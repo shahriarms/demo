@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:setup": "tsx scripts/setup-db.ts"
+    "db:setup": "docker exec stockpilot_app npm run db:setup:internal",
+    "db:setup:internal": "tsx scripts/setup-db.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
