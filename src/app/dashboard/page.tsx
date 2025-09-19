@@ -23,8 +23,8 @@ import { DailyDueReportDialog } from '@/components/daily-due-report-dialog';
 import { DailyUnitsSoldReportDialog } from '@/components/daily-units-sold-report-dialog';
 import { MonthlySalesDialog } from '@/components/monthly-sales-report-dialog';
 import { MonthlyExpensesDialog } from '@/components/monthly-expenses-report-dialog';
-import { MonthlyDueDialog } from '@/components/monthly-due-report-dialog';
-import { MonthlyUnitsSoldDialog } from '@/components/monthly-units-sold-report-dialog';
+import { MonthlyDueReportDialog } from '@/components/monthly-due-report-dialog';
+import { MonthlyUnitsSoldReportDialog } from '@/components/monthly-units-sold-report-dialog';
 import { MonthlySalaryReportDialog } from '@/components/monthly-salary-report-dialog';
 import type { DateRange } from 'react-day-picker';
 
@@ -354,7 +354,7 @@ export default function Dashboard() {
               <CardHeader>
                   <CardTitle>Daily Expenses for {rangeTitle}</CardTitle>
                   <CardDescription>Showing expense data for each day of the range.</CardDescription>
-              </Header>
+              </CardHeader>
               <CardContent>
                   <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
                       <BarChart data={expensesChartData}>
@@ -406,13 +406,13 @@ export default function Dashboard() {
         expenses={rangeExpenses}
         dateRange={dateRange}
       />
-      <MonthlyDueDialog
+      <MonthlyDueReportDialog
         open={isMonthlyDueReportOpen}
         onOpenChange={setMonthlyDueReportOpen}
         invoices={rangeInvoices}
         dateRange={dateRange}
       />
-      <MonthlyUnitsSoldDialog
+      <MonthlyUnitsSoldReportDialog
         open={isMonthlyUnitsSoldReportOpen}
         onOpenChange={setMonthlyUnitsSoldReportOpen}
         invoices={rangeInvoices}
