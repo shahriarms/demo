@@ -261,6 +261,7 @@ export default function Dashboard() {
             </div>
         </div>
 
+        {/* Date Range Summary Cards */}
         <div>
             <h2 className="text-lg font-semibold mb-4">Date Range Summary ({rangeTitle})</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
@@ -372,6 +373,8 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Daily Report Dialogs */}
       <DailySalesDialog
         open={isDailySalesReportOpen}
         onOpenChange={setDailySalesReportOpen}
@@ -394,6 +397,7 @@ export default function Dashboard() {
         products={products}
       />
 
+      {/* Monthly/Date Range Report Dialogs */}
       <MonthlySalesDialog
         open={isMonthlySalesReportOpen}
         onOpenChange={setMonthlySalesReportOpen}
