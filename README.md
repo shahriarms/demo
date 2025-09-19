@@ -79,15 +79,35 @@ That's it! Now, whenever you log in to your PC, Docker will start automatically,
 
 ---
 
-## Database Backup and Restore (ডেটাবেস ব্যাকআপ এবং পুনরুদ্ধার)
+## Database Management (ডেটাবেস পরিচালনা)
 
-Your data is valuable. Here’s how to back it up and restore it using both pgAdmin and the command line.
+Your data is valuable. Here’s how to interact with, back up, and restore your database.
 
-### Option 1: Using pgAdmin (Graphical Interface)
+### Accessing the Database via CLI (psql)
+
+For developers who prefer the command line, `psql` is a powerful tool for interacting with your PostgreSQL database. It is already included in your database container.
+
+To open an interactive `psql` session, run the following command in your terminal:
+
+```bash
+docker exec -it stockpilot_db psql -U user -d stockpilot_db
+```
+
+This command does the following:
+- `docker exec`: Executes a command inside a running container.
+- `-it`: Runs the command in interactive mode, connecting your terminal to the container's terminal.
+- `stockpilot_db`: The name of your database container.
+- `psql -U user -d stockpilot_db`: The command to run inside the container, which starts `psql` with username `user` connected to the `stockpilot_db` database.
+
+You will now have a `psql` prompt (e.g., `stockpilot_db=>`) where you can run SQL queries directly (e.g., `SELECT * FROM products;`). Type `\q` to exit.
+
+### Backup and Restore
+
+#### Option 1: Using pgAdmin (Graphical Interface)
 
 This is the easiest method for most users.
 
-#### How to Connect to Your Database in pgAdmin:
+**How to Connect to Your Database in pgAdmin:**
 1.  Open pgAdmin at [http://localhost:8080](http://localhost:8080) and log in.
 2.  Right-click on **Servers** -> **Create** -> **Server...**.
 3.  In the **General** tab, give it a name (e.g., `StockPilot Docker DB`).
@@ -99,7 +119,7 @@ This is the easiest method for most users.
     - **Password**: `password`
 5.  Click **Save**. You should now see your `stockpilot_db` database in the sidebar.
 
-#### Backing Up with pgAdmin:
+**Backing Up with pgAdmin:**
 1.  In the pgAdmin browser, expand **Servers** -> **StockPilot Docker DB** -> **Databases**.
 2.  Right-click on the `stockpilot_db` database.
 3.  Select **Backup...**.
@@ -107,7 +127,7 @@ This is the easiest method for most users.
 5.  **Format**: Select **Plain**.
 6.  Click the **Backup** button. A `.sql` file will be saved to your specified location.
 
-#### Restoring with pgAdmin:
+**Restoring with pgAdmin:**
 **Important:** Restoring will overwrite the current database.
 1.  First, it's safest to drop and re-create the database. Right-click `stockpilot_db` and select **Delete/Drop**.
 2.  Then, right-click **Databases** -> **Create** -> **Database...** and create a new database named `stockpilot_db` (owner should be `user`).
@@ -119,11 +139,11 @@ This is the easiest method for most users.
 
 ---
 
-### Option 2: Using Command Line (`pg_dump` & `psql`)
+#### Option 2: Using Command Line (`pg_dump` & `psql`)
 
 This method is faster and great for automation. These commands should be run from your host machine's terminal.
 
-#### Backing Up with CLI:
+**Backing Up with CLI:**
 This single command connects to the running Docker container and executes `pg_dump` to create a backup file on your desktop.
 
 ```bash
@@ -134,7 +154,7 @@ docker exec -t stockpilot_db pg_dump -U user -d stockpilot_db > backup.sql
 ```
 This will create a `backup.sql` file in your current directory.
 
-#### Restoring with CLI:
+**Restoring with CLI:**
 This command pushes the `backup.sql` file into the `psql` command inside the Docker container, restoring the database.
 
 **First, drop the public schema to start fresh:**
