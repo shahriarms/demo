@@ -206,6 +206,7 @@ export default function Dashboard() {
         <div>
             <h2 className="text-lg font-semibold mb-4">Today's Summary</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                {/* Card for Today's Sales */}
                 <Card as="button" onClick={() => setDailySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('todays_sales_card_title')}</CardTitle>
@@ -216,6 +217,7 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
                   </CardContent>
                 </Card>
+                {/* Card for Today's Expenses */}
                 <Card as="button" onClick={() => setDailyExpensesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{"Today's Expenses"}</CardTitle>
@@ -226,6 +228,7 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
                   </CardContent>
                 </Card>
+                 {/* Card for Today's Due */}
                 <Card as="button" onClick={() => setDailyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('todays_due_card_title')}</CardTitle>
@@ -236,6 +239,7 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
                   </CardContent>
                 </Card>
+                 {/* Card for Units Sold Today */}
                 <Card as="button" onClick={() => setDailyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('units_sold_today_card_title')}</CardTitle>
@@ -246,6 +250,7 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{t('total_items_footer')}</p>
                   </CardContent>
                 </Card>
+                {/* Card for Today's Profit */}
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Today's Profit</CardTitle>
@@ -265,6 +270,7 @@ export default function Dashboard() {
         <div>
             <h2 className="text-lg font-semibold mb-4">Date Range Summary ({rangeTitle})</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+              {/* Card for Monthly Sales */}
               <Card as="button" onClick={() => setMonthlySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('monthly_sales_card_title')}</CardTitle>
@@ -275,6 +281,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{rangeInvoices.length} invoices in range</p>
                 </CardContent>
               </Card>
+              {/* Card for Monthly Expenses */}
               <Card as="button" onClick={() => setMonthlyExpensesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('monthly_expenses_card_title')}</CardTitle>
@@ -285,6 +292,7 @@ export default function Dashboard() {
                    <p className="text-xs text-muted-foreground">{rangeExpenses.length} entries in range</p>
                 </CardContent>
               </Card>
+              {/* Card for Salary Paid */}
                <Card as="button" onClick={() => setMonthlySalaryReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Salary Paid</CardTitle>
@@ -295,6 +303,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{rangeSalaries.length} salary payments</p>
                 </CardContent>
               </Card>
+              {/* Card for Total Due */}
                <Card as="button" onClick={() => setMonthlyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Due</CardTitle>
@@ -305,6 +314,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">Outstanding from this range</p>
                 </CardContent>
               </Card>
+              {/* Card for Total Units Sold */}
                <Card as="button" onClick={() => setMonthlyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Units Sold</CardTitle>
@@ -315,6 +325,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">Total items sold in range</p>
                 </CardContent>
               </Card>
+              {/* Card for Profit */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('profit_card_title')}</CardTitle>

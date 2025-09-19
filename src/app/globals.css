@@ -81,11 +81,8 @@
     -webkit-print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
-  body * {
-    visibility: hidden;
-  }
   .print-area, .print-area * {
-    visibility: visible;
+    visibility: visible !important;
   }
   .print-area {
     position: absolute;
@@ -94,6 +91,9 @@
     width: 100%;
     height: auto;
   }
+  body > *:not(.print-area) {
+    visibility: hidden;
+  }
   .print-source {
      visibility: visible !important;
   }
@@ -101,10 +101,3 @@
       display: none !important;
   }
 }
-
-@page {
-  size: A4;
-  margin: 0;
-}
-
-    
