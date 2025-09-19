@@ -43,7 +43,7 @@ interface InvoiceFormContextType {
 
 const InvoiceFormContext = createContext<InvoiceFormContextType | undefined>(undefined);
 
-const createNewDraft = (index: number = 0, lastInvoiceId: number, isLoading: boolean): DraftInvoice => {
+const createNewDraft = (index: number, lastInvoiceId: number, isLoading: boolean): DraftInvoice => {
     let id: number | string;
     let label: string;
 
@@ -91,17 +91,30 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
 
     // Initialize state on first load or when data is ready
     useEffect(() => {
+        if (isAppDataLoading) return; // Wait until data is loaded
+        
         try {
             const savedDrafts = localStorage.getItem(STORAGE_KEYS.invoiceDrafts);
             const savedIndex = localStorage.getItem(STORAGE_KEYS.activeInvoiceDraftIndex);
 
             if (savedDrafts) {
-                const parsedDrafts = JSON.parse(savedDrafts);
+                let parsedDrafts: DraftInvoice[] = JSON.parse(savedDrafts);
                 if (Array.isArray(parsedDrafts) && parsedDrafts.length > 0) {
-                    setDrafts(parsedDrafts);
+                    
+                    // ** FIX: Correct any malformed draft IDs from previous sessions **
+                    const correctedDrafts = parsedDrafts.map((draft, index) => {
+                        if (typeof draft.id === 'string' && draft.id.startsWith('draft-')) {
+                            const newId = lastInvoiceId + index + 1;
+                            return { ...draft, id: newId, label: `Memo #${newId}` };
+                        }
+                        return draft;
+                    });
+                    
+                    setDrafts(correctedDrafts);
+                    
                     if (savedIndex) {
                         const parsedIndex = JSON.parse(savedIndex);
-                        if (parsedIndex < parsedDrafts.length) {
+                        if (parsedIndex < correctedDrafts.length) {
                             setActiveDraftIndex(parsedIndex);
                         }
                     }
@@ -113,22 +126,22 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         }
 
         // If no saved state, create a new draft
-        if (!isAppDataLoading && drafts.length === 0) {
-            setDrafts([createNewDraft(0, lastInvoiceId, isAppDataLoading)]);
-        }
+        setDrafts([createNewDraft(0, lastInvoiceId, isAppDataLoading)]);
 
     }, [isAppDataLoading, lastInvoiceId]);
 
 
     // Save state to localStorage whenever it changes
     useEffect(() => {
-        try {
-            localStorage.setItem(STORAGE_KEYS.invoiceDrafts, JSON.stringify(drafts));
-            localStorage.setItem(STORAGE_KEYS.activeInvoiceDraftIndex, JSON.stringify(activeDraftIndex));
-        } catch (error) {
-            console.error("Failed to save invoice form state to localStorage", error);
+        if (drafts.length > 0 && !isAppDataLoading) {
+            try {
+                localStorage.setItem(STORAGE_KEYS.invoiceDrafts, JSON.stringify(drafts));
+                localStorage.setItem(STORAGE_KEYS.activeInvoiceDraftIndex, JSON.stringify(activeDraftIndex));
+            } catch (error) {
+                console.error("Failed to save invoice form state to localStorage", error);
+            }
         }
-    }, [drafts, activeDraftIndex]);
+    }, [drafts, activeDraftIndex, isAppDataLoading]);
     
     const activeDraft = useMemo(() => drafts[activeDraftIndex] || null, [drafts, activeDraftIndex]);
     
