@@ -3,22 +3,17 @@ import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 
-// Load environment variables from .env.local
-dotenv.config({ path: resolve(process.cwd(), '.env.local') });
-
-const connectionString = process.env.POSTGRES_URL;
-
-if (!connectionString) {
-  console.error('🔴 Error: POSTGRES_URL environment variable is not set.');
-  console.error('Please create a .env.local file and add your database connection string.');
-  process.exit(1);
-}
+// This script is intended to be run from the host machine to set up the DB inside the Docker container.
+// Therefore, it should always connect to localhost.
+// The docker-compose.yml file maps the host's port 5432 to the container's port 5432.
+const connectionString = 'postgresql://user:password@localhost:5432/stockpilot_db';
 
 const pool = new Pool({
   connectionString,
 });
 
 async function setupDatabase() {
+  console.log('🔵 Attempting to connect to the database at localhost:5432...');
   const client = await pool.connect();
   console.log('✅ Connected to the database.');
 
@@ -53,6 +48,7 @@ async function setupDatabase() {
   } catch (err) {
     if (err instanceof Error) {
         console.error('🔴 Error setting up the database:', err.stack);
+        console.error('\n🔴 Please ensure the Docker containers are running (`docker-compose up -d`).');
     } else {
         console.error('🔴 An unknown error occurred:', err);
     }
