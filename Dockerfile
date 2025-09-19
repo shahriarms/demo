@@ -1,49 +1,36 @@
-# Stage 1: Install dependencies
-FROM node:18-alpine AS deps
-WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
+# 1. Base Image
+FROM node:18-alpine AS base
+
+# 2. Builder Stage
+FROM base AS builder
+# Set working directory
+WORKDIR /app
+# Install dependencies
 COPY package.json ./
-# Use npm install which is more flexible than npm ci and doesn't require a lock file
+COPY package-lock.json ./
 RUN npm install
-
-# Stage 2: Build the application
-FROM node:18-alpine AS builder
-WORKDIR /app
-
-# Copy installed dependencies from the 'deps' stage
-COPY --from=deps /app/node_modules ./node_modules
-# Copy the rest of the application code
+# Copy source files
 COPY . .
-
-# Set Next.js telemetry to disabled
-ENV NEXT_TELEMETRY_DISABLED 1
-
-# Build the Next.js application for production
+# Build the Next.js app
 RUN npm run build
 
-# Stage 3: Production image
-FROM node:18-alpine AS runner
+# 3. Runner Stage
+FROM base AS runner
 WORKDIR /app
 
-# Set Next.js telemetry to disabled
-ENV NEXT_TELEMETRY_DISABLED 1
-
-# Set the environment to production
-ENV NODE_ENV production
+# Set production environment
+ENV NODE_ENV=production
 
 # Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# The server is now started on port 3000 by default.
-# The following command is not needed as the server.js file is automatically run.
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
-# CMD ["node", "server.js"]
-EXPOSE 3000
+# The aports and environment variables are defined in docker-compose.yml
+# EXPOSE 3000
+# ENV PORT 3000
 
-# The start command is now implicitly handled by the standalone output.
-# You can customize the start command by creating a server.js file if needed.
+# Run the app
+# The user will be created in the base image
 CMD ["node", "server.js"]

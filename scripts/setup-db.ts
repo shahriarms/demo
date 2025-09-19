@@ -3,9 +3,12 @@ import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 
+// Load environment variables from .env.local file if it exists
+dotenv.config({ path: resolve(__dirname, '../.env.local') });
+
 // This script is intended to be run from the host machine to set up the DB inside the Docker container.
-// Therefore, it should always connect to localhost.
-// The docker-compose.yml file maps the host's port 5432 to the container's port 5432.
+// It should ALWAYS connect to localhost, as the port is mapped in docker-compose.yml.
+// If POSTGRES_URL is set for a different remote DB, it will be used, otherwise, it defaults to the local Docker setup.
 const connectionString = 'postgresql://user:password@localhost:5432/stockpilot_db';
 
 const pool = new Pool({
@@ -14,10 +17,11 @@ const pool = new Pool({
 
 async function setupDatabase() {
   console.log('🔵 Attempting to connect to the database at localhost:5432...');
-  const client = await pool.connect();
-  console.log('✅ Connected to the database.');
-
+  let client;
   try {
+    client = await pool.connect();
+    console.log('✅ Connected to the database successfully.');
+
     // Drop the table if it exists to ensure a fresh start with the correct schema
     await client.query('DROP TABLE IF EXISTS products;');
     console.log("✅ Table 'products' dropped if it existed.");
@@ -47,14 +51,17 @@ async function setupDatabase() {
 
   } catch (err) {
     if (err instanceof Error) {
-        console.error('🔴 Error setting up the database:', err.stack);
-        console.error('\n🔴 Please ensure the Docker containers are running (`docker-compose up -d`).');
+        console.error('🔴 Error setting up the database:', err.message);
+        console.error('\n🔴 PLEASE ENSURE THAT DOCKER CONTAINERS ARE RUNNING.');
+        console.error('Run `docker-compose up -d` in your project root and try again.');
     } else {
         console.error('🔴 An unknown error occurred:', err);
     }
-    process.exit(1);
+    process.exit(1); // Exit with error code
   } finally {
-    await client.release();
+    if (client) {
+        await client.release();
+    }
     await pool.end();
     console.log('✅ Database setup complete. Connection closed.');
   }
