@@ -57,57 +57,59 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
         fontFamily: 'sans-serif',
         fontSize: '14px',
         color: '#333',
-        maxWidth: '800px',
+        maxWidth: isPos ? '80mm' : '800px',
         margin: 'auto',
-        padding: '2rem',
-        border: '2px dashed #ccc',
+        padding: isPos ? '0.25rem' : '2rem',
+        border: isPos ? 'none' : '2px dashed #ccc',
         boxSizing: 'border-box',
     };
 
     const headerStyles: React.CSSProperties = {
         textAlign: 'center',
-        marginBottom: '2rem',
+        marginBottom: isPos ? '1rem' : '2rem',
     };
     
     const h1Styles: React.CSSProperties = {
-      fontSize: '2rem',
+      fontSize: isPos ? '1.5rem' : '2rem',
       fontWeight: 'bold',
       color: '#000',
       margin: '0 0 0.5rem 0',
     };
 
     const h2Styles: React.CSSProperties = {
-      fontSize: '1.5rem',
+      fontSize: isPos ? '1.2rem' : '1.5rem',
       fontWeight: 600,
       color: '#158a67',
       margin: 0,
     }
 
     const customerDetailsStyles: React.CSSProperties = {
-        display: 'flex',
+        display: isPos ? 'block' : 'flex',
         justifyContent: 'space-between',
-        marginBottom: '2rem',
+        marginBottom: isPos ? '1rem' : '2rem',
         borderTop: '1px solid #eee',
         borderBottom: '1px solid #eee',
-        padding: '1rem 0',
+        padding: isPos ? '0.5rem 0' : '1rem 0',
+        fontSize: isPos ? '12px' : '14px',
     };
 
     const tableStyles: React.CSSProperties = {
         width: '100%',
         borderCollapse: 'collapse',
-        marginBottom: '2rem',
+        marginBottom: isPos ? '1rem' : '2rem',
+        fontSize: isPos ? '12px' : '14px',
     };
 
     const thStyles: React.CSSProperties = {
         borderBottom: '2px solid #ccc',
-        padding: '0.75rem',
+        padding: isPos ? '0.25rem' : '0.75rem',
         textAlign: 'left',
         fontWeight: 600,
     };
 
     const tdStyles: React.CSSProperties = {
         borderBottom: '1px solid #eee',
-        padding: '0.75rem',
+        padding: isPos ? '0.25rem' : '0.75rem',
     };
 
     const totalsSectionStyles: React.CSSProperties = {
@@ -117,18 +119,19 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
     };
     
     const totalsTableStyles: React.CSSProperties = {
-        width: '250px',
+        width: isPos ? '150px' : '250px',
+        fontSize: isPos ? '12px' : '14px',
     };
 
     const totalRowStyles: React.CSSProperties = {
         fontWeight: 'bold',
-        fontSize: '1.1rem',
+        fontSize: isPos ? '1.1em' : '1.1rem',
         borderTop: '2px solid #333',
     };
 
     const footerStyles: React.CSSProperties = {
         textAlign: 'center',
-        marginTop: '3rem',
+        marginTop: isPos ? '1rem' : '3rem',
         paddingTop: '1rem',
         borderTop: '1px solid #eee',
         fontSize: '12px',
@@ -136,22 +139,22 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
     };
 
     return (
-        <div ref={ref}>
-            <div style={memoStyles} className="print-source">
+        <div ref={ref} className="print-source">
+            <div style={memoStyles}>
                 <header style={headerStyles}>
                     <h1 style={h1Styles}>{t('memo_title')}</h1>
                     <h2 style={h2Styles}>{t('shop_name')}</h2>
-                    <p className={cn(isBn ? 'font-bangla' : '')} style={{ margin: '0.25rem 0' }}>{t('shop_description')}</p>
-                    <p style={{ margin: '0.25rem 0' }}>Email: engmahmud.mm@gmail.com</p>
+                    <p className={cn(isBn ? 'font-bangla' : '', isPos ? 'text-xs' : '')} style={{ margin: '0.25rem 0' }}>{t('shop_description')}</p>
+                    <p style={{ margin: '0.25rem 0', fontSize: isPos ? '10px' : '12px' }}>Email: engmahmud.mm@gmail.com</p>
                 </header>
                 
                 <div style={customerDetailsStyles}>
                     <div>
                          <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('customer_name_label')}:</strong> {customerName || '..................'}</p>
-                         <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('customer_address_label')}:</strong> {customerAddress || '..................'}</p>
+                         {!isPos && <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('customer_address_label')}:</strong> {customerAddress || '..................'}</p>}
                          <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('customer_phone_label')}:</strong> {customerPhone || '..................'}</p>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div style={{ textAlign: isPos ? 'left' : 'right' }}>
                         <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('invoice_no_label')}:</strong> {invoiceId ? invoiceId : '...'}</p>
                         <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('date_label')}:</strong> {currentDate || '...'}</p>
                     </div>
@@ -219,3 +222,5 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
 );
 
 InvoicePrintLayout.displayName = 'InvoicePrintLayout';
+
+    

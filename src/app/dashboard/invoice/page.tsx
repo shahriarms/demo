@@ -67,6 +67,7 @@ export default function InvoicePage() {
   
   const [draftToDelete, setDraftToDelete] = useState<DraftInvoice | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [isPrintConfirmOpen, setPrintConfirmOpen] = useState(false);
   
   const { id: draftId, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount, items, cashReceived, changeAmount } = activeDraft || {};
 
@@ -82,8 +83,14 @@ export default function InvoicePage() {
     return true;
   };
   
+  const handlePrintConfirm = () => {
+     if (!validateInvoice()) return;
+     setPrintConfirmOpen(true);
+  };
+  
   const handleSaveAndPrint = async () => {
      if (!validateInvoice() || !activeDraft) return;
+     setPrintConfirmOpen(false);
      setIsPrinting(true);
   };
 
@@ -227,7 +234,7 @@ export default function InvoicePage() {
   }
 
   const customerInfoCard = (
-    <Card className="h-full">
+    <Card>
         <CardHeader>
             <CardTitle>{activeDraft.label}</CardTitle>
             <CardDescription>{t('invoice_no_label')}: {typeof draftId === 'number' ? draftId : '...'}</CardDescription>
@@ -252,7 +259,7 @@ export default function InvoicePage() {
   );
 
   const addProductsCard = (
-    <Card className="flex-1 flex flex-col min-h-0 h-full">
+    <Card className="flex-1 flex flex-col min-h-[400px]">
         <CardHeader>
             <CardTitle>{t('add_products_label')}</CardTitle>
             <RadioGroup
@@ -393,14 +400,14 @@ export default function InvoicePage() {
      <Card className="flex-1 flex flex-col min-h-0 h-full">
        <CardHeader className="flex-row items-center justify-between no-print">
            <CardTitle>{t('live_print_preview_title')}</CardTitle>
-           <Button onClick={handleSaveAndPrint} disabled={!items || items.length === 0 || isPrinting}>
+           <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isPrinting}>
                 {isPrinting ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
                 {isPrinting ? 'Printing...' : t('save_and_print_button')}
             </Button>
        </CardHeader>
        <CardContent className="flex-1 min-h-0 p-0 sm:p-4 bg-muted/50">
             <ScrollArea className="h-full">
-                <div ref={componentToPrintRef} className={cn("bg-white mx-auto print-source", settings.printFormat === 'pos' ? "w-[80mm] p-2" : "w-full")}>
+                <div ref={componentToPrintRef} className="print-area">
                     <InvoicePrintLayout 
                         invoiceId={draftId}
                         currentDate={new Date().toLocaleDateString()}
@@ -423,34 +430,30 @@ export default function InvoicePage() {
   const desktopLayout = (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
       {/* Left Column */}
-      <div className="flex flex-col gap-4">
+      <div className="lg:col-span-1 flex flex-col gap-4">
         {customerInfoCard}
         {addProductsCard}
       </div>
 
-      {/* Middle Column */}
-      <div className="lg:col-span-1 h-full">
-        {invoiceItemsCard}
-      </div>
-
-      {/* Right Column */}
-      <div className="lg:col-span-1 h-full">
-        {livePreviewCard}
+      {/* Middle & Right Column Wrapper */}
+      <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+         <div className="md:col-span-1 h-full">
+            {invoiceItemsCard}
+         </div>
+         <div className="md:col-span-1 h-full">
+            {livePreviewCard}
+         </div>
       </div>
     </div>
   );
 
   const mobileLayout = (
-     <Carousel className="w-full h-full">
-      <CarouselContent>
-        <CarouselItem className="h-full"><div className="p-1 h-full">{customerInfoCard}</div></CarouselItem>
-        <CarouselItem className="h-full"><div className="p-1 h-full">{addProductsCard}</div></CarouselItem>
-        <CarouselItem className="h-full"><div className="p-1 h-full">{invoiceItemsCard}</div></CarouselItem>
-        <CarouselItem className="h-full"><div className="p-1 h-full">{livePreviewCard}</div></CarouselItem>
-      </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
-    </Carousel>
+     <div className="flex flex-col gap-4 h-full">
+        {customerInfoCard}
+        {addProductsCard}
+        {invoiceItemsCard}
+        {livePreviewCard}
+     </div>
   );
 
 
@@ -537,6 +540,26 @@ export default function InvoicePage() {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <AlertDialog open={isPrintConfirmOpen} onOpenChange={setPrintConfirmOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Print</AlertDialogTitle>
+                    <AlertDialogDescription>
+                       Are you sure you want to save and print this invoice? This will finalize the invoice.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSaveAndPrint}>
+                       Yes, Print
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
     </div>
   );
 }
+
+    
