@@ -17,51 +17,40 @@ StockPilot is a modern, responsive inventory management application designed to 
 
 ---
 
-## Getting Started: The Docker Ecosystem
+## Getting Started: The Easiest 2-Step Setup
 
-This project is configured to run as a complete, isolated ecosystem using Docker. This is the highly recommended approach as it manages the web application, the database, and the database management tool in a single, cohesive environment.
+This project is configured to run as a complete, isolated system using Docker. Follow these two simple steps to get everything running. **You do not need to create any `.env` file.**
 
 ### 1. Prerequisites (পূর্বশর্ত)
 
-- **Docker Desktop**: You must have Docker and Docker Compose installed. Docker Desktop includes both and is the easiest way to get started. Download it from the official website: [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/).
+- **Docker Desktop**: You must have Docker and Docker Compose installed. Docker Desktop includes both. Download it from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/).
 
-### 2. Clone the Repository (রিপোজিটরি ক্লোন করুন)
+### Step 1: Build and Run the Entire System
 
-If you haven't already, open your terminal and clone the project to your computer:
-```bash
-git clone https://github.com/your-username/stockpilot.git
-cd stockpilot
-```
-*(Replace `your-username/stockpilot.git` with your actual repository URL)*
+Open your terminal in the project's root directory and run this single command. It will build and start your application, the database, and the database management tool all at once.
 
-### 3. Build and Run the Entire Stack (অ্যাপ, ডেটাবেস ও pgAdmin চালান)
-
-Run a single command from your terminal in the project's root directory. The `-d` flag runs the containers in "detached" mode (in the background).
 ```bash
 docker-compose up -d --build
 ```
-- **`docker-compose up`**: Reads the `docker-compose.yml` file and starts all services (`web`, `db`, `pgadmin`).
-- **`--build`**: Builds the application's Docker image from the `Dockerfile`. Use this the first time or after changing source code/dependencies.
-- **`-d`**: Runs the containers in the background, so your terminal is free.
 
-To stop the entire system, run: `docker-compose down`
+- **`--build`**: Use this flag the very first time you run the command.
+- **`-d`**: Runs everything in the background.
 
-### 4. First-Time Database Setup (শুধুমাত্র প্রথমবার)
+To stop the entire system later, run: `docker-compose down`
 
-The very first time you run the application, you need to create the necessary database tables inside the running Docker container.
+### Step 2: Set Up the Database (First-Time Only)
 
-1.  Open a **new terminal window** (leave Docker running).
-2.  Run the setup script:
-    ```bash
-    npm run db:setup
-    ```
-    This script connects to your Dockerized PostgreSQL database and creates the `products` table. You only need to do this once.
+After the command in Step 1 is finished, run this second command in the same terminal. This will create the necessary tables inside your running database.
 
-### 5. Accessing the Services (পরিষেবাগুলি অ্যাক্সেস করা)
+```bash
+npm run db:setup
+```
 
-Once the containers are running, you can access the different parts of your application:
+**That's it! Your setup is complete.**
+
+You can now access your services:
 - **StockPilot Web App**: [http://localhost:3000](http://localhost:3000)
-- **pgAdmin (Database GUI)**: [http://localhost:8080](http://localhost:8080)
+- **pgAdmin (Optional Database Tool)**: [http://localhost:8080](http://localhost:8080)
   - **Email**: `admin@stockpilot.com`
   - **Password**: `password`
 
@@ -122,13 +111,10 @@ This is the easiest method for most users.
 1.  First, it's safest to drop and re-create the database. Right-click `stockpilot_db` and select **Delete/Drop**.
 2.  Then, right-click **Databases** -> **Create** -> **Database...** and create a new database named `stockpilot_db` (owner should be `user`).
 3.  Right-click on the newly created, empty `stockpilot_db`.
-4.  Select **Restore...**.
-5.  **Format**: Select **Custom or tar**. (Wait, if you backed up as Plain, you need to use the Query Tool).
-    *Correction for `Plain` format:*
-1.  Right-click the new `stockpilot_db` and select **Query Tool**.
-2.  Click the "Open File" icon in the Query Tool toolbar.
-3.  Find and select your `.sql` backup file. The SQL content will load into the editor.
-4.  Click the "Execute/Run" icon (the lightning bolt). The commands will run and restore your data.
+4.  Select **Query Tool**.
+5.  Click the "Open File" icon in the Query Tool toolbar.
+6.  Find and select your `.sql` backup file. The SQL content will load into the editor.
+7.  Click the "Execute/Run" icon (the lightning bolt). The commands will run and restore your data.
 
 ---
 
@@ -165,4 +151,4 @@ cat backup.sql | docker exec -i stockpilot_db psql -U user -d stockpilot_db
 Your database is now restored from the `backup.sql` file.
 
 ---
-*This README provides a comprehensive guide for both Docker-based and local setups, with a strong recommendation for using the Docker ecosystem for its simplicity and reliability.*
+*This README provides a comprehensive guide for the recommended Docker ecosystem, ensuring simplicity and reliability.*
