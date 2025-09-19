@@ -32,10 +32,6 @@ import { PaymentReceipt } from '@/components/payment-receipt';
 import { useTranslation } from '@/hooks/use-translation';
 
 
-type PaymentStatus = 'idle' | 'processing' | 'printing' | 'success' | 'cancelled';
-type PendingPayment = Omit<Payment, 'id' | 'date'> | null;
-
-
 export default function BuyersDuePage() {
   const { invoices: allInvoices, buyers, getInvoicesForBuyer, addPayment, getPaymentsForInvoice, isAppDataLoading, getBuyerById } = useAppData();
   const { toast } = useToast();
@@ -46,18 +42,18 @@ export default function BuyersDuePage() {
   const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
-  const [pendingPayment, setPendingPayment] = useState<PendingPayment>(null);
+  
   const [isConfirmingPayment, setConfirmingPayment] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [lastSuccessfulPayment, setLastSuccessfulPayment] = useState<{payment: Payment, invoice: Invoice, buyer: Buyer} | null>(null);
   
   const componentToPrintRef = useRef(null);
-  const printCancelTimer = useRef<NodeJS.Timeout | null>(null);
   
   // This effect ensures that if the underlying data changes (e.g. after a payment),
   // the selected items are refreshed with the latest data.
   useEffect(() => {
     if (selectedBuyer) {
-      const refreshedBuyer = getBuyerById(selectedBuyer.id);
+      const refreshedBuyer = buyers.find(b => b.id === selectedBuyer.id);
       if (refreshedBuyer) {
         setSelectedBuyer(refreshedBuyer);
       } else { // Buyer might not exist anymore
@@ -73,9 +69,9 @@ export default function BuyersDuePage() {
             setSelectedInvoice(null);
         }
     }
-  }, [allInvoices, buyers, selectedBuyer, selectedInvoice, getBuyerById]);
-  
-  const handleProcessPayment = async () => {
+  }, [allInvoices, buyers, selectedBuyer, selectedInvoice]);
+
+  const handleOpenConfirmation = () => {
     if (!selectedInvoice || !selectedBuyer || typeof paymentAmount !== 'number' || paymentAmount <= 0) {
       toast({ variant: 'destructive', title: t('invalid_amount_toast_title'), description: t('invalid_amount_toast_description') });
       return;
@@ -84,88 +80,89 @@ export default function BuyersDuePage() {
         toast({ variant: 'destructive', title: t('overpayment_error_toast_title'), description: t('overpayment_error_toast_description', { amount: selectedInvoice.dueAmount.toFixed(2) }) });
         return;
     }
-    
     setConfirmingPayment(true);
   };
-  
-  const confirmPaymentAndPrint = async () => {
-    setConfirmingPayment(false);
 
+  const handleConfirmAndProcessPayment = async () => {
     if (!selectedInvoice || !selectedBuyer || typeof paymentAmount !== 'number' || paymentAmount <= 0) return;
 
-    setPaymentStatus('processing');
-    const newPendingPayment: PendingPayment = {
+    setIsProcessing(true);
+    setConfirmingPayment(false);
+
+    const paymentPayload = {
       invoiceId: selectedInvoice.id,
       buyerId: selectedBuyer.id,
       amount: paymentAmount,
     };
-    setPendingPayment(newPendingPayment);
 
-    // Give React time to update the state and re-render the receipt component
-    await new Promise(resolve => setTimeout(resolve, 50)); 
-    
-    setPaymentStatus('printing');
-    window.print();
-  }
+    const newPayment = await addPayment(paymentPayload);
 
+    setIsProcessing(false);
+
+    if (newPayment) {
+        toast({
+            title: t('payment_received_toast_title'),
+            description: t('payment_received_toast_description', { amount: newPayment.amount.toFixed(2), invoiceId: newPayment.invoiceId }),
+        });
+        
+        // Find the latest state of the invoice after payment
+        const updatedInvoice = allInvoices.find(i => i.id === newPayment.invoiceId);
+        if (updatedInvoice) {
+           setLastSuccessfulPayment({ payment: newPayment, invoice: updatedInvoice, buyer: selectedBuyer });
+        }
+        
+        setPaymentAmount('');
+    } else {
+        // Error toast is handled inside addPayment hook
+    }
+  };
+  
+  // Effect to trigger printing after a successful payment
   useEffect(() => {
-    const handleBeforePrint = () => {
-        // Assume cancellation if afterprint doesn't fire within a short time
-        printCancelTimer.current = setTimeout(() => {
-            if (paymentStatus === 'printing') {
-                toast({ variant: 'destructive', title: 'Payment Cancelled', description: 'Print process was cancelled.' });
-                setPaymentStatus('cancelled');
-                setPendingPayment(null);
-            }
-        }, 1000); // 1 second timeout
-    };
+    if (lastSuccessfulPayment) {
+      // Use a short timeout to allow the state to update and the receipt component to re-render with the correct data.
+      const timer = setTimeout(() => {
+        window.print();
+        // Clear the successful payment state to prevent re-printing on re-renders.
+        setLastSuccessfulPayment(null);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [lastSuccessfulPayment]);
 
-    const handleAfterPrint = async () => {
-        if (printCancelTimer.current) {
-            clearTimeout(printCancelTimer.current);
-        }
-
-        if (paymentStatus === 'printing' && pendingPayment) {
-            const newPayment = await addPayment(pendingPayment);
-            if (newPayment) {
-              setPaymentStatus('success');
-              toast({
-                  title: t('payment_received_toast_title'),
-                  description: t('payment_received_toast_description', { amount: pendingPayment.amount.toFixed(2), invoiceId: pendingPayment.invoiceId }),
-              });
-              
-              // Clean up
-              setPendingPayment(null);
-              setPaymentAmount('');
-            } else {
-              setPaymentStatus('cancelled');
-              toast({ variant: 'destructive', title: 'Payment Failed', description: 'Could not save payment. Please try again.' });
-            }
-        }
-    };
-    
-    window.addEventListener('beforeprint', handleBeforePrint);
-    window.addEventListener('afterprint', handleAfterPrint);
-
-    return () => {
-        window.removeEventListener('beforeprint', handleBeforePrint);
-        window.removeEventListener('afterprint', handleAfterPrint);
-        if (printCancelTimer.current) {
-            clearTimeout(printCancelTimer.current);
-        }
-    };
-  }, [paymentStatus, pendingPayment, addPayment, toast, t]);
-
-  // Reset status when selections change
-  useEffect(() => {
-    setPaymentStatus('idle');
-  }, [selectedBuyer, selectedInvoice]);
 
   const buyersWithDue = useMemo(() => buyers.filter(b => getInvoicesForBuyer(b.id).some(inv => inv.dueAmount > 0.001)), [buyers, getInvoicesForBuyer]);
   const filteredBuyersWithDue = useMemo(() => buyerSearchTerm ? buyersWithDue.filter(b => b.name.toLowerCase().includes(buyerSearchTerm.toLowerCase()) || (b.phone && b.phone.toLowerCase().includes(buyerSearchTerm.toLowerCase()))) : buyersWithDue, [buyersWithDue, buyerSearchTerm]);
-  const dueInvoicesForSelectedBuyer = useMemo(() => selectedBuyer ? getInvoicesForBuyer(selectedBuyer.id).filter(inv => inv.dueAmount > 0.001) : [], [selectedBuyer, getInvoicesForBuyer]);
-  const filteredDueInvoices = useMemo(() => invoiceSearchTerm ? dueInvoicesForSelectedBuyer.filter(inv => String(inv.id).toLowerCase().includes(invoiceSearchTerm.toLowerCase()) || new Date(inv.date).toLocaleDateString().toLowerCase().includes(invoiceSearchTerm.toLowerCase())) : dueInvoicesForSelectedBuyer, [dueInvoicesForSelectedBuyer, invoiceSearchTerm]);
-  const paymentHistory = useMemo(() => selectedInvoice ? getPaymentsForInvoice(selectedInvoice.id) : [], [selectedInvoice, getPaymentsForInvoice]);
+  
+  const dueInvoicesForSelectedBuyer = useMemo(() => {
+    if (!selectedBuyer) return [];
+    return getInvoicesForBuyer(selectedBuyer.id).filter(inv => inv.dueAmount > 0.001);
+  }, [selectedBuyer, getInvoicesForBuyer]);
+
+  const filteredDueInvoices = useMemo(() => {
+    if (!dueInvoicesForSelectedBuyer) return [];
+    const searchTermLower = invoiceSearchTerm.toLowerCase();
+    const invoices = invoiceSearchTerm 
+      ? dueInvoicesForSelectedBuyer.filter(inv => String(inv.id).toLowerCase().includes(searchTermLower) || new Date(inv.date).toLocaleDateString().toLowerCase().includes(searchTermLower)) 
+      : dueInvoicesForSelectedBuyer;
+    
+    // Create a temporary view of invoices with pending payment for real-time UI updates
+    return invoices.map(inv => {
+        if (inv.id === selectedInvoice?.id && typeof paymentAmount === 'number' && paymentAmount > 0) {
+            return {
+                ...inv,
+                dueAmount: Math.max(0, inv.dueAmount - paymentAmount)
+            };
+        }
+        return inv;
+    });
+
+  }, [dueInvoicesForSelectedBuyer, invoiceSearchTerm, selectedInvoice, paymentAmount]);
+
+  const paymentHistoryForReceipt = useMemo(() => {
+    if (!lastSuccessfulPayment) return [];
+    return getPaymentsForInvoice(lastSuccessfulPayment.invoice.id);
+  }, [lastSuccessfulPayment, getPaymentsForInvoice]);
 
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
@@ -175,34 +172,18 @@ export default function BuyersDuePage() {
   };
 
   const handleSelectInvoice = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
+    setSelectedInvoice(allInvoices.find(i => i.id === invoice.id) || null);
     setPaymentAmount('');
   };
   
-  const receiptPaymentHistory = useMemo(() => {
-    if (!selectedInvoice || !selectedBuyer) return paymentHistory;
-    if (pendingPayment && typeof pendingPayment.amount === 'number') {
-        const tempPayment: Payment = {
-            id: 'pending', invoiceId: selectedInvoice.id, buyerId: selectedBuyer.id,
-            amount: pendingPayment.amount, date: new Date().toISOString(),
-        };
-        return [tempPayment, ...paymentHistory];
+  const currentDueForSelectedInvoice = useMemo(() => {
+    if (!selectedInvoice) return 0;
+    if (typeof paymentAmount === 'number' && paymentAmount > 0) {
+      return Math.max(0, selectedInvoice.dueAmount - paymentAmount);
     }
-    return paymentHistory;
-  }, [paymentHistory, pendingPayment, selectedInvoice, selectedBuyer]);
+    return selectedInvoice.dueAmount;
+  }, [selectedInvoice, paymentAmount]);
 
-  const isProcessing = paymentStatus === 'processing' || paymentStatus === 'printing';
-
-  const getButtonState = () => {
-    switch (paymentStatus) {
-      case 'processing': return { text: 'Processing...', disabled: true };
-      case 'printing': return { text: 'Printing...', disabled: true };
-      case 'success': return { text: 'Payment Complete', disabled: true };
-      case 'cancelled': return { text: 'Payment Cancelled', disabled: false };
-      default: return { text: t('receive_and_print_button'), disabled: false };
-    }
-  }
-  const buttonState = getButtonState();
 
   if (isAppDataLoading) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -287,20 +268,35 @@ export default function BuyersDuePage() {
               <CardContent className="space-y-4 no-print">
                   {selectedInvoice ? (
                       <>
-                          <div className="flex justify-between items-start">
+                          <div className="flex justify-between items-start p-4 bg-muted/50 rounded-lg">
                             <div>
                                 <p>{t('invoice_label')}: <span className="font-mono">{selectedInvoice.id}</span></p>
-                                <p>{t('due_amount_label')}: <span className="font-bold text-destructive">৳{selectedInvoice.dueAmount.toFixed(2)}</span></p>
+                                <p>Original Due: <span className="font-mono">৳{selectedInvoice.dueAmount.toFixed(2)}</span></p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-lg">New Due:</p>
+                                <p className="font-bold text-destructive text-2xl">৳{currentDueForSelectedInvoice.toFixed(2)}</p>
                             </div>
                           </div>
                           <div className="flex flex-col sm:flex-row items-center gap-2">
                               <div className="relative flex-1 w-full">
                                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">৳</span>
-                                  <Input type="text" inputMode="decimal" placeholder={t('enter_amount_placeholder')} className="pl-8" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : parseFloat(e.target.value) || undefined)} disabled={isProcessing} />
+                                  <Input 
+                                    type="text" 
+                                    inputMode="decimal" 
+                                    placeholder={t('enter_amount_placeholder')} 
+                                    className="pl-8" 
+                                    value={paymentAmount} 
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setPaymentAmount(val === '' ? '' : parseFloat(val) || 0);
+                                    }}
+                                    disabled={isProcessing} 
+                                  />
                               </div>
-                              <Button onClick={handleProcessPayment} className="w-full sm:w-auto" disabled={isProcessing || buttonState.disabled}>
+                              <Button onClick={handleOpenConfirmation} className="w-full sm:w-auto" disabled={isProcessing || !paymentAmount || paymentAmount <= 0}>
                                   {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}
-                                  {buttonState.text}
+                                  {t('receive_and_print_button')}
                               </Button>
                           </div>
                       </>
@@ -315,21 +311,35 @@ export default function BuyersDuePage() {
                   </div>
                   <div className="p-6 pt-2 flex-1">
                       <div className="bg-background">
-                          {selectedBuyer && selectedInvoice ? (
-                            <div ref={componentToPrintRef} className="print-source">
-                                  <PaymentReceipt
-                                      buyer={selectedBuyer}
-                                      invoice={selectedInvoice}
-                                      paymentHistory={receiptPaymentHistory}
-                                      newPaymentAmount={pendingPayment?.amount}
-                                  />
-                              </div>
-                          ) : (
-                              <div className="text-center text-muted-foreground p-8 flex flex-col justify-center items-center h-full border rounded-lg no-print">
-                                  <FileText className="w-12 h-12 mb-4 text-muted-foreground/50"/>
-                                  <p>{t('select_invoice_for_preview')}</p>
-                            </div>
-                          )}
+                           {/* This div is for printing the last successful transaction */}
+                          <div className="print-source" ref={componentToPrintRef}>
+                            {lastSuccessfulPayment && (
+                                <PaymentReceipt
+                                    buyer={lastSuccessfulPayment.buyer}
+                                    invoice={lastSuccessfulPayment.invoice}
+                                    paymentHistory={paymentHistoryForReceipt}
+                                    newPaymentAmount={lastSuccessfulPayment.payment.amount}
+                                />
+                            )}
+                          </div>
+
+                           {/* This is for on-screen preview only */}
+                           <div className="no-print">
+                            {(selectedBuyer && selectedInvoice) ? (
+                                <PaymentReceipt
+                                    buyer={selectedBuyer}
+                                    invoice={selectedInvoice}
+                                    paymentHistory={getPaymentsForInvoice(selectedInvoice.id)}
+                                    newPaymentAmount={(typeof paymentAmount === 'number') ? paymentAmount : 0}
+                                />
+                            ) : (
+                                <div className="text-center text-muted-foreground p-8 flex flex-col justify-center items-center h-full border rounded-lg">
+                                    <FileText className="w-12 h-12 mb-4 text-muted-foreground/50"/>
+                                    <p>{t('select_invoice_for_preview')}</p>
+                                </div>
+                            )}
+                           </div>
+
                       </div>
                   </div>
               </div>
@@ -341,12 +351,19 @@ export default function BuyersDuePage() {
               <AlertDialogHeader>
                   <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
                   <AlertDialogDescription>
-                      You are about to receive a payment of <strong>৳{typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00'}</strong> for invoice <strong>#{selectedInvoice?.id}</strong>. This will print a receipt.
+                      You are about to receive a payment of <strong>৳{typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00'}</strong> for invoice <strong>#{selectedInvoice?.id}</strong>.
+                      <br />
+                      Original Due: ৳{selectedInvoice?.dueAmount.toFixed(2)}
+                      <br />
+                      New Due will be: <strong>৳{currentDueForSelectedInvoice.toFixed(2)}</strong>
+                      <br /><br />
+                      This will save the payment and print a receipt.
                   </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={confirmPaymentAndPrint}>
+                  <AlertDialogAction onClick={handleConfirmAndProcessPayment} disabled={isProcessing}>
+                      {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Confirm and Print
                   </AlertDialogAction>
               </AlertDialogFooter>
@@ -355,3 +372,4 @@ export default function BuyersDuePage() {
     </>
   );
 }
+
