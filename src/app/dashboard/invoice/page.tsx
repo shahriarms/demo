@@ -224,9 +224,9 @@ export default function InvoicePage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col gap-4">
         {/* Memo Tabs */}
-        <div className="flex-shrink-0 flex items-center gap-2 border-b pb-2 flex-wrap no-print">
+        <div className="flex items-center gap-2 border-b pb-2 flex-wrap no-print">
             {drafts.map((draft, index) => (
                 <div key={draft.id} className="relative group">
                     <Button 
@@ -290,8 +290,8 @@ export default function InvoicePage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Left Column */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Column 1: Customer Info & Product Adder */}
           <div className="flex flex-col gap-4">
             <Card>
                 <CardHeader>
@@ -316,7 +316,7 @@ export default function InvoicePage() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="flex-1 flex flex-col">
                 <CardHeader>
                     <CardTitle>{t('add_products_label')}</CardTitle>
                     <RadioGroup
@@ -328,8 +328,7 @@ export default function InvoicePage() {
                         <div className="flex items-center space-x-2"><RadioGroupItem value="Hardware" id="r-hardware" /><Label htmlFor="r-hardware">{t('hardware_tab')}</Label></div>
                     </RadioGroup>
                 </CardHeader>
-                <CardContent>
-                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 h-[400px]">
+                <CardContent className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {/* Category List */}
                         <div className="flex flex-col gap-2">
                            <Label>{t('category_header')}</Label>
@@ -371,117 +370,115 @@ export default function InvoicePage() {
                                 </div>
                            </ScrollArea>
                         </div>
-                    </div>
                 </CardContent>
             </Card>
           </div>
 
-          {/* Right Column */}
-          <div className="flex flex-col gap-4">
-             <Card>
-                <CardHeader>
-                    <CardTitle>Invoice Items</CardTitle>
-                </CardHeader>
-                <CardContent className='p-0'>
-                    <ScrollArea className="h-[400px]">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Item</TableHead>
-                                    <TableHead className="w-24">Qty</TableHead>
-                                    <TableHead className="w-32 hidden sm:table-cell">Price</TableHead>
-                                    <TableHead className="text-right w-32">Total</TableHead>
-                                    <TableHead className="w-12"></TableHead>
+          {/* Column 2: Invoice Items */}
+          <Card className="flex flex-col">
+            <CardHeader>
+                <CardTitle>Invoice Items</CardTitle>
+            </CardHeader>
+            <CardContent className='p-0 flex-1'>
+                <ScrollArea className="h-full">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Item</TableHead>
+                                <TableHead className="w-24">Qty</TableHead>
+                                <TableHead className="w-32 hidden sm:table-cell">Price</TableHead>
+                                <TableHead className="text-right w-32">Total</TableHead>
+                                <TableHead className="w-12"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {items && items.length > 0 ? items.map(item => (
+                                <TableRow key={item.id}>
+                                    <TableCell>
+                                        <p className="font-medium">{item.name}</p>
+                                        <p className='text-xs text-muted-foreground'>Suggested: ৳{(item.originalPrice || 0).toFixed(2)}</p>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Input type="text" inputMode="decimal" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
+                                    </TableCell>
+                                    <TableCell className="hidden sm:table-cell">
+                                         <div className="relative flex items-center">
+                                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">৳</span>
+                                             <Input type="text" inputMode="decimal" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium h-9" />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right font-semibold">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
+                                    <TableCell>
+                                         <Button variant="ghost" size="icon" onClick={() => removeInvoiceItem(item.id)} className="h-9 w-9">
+                                            <Trash2 className="w-4 h-4 text-destructive" />
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {items && items.length > 0 ? items.map(item => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>
-                                            <p className="font-medium">{item.name}</p>
-                                            <p className='text-xs text-muted-foreground'>Suggested: ৳{(item.originalPrice || 0).toFixed(2)}</p>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input type="text" inputMode="decimal" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
-                                        </TableCell>
-                                        <TableCell className="hidden sm:table-cell">
-                                             <div className="relative flex items-center">
-                                                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">৳</span>
-                                                 <Input type="text" inputMode="decimal" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium h-9" />
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right font-semibold">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
-                                        <TableCell>
-                                             <Button variant="ghost" size="icon" onClick={() => removeInvoiceItem(item.id)} className="h-9 w-9">
-                                                <Trash2 className="w-4 h-4 text-destructive" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                )) : (
-                                    <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">No items added yet.</TableCell></TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </ScrollArea>
-                </CardContent>
-                <CardFooter className="flex-col items-stretch space-y-2 pt-4">
-                    <div className="w-full md:w-80 ml-auto space-y-2">
-                       <div className="flex justify-between items-center text-sm">
-                           <span className='text-muted-foreground'>{t('subtotal_label')}</span>
-                           <span className="font-medium">৳{(subtotal ?? 0).toFixed(2)}</span>
-                       </div>
-                       <div className="flex justify-between items-center">
-                           <Label htmlFor='paidAmount' className="shrink-0 text-muted-foreground text-sm">{t('paid_label')}</Label>
-                           <div className="relative w-32">
-                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
-                                <Input 
-                                    id='paidAmount' 
-                                    type="text"
-                                    inputMode='decimal'
-                                    value={paidAmount ?? ''} 
-                                    onChange={e => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || undefined })} 
-                                    className="h-9 pl-5 text-right font-medium"
-                                    placeholder='0'
-                                />
-                           </div>
-                       </div>
-                       <div className="flex justify-between items-center font-bold text-base border-t pt-2 mt-2">
-                           <span>{t('due_label')}</span>
-                           <span>৳{(dueAmount ?? 0).toFixed(2)}</span>
-                       </div>
-                    </div>
-                </CardFooter>
-            </Card>
-
-             <Card>
-               <CardHeader className="flex-row items-center justify-between no-print">
-                   <CardTitle>{t('live_print_preview_title')}</CardTitle>
-                   <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isPrinting}>
-                        {isPrinting ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
-                        {isPrinting ? 'Printing...' : t('save_and_print_button')}
-                    </Button>
-               </CardHeader>
-               <CardContent className="p-0 sm:p-4 bg-muted/50">
-                    <ScrollArea className="h-[500px]">
-                        <div ref={componentToPrintRef} className="print-area">
-                            <InvoicePrintLayout 
-                                invoiceId={draftId}
-                                currentDate={new Date().toLocaleDateString()}
-                                customerName={customerName}
-                                customerAddress={customerAddress}
-                                customerPhone={customerPhone}
-                                invoiceItems={items}
-                                subtotal={subtotal}
-                                paidAmount={paidAmount || 0}
-                                dueAmount={dueAmount}
-                                printFormat={settings.printFormat}
-                                locale={settings.locale}
+                            )) : (
+                                <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">No items added yet.</TableCell></TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
+            </CardContent>
+            <CardFooter className="flex-col items-stretch space-y-2 pt-4">
+                <div className="w-full md:w-80 ml-auto space-y-2">
+                   <div className="flex justify-between items-center text-sm">
+                       <span className='text-muted-foreground'>{t('subtotal_label')}</span>
+                       <span className="font-medium">৳{(subtotal ?? 0).toFixed(2)}</span>
+                   </div>
+                   <div className="flex justify-between items-center">
+                       <Label htmlFor='paidAmount' className="shrink-0 text-muted-foreground text-sm">{t('paid_label')}</Label>
+                       <div className="relative w-32">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
+                            <Input 
+                                id='paidAmount' 
+                                type="text"
+                                inputMode='decimal'
+                                value={paidAmount ?? ''} 
+                                onChange={e => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || undefined })} 
+                                className="h-9 pl-5 text-right font-medium"
+                                placeholder='0'
                             />
-                        </div>
-                    </ScrollArea>
-               </CardContent>
-            </Card>
-          </div>
+                       </div>
+                   </div>
+                   <div className="flex justify-between items-center font-bold text-base border-t pt-2 mt-2">
+                       <span>{t('due_label')}</span>
+                       <span>৳{(dueAmount ?? 0).toFixed(2)}</span>
+                   </div>
+                </div>
+            </CardFooter>
+          </Card>
+          
+          {/* Column 3: Live Print Preview */}
+          <Card className="flex flex-col">
+           <CardHeader className="flex-row items-center justify-between no-print">
+               <CardTitle>{t('live_print_preview_title')}</CardTitle>
+               <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isPrinting}>
+                    {isPrinting ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
+                    {isPrinting ? 'Printing...' : t('save_and_print_button')}
+                </Button>
+           </CardHeader>
+           <CardContent className="flex-1 p-0 sm:p-4 bg-muted/50">
+                <ScrollArea className="h-full">
+                    <div ref={componentToPrintRef} className="print-area">
+                        <InvoicePrintLayout 
+                            invoiceId={draftId}
+                            currentDate={new Date().toLocaleDateString()}
+                            customerName={customerName}
+                            customerAddress={customerAddress}
+                            customerPhone={customerPhone}
+                            invoiceItems={items}
+                            subtotal={subtotal}
+                            paidAmount={paidAmount || 0}
+                            dueAmount={dueAmount}
+                            printFormat={settings.printFormat}
+                            locale={settings.locale}
+                        />
+                    </div>
+                </ScrollArea>
+           </CardContent>
+          </Card>
         </div>
 
         <AlertDialog open={!!draftToDelete} onOpenChange={() => setDraftToDelete(null)}>
@@ -519,4 +516,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
