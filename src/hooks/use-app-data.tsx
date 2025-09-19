@@ -39,7 +39,7 @@ interface AppDataContextType {
 
 
     // Payment Functions
-    addPayment: (payment: Omit<Payment, 'id' | 'date'>) => Promise<void>;
+    addPayment: (payment: Omit<Payment, 'id' | 'date'>) => Promise<Payment | null>;
     getPaymentsForInvoice: (invoiceId: number) => Payment[];
 
     // Expense Functions
@@ -187,7 +187,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           customerPhone: draftInvoice.customerPhone,
           items: draftInvoice.items.map(({ originalPrice, ...item }) => item),
           subtotal: draftInvoice.subtotal,
-          paidAmount: draftInvoice.paidAmount,
+          paidAmount: draftInvoice.paidAmount || 0,
           dueAmount: draftInvoice.dueAmount,
           date: new Date().toISOString(),
         };
@@ -245,14 +245,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [products]);
 
 
-    const addPayment = useCallback(async (paymentData: Omit<Payment, 'id' | 'date'>) => {
+    const addPayment = useCallback(async (paymentData: Omit<Payment, 'id' | 'date'>): Promise<Payment | null> => {
         if (!isDbConnected) {
              toast({ variant: 'destructive', title: 'Offline Mode', description: 'Cannot process payment while offline.'});
-             return;
+             return null;
         }
-        await dataActions.addPayment(paymentData);
-        await loadAllData();
-    }, [isDbConnected, loadAllData, toast]);
+        try {
+            const newPayment = await dataActions.addPayment(paymentData);
+            // Manually update state for faster UI response
+            setPayments(prev => [newPayment, ...prev]);
+            setInvoices(prev => prev.map(inv => 
+                inv.id === newPayment.invoiceId 
+                ? { ...inv, paidAmount: inv.paidAmount + newPayment.amount, dueAmount: inv.dueAmount - newPayment.amount }
+                : inv
+            ));
+            return newPayment;
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Payment Error', description: error.message || "Failed to process payment."});
+            return null;
+        }
+    }, [isDbConnected, toast]);
 
     const getPaymentsForInvoice = useCallback((invoiceId: number) => {
         return payments.filter(p => p.invoiceId === invoiceId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

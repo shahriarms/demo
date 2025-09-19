@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
@@ -36,7 +37,7 @@ type PendingPayment = Omit<Payment, 'id' | 'date'> | null;
 
 
 export default function BuyersDuePage() {
-  const { buyers, getInvoicesForBuyer, addPayment, getPaymentsForInvoice, isAppDataLoading, getBuyerById } = useAppData();
+  const { invoices: allInvoices, buyers, getInvoicesForBuyer, addPayment, getPaymentsForInvoice, isAppDataLoading, getBuyerById } = useAppData();
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -52,17 +53,27 @@ export default function BuyersDuePage() {
   const componentToPrintRef = useRef(null);
   const printCancelTimer = useRef<NodeJS.Timeout | null>(null);
   
+  // This effect ensures that if the underlying data changes (e.g. after a payment),
+  // the selected items are refreshed with the latest data.
   useEffect(() => {
     if (selectedBuyer) {
       const refreshedBuyer = getBuyerById(selectedBuyer.id);
       if (refreshedBuyer) {
         setSelectedBuyer(refreshedBuyer);
-      } else {
+      } else { // Buyer might not exist anymore
         setSelectedBuyer(null);
         setSelectedInvoice(null);
       }
     }
-  }, [buyers, selectedBuyer?.id, getBuyerById]);
+    if (selectedInvoice) {
+        const refreshedInvoice = allInvoices.find(inv => inv.id === selectedInvoice.id);
+        if (refreshedInvoice) {
+            setSelectedInvoice(refreshedInvoice);
+        } else { // Invoice might not exist anymore (e.g. fully paid and filtered out)
+            setSelectedInvoice(null);
+        }
+    }
+  }, [allInvoices, buyers, selectedBuyer, selectedInvoice, getBuyerById]);
   
   const handleProcessPayment = async () => {
     if (!selectedInvoice || !selectedBuyer || typeof paymentAmount !== 'number' || paymentAmount <= 0) {
@@ -115,20 +126,20 @@ export default function BuyersDuePage() {
         }
 
         if (paymentStatus === 'printing' && pendingPayment) {
-            await addPayment(pendingPayment);
-            setPaymentStatus('success');
-            toast({
-                title: t('payment_received_toast_title'),
-                description: t('payment_received_toast_description', { amount: pendingPayment.amount.toFixed(2), invoiceId: pendingPayment.invoiceId }),
-            });
-            
-            // Clean up
-            setPendingPayment(null);
-            setPaymentAmount('');
-            
-            const updatedInvoices = getInvoicesForBuyer(pendingPayment.buyerId).filter(inv => inv.dueAmount > 0);
-            if (!updatedInvoices.some(inv => inv.id === pendingPayment.invoiceId)) {
-                setSelectedInvoice(null);
+            const newPayment = await addPayment(pendingPayment);
+            if (newPayment) {
+              setPaymentStatus('success');
+              toast({
+                  title: t('payment_received_toast_title'),
+                  description: t('payment_received_toast_description', { amount: pendingPayment.amount.toFixed(2), invoiceId: pendingPayment.invoiceId }),
+              });
+              
+              // Clean up
+              setPendingPayment(null);
+              setPaymentAmount('');
+            } else {
+              setPaymentStatus('cancelled');
+              toast({ variant: 'destructive', title: 'Payment Failed', description: 'Could not save payment. Please try again.' });
             }
         }
     };
@@ -143,16 +154,16 @@ export default function BuyersDuePage() {
             clearTimeout(printCancelTimer.current);
         }
     };
-  }, [paymentStatus, pendingPayment, addPayment, toast, getInvoicesForBuyer, t]);
+  }, [paymentStatus, pendingPayment, addPayment, toast, t]);
 
   // Reset status when selections change
   useEffect(() => {
     setPaymentStatus('idle');
   }, [selectedBuyer, selectedInvoice]);
 
-  const buyersWithDue = useMemo(() => buyers.filter(b => getInvoicesForBuyer(b.id).some(inv => inv.dueAmount > 0)), [buyers, getInvoicesForBuyer]);
+  const buyersWithDue = useMemo(() => buyers.filter(b => getInvoicesForBuyer(b.id).some(inv => inv.dueAmount > 0.001)), [buyers, getInvoicesForBuyer]);
   const filteredBuyersWithDue = useMemo(() => buyerSearchTerm ? buyersWithDue.filter(b => b.name.toLowerCase().includes(buyerSearchTerm.toLowerCase()) || (b.phone && b.phone.toLowerCase().includes(buyerSearchTerm.toLowerCase()))) : buyersWithDue, [buyersWithDue, buyerSearchTerm]);
-  const dueInvoicesForSelectedBuyer = useMemo(() => selectedBuyer ? getInvoicesForBuyer(selectedBuyer.id).filter(inv => inv.dueAmount > 0) : [], [selectedBuyer, getInvoicesForBuyer]);
+  const dueInvoicesForSelectedBuyer = useMemo(() => selectedBuyer ? getInvoicesForBuyer(selectedBuyer.id).filter(inv => inv.dueAmount > 0.001) : [], [selectedBuyer, getInvoicesForBuyer]);
   const filteredDueInvoices = useMemo(() => invoiceSearchTerm ? dueInvoicesForSelectedBuyer.filter(inv => String(inv.id).toLowerCase().includes(invoiceSearchTerm.toLowerCase()) || new Date(inv.date).toLocaleDateString().toLowerCase().includes(invoiceSearchTerm.toLowerCase())) : dueInvoicesForSelectedBuyer, [dueInvoicesForSelectedBuyer, invoiceSearchTerm]);
   const paymentHistory = useMemo(() => selectedInvoice ? getPaymentsForInvoice(selectedInvoice.id) : [], [selectedInvoice, getPaymentsForInvoice]);
 
@@ -160,6 +171,7 @@ export default function BuyersDuePage() {
     setSelectedBuyer(buyer);
     setSelectedInvoice(null);
     setInvoiceSearchTerm('');
+    setPaymentAmount('');
   };
 
   const handleSelectInvoice = (invoice: Invoice) => {
@@ -284,7 +296,7 @@ export default function BuyersDuePage() {
                           <div className="flex flex-col sm:flex-row items-center gap-2">
                               <div className="relative flex-1 w-full">
                                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">৳</span>
-                                  <Input type="text" inputMode="decimal" placeholder={t('enter_amount_placeholder')} className="pl-8" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : parseFloat(e.target.value))} disabled={isProcessing} />
+                                  <Input type="text" inputMode="decimal" placeholder={t('enter_amount_placeholder')} className="pl-8" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : parseFloat(e.target.value) || undefined)} disabled={isProcessing} />
                               </div>
                               <Button onClick={handleProcessPayment} className="w-full sm:w-auto" disabled={isProcessing || buttonState.disabled}>
                                   {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}
