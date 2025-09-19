@@ -28,17 +28,21 @@ import { MonthlyUnitsSoldDialog } from '@/components/monthly-units-sold-report-d
 import { MonthlySalaryReportDialog } from '@/components/monthly-salary-report-dialog';
 import type { DateRange } from 'react-day-picker';
 
-const initialDateRange: DateRange = {
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date()),
-};
 
 export default function Dashboard() {
   const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading } = useAppData();
   const { t } = useTranslation();
 
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(initialDateRange);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
+  useEffect(() => {
+    // Set initial date range on client-side to avoid hydration mismatch
+    setDateRange({
+      from: startOfMonth(new Date()),
+      to: endOfMonth(new Date()),
+    });
+  }, []);
+
   const [rangeInvoices, setRangeInvoices] = useState<any[]>([]);
   const [rangeExpenses, setRangeExpenses] = useState<any[]>([]);
   const [rangeSalaries, setRangeSalaries] = useState<any[]>([]);
@@ -116,7 +120,10 @@ export default function Dashboard() {
   }, [rangeInvoices, rangeExpenses, dateRange]);
 
   const handleReset = useCallback(() => {
-    setDateRange(initialDateRange);
+    setDateRange({
+        from: startOfMonth(new Date()),
+        to: endOfMonth(new Date()),
+    });
   }, []);
 
 
@@ -139,7 +146,7 @@ export default function Dashboard() {
     return format(dateRange.from, 'PPP');
   }, [dateRange]);
 
-  if (isLoading) {
+  if (isLoading || !dateRange) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
@@ -347,7 +354,7 @@ export default function Dashboard() {
               <CardHeader>
                   <CardTitle>Daily Expenses for {rangeTitle}</CardTitle>
                   <CardDescription>Showing expense data for each day of the range.</CardDescription>
-              </CardHeader>
+              </Header>
               <CardContent>
                   <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
                       <BarChart data={expensesChartData}>
@@ -422,5 +429,3 @@ export default function Dashboard() {
     </>
   );
 }
-
-    
