@@ -1,3 +1,4 @@
+
 # StockPilot - Inventory Management System
 
 StockPilot is a modern, responsive inventory management application designed to streamline stock, invoice, and expense tracking for small businesses. Built with Next.js, Firebase, and Tailwind CSS.
@@ -40,7 +41,7 @@ To stop the entire system later, run: `docker-compose down`
 
 ### Step 2: Set Up the Database (First-Time Only)
 
-After the command in Step 1 is finished, run this second command in the same terminal. This will create the necessary tables inside your running database.
+After the command in Step 1 is finished, run this second command in the same terminal. This will create all the necessary tables (products, invoices, buyers, expenses, etc.) inside your running database.
 
 ```bash
 npm run db:setup
