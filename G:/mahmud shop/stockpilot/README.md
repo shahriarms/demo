@@ -27,20 +27,20 @@ This project is configured to run as a complete, isolated system using Docker. F
 
 ### Step 1: Build and Run the Entire System
 
-Open your terminal in the project's root directory and run this single command. It will build and start your application, the database, and the database management tool all at once.
+Open your terminal (like **Windows PowerShell**) in the project's root directory and run this single command. It will build and start your application, the database, and the database management tool all at once.
 
 ```bash
 docker-compose up -d --build
 ```
 
-- **`--build`**: Use this flag the very first time you run the command.
-- **`-d`**: Runs everything in the background.
+- **`--build`**: Use this flag the very first time you run the command. It builds the necessary Docker images.
+- **`-d`**: Runs everything in the background (detached mode).
 
 To stop the entire system later, run: `docker-compose down`
 
 ### Step 2: Set Up the Database (First-Time Only)
 
-After the command in Step 1 is finished, run this second command in the same terminal. This will create all the necessary tables (products, invoices, buyers, expenses, etc.) inside your running database.
+After the command in Step 1 is finished (it might take a minute), run this second command in the same terminal. This will create all the necessary tables (products, invoices, buyers, expenses, etc.) inside your running database.
 
 ```bash
 npm run db:setup
@@ -134,7 +134,8 @@ This is the easiest method for most users.
 4.  Select **Query Tool**.
 5.  Click the "Open File" icon in the Query Tool toolbar.
 6.  Find and select your `.sql` backup file. The SQL content will load into the editor.
-7.  Click the "Execute/Run" icon (the lightning bolt). The commands will run and restore your data.
+7
+.  Click the "Execute/Run" icon (the lightning bolt). The commands will run and restore your data.
 
 ---
 
