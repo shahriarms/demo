@@ -27,6 +27,7 @@ import { MonthlyDueDialog } from '@/components/monthly-due-report-dialog';
 import { MonthlyUnitsSoldDialog } from '@/components/monthly-units-sold-report-dialog';
 import { MonthlySalaryReportDialog } from '@/components/monthly-salary-report-dialog';
 import type { DateRange } from 'react-day-picker';
+import type { Invoice, Expense, SalaryPayment } from '@/lib/types';
 
 
 export default function Dashboard() {
@@ -35,19 +36,11 @@ export default function Dashboard() {
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
-  useEffect(() => {
-    // Set initial date range on client-side to avoid hydration mismatch
-    setDateRange({
-      from: startOfMonth(new Date()),
-      to: endOfMonth(new Date()),
-    });
-  }, []);
-
-  const [rangeInvoices, setRangeInvoices] = useState<any[]>([]);
-  const [rangeExpenses, setRangeExpenses] = useState<any[]>([]);
-  const [rangeSalaries, setRangeSalaries] = useState<any[]>([]);
-  const [todayInvoices, setTodayInvoices] = useState<any[]>([]);
-  const [todayExpenses, setTodayExpenses] = useState<any[]>([]);
+  const [rangeInvoices, setRangeInvoices] = useState<Invoice[]>([]);
+  const [rangeExpenses, setRangeExpenses] = useState<Expense[]>([]);
+  const [rangeSalaries, setRangeSalaries] = useState<SalaryPayment[]>([]);
+  const [todayInvoices, setTodayInvoices] = useState<Invoice[]>([]);
+  const [todayExpenses, setTodayExpenses] = useState<Expense[]>([]);
   
   const [isDailySalesReportOpen, setDailySalesReportOpen] = useState(false);
   const [isDailyExpensesReportOpen, setDailyExpensesReportOpen] = useState(false);
@@ -59,18 +52,28 @@ export default function Dashboard() {
   const [isMonthlyDueReportOpen, setMonthlyDueReportOpen] = useState(false);
   const [isMonthlyUnitsSoldReportOpen, setMonthlyUnitsSoldReportOpen] = useState(false);
   const [isMonthlySalaryReportOpen, setMonthlySalaryReportOpen] = useState(false);
+  
+  // This useEffect ensures all date-sensitive operations run only on the client, preventing hydration errors.
+  useEffect(() => {
+    // Set initial date range on client-side
+    setDateRange({
+      from: startOfMonth(new Date()),
+      to: endOfMonth(new Date()),
+    });
+    
+    // Set today's data on client-side
+    const today = new Date();
+    setTodayInvoices(getInvoicesForDateRange(today, today));
+    setTodayExpenses(getExpensesForDateRange(today, today));
+  }, [getInvoicesForDateRange, getExpensesForDateRange]);
 
+  // This useEffect updates the date range data when the range changes.
   useEffect(() => {
     if (!isLoading && dateRange?.from && dateRange?.to) {
       setRangeInvoices(getInvoicesForDateRange(dateRange.from, dateRange.to));
       setRangeExpenses(getExpensesForDateRange(dateRange.from, dateRange.to));
       setRangeSalaries(getSalaryPaymentsForDateRange(dateRange.from, dateRange.to));
     }
-     if (!isLoading) {
-      const today = new Date();
-      setTodayInvoices(getInvoicesForDateRange(today, today));
-      setTodayExpenses(getExpensesForDateRange(today, today));
-     }
   }, [isLoading, dateRange, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange]);
 
 
@@ -89,8 +92,6 @@ export default function Dashboard() {
       const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
       const totalExpenses = todayExpenses.reduce((sum, exp) => sum + exp.amount, 0);
       const grossProfit = getGrossProfitForDateRange(todayInvoices);
-      // Note: today's salary payments are not typically considered in daily profit, but could be.
-      // For simplicity, we only subtract general expenses for daily profit.
       const profit = grossProfit - totalExpenses;
       const totalDue = todayInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
       const unitsSold = todayInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
@@ -206,7 +207,6 @@ export default function Dashboard() {
         <div>
             <h2 className="text-lg font-semibold mb-4">Today's Summary</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                {/* Card for Today's Sales */}
                 <Card as="button" onClick={() => setDailySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('todays_sales_card_title')}</CardTitle>
@@ -217,7 +217,6 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
                   </CardContent>
                 </Card>
-                {/* Card for Today's Expenses */}
                 <Card as="button" onClick={() => setDailyExpensesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{"Today's Expenses"}</CardTitle>
@@ -228,7 +227,6 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
                   </CardContent>
                 </Card>
-                 {/* Card for Today's Due */}
                 <Card as="button" onClick={() => setDailyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('todays_due_card_title')}</CardTitle>
@@ -239,7 +237,6 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
                   </CardContent>
                 </Card>
-                 {/* Card for Units Sold Today */}
                 <Card as="button" onClick={() => setDailyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('units_sold_today_card_title')}</CardTitle>
@@ -250,7 +247,6 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{t('total_items_footer')}</p>
                   </CardContent>
                 </Card>
-                {/* Card for Today's Profit */}
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Today's Profit</CardTitle>
@@ -270,7 +266,6 @@ export default function Dashboard() {
         <div>
             <h2 className="text-lg font-semibold mb-4">Date Range Summary ({rangeTitle})</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-              {/* Card for Monthly Sales */}
               <Card as="button" onClick={() => setMonthlySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('monthly_sales_card_title')}</CardTitle>
@@ -281,7 +276,6 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{rangeInvoices.length} invoices in range</p>
                 </CardContent>
               </Card>
-              {/* Card for Monthly Expenses */}
               <Card as="button" onClick={() => setMonthlyExpensesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('monthly_expenses_card_title')}</CardTitle>
@@ -292,7 +286,6 @@ export default function Dashboard() {
                    <p className="text-xs text-muted-foreground">{rangeExpenses.length} entries in range</p>
                 </CardContent>
               </Card>
-              {/* Card for Salary Paid */}
                <Card as="button" onClick={() => setMonthlySalaryReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Salary Paid</CardTitle>
@@ -303,7 +296,6 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{rangeSalaries.length} salary payments</p>
                 </CardContent>
               </Card>
-              {/* Card for Total Due */}
                <Card as="button" onClick={() => setMonthlyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Due</CardTitle>
@@ -314,7 +306,6 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">Outstanding from this range</p>
                 </CardContent>
               </Card>
-              {/* Card for Total Units Sold */}
                <Card as="button" onClick={() => setMonthlyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Units Sold</CardTitle>
@@ -325,7 +316,6 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">Total items sold in range</p>
                 </CardContent>
               </Card>
-              {/* Card for Profit */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t('profit_card_title')}</CardTitle>
