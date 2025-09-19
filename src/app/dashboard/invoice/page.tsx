@@ -41,7 +41,7 @@ import { Separator } from '@/components/ui/separator';
 
 
 export default function InvoicePage() {
-  const { saveAndPrintInvoice } = useAppData();
+  const { addInvoice } = useAppData();
   const { settings } = useSettings();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -108,7 +108,7 @@ export default function InvoicePage() {
       
       if (isPrinting && activeDraft && printInitiated) {
         try {
-          const newInvoiceId = await saveAndPrintInvoice(activeDraft);
+          const newInvoiceId = await addInvoice(activeDraft);
           if (newInvoiceId) {
             toast({
               title: t('invoice_saved_toast_title'),
@@ -144,7 +144,7 @@ export default function InvoicePage() {
         clearTimeout(printCancelTimer.current);
       }
     };
-  }, [isPrinting, activeDraft, saveAndPrintInvoice, resetActiveDraft, toast, t]);
+  }, [isPrinting, activeDraft, addInvoice, resetActiveDraft, toast, t]);
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');

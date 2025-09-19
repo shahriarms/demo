@@ -1,7 +1,7 @@
 
 // This file contains the PostgreSQL implementation for the ProductService.
 // It is only imported and used on the server-side when a POSTGRES_URL is available.
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import type { Product } from '@/lib/types';
 
 let pool: Pool;
@@ -92,22 +92,15 @@ class PostgresProductService {
         return formatProduct(result.rows[0]);
     }
     
-    static async updateMultipleStocks(updates: { id: string; stockChange: number }[]): Promise<void> {
-        const client = await pool.connect();
-        try {
-            await client.query('BEGIN');
-            for (const update of updates) {
-                await client.query(
-                    'UPDATE products SET stock = stock + $1 WHERE id = $2',
-                    [update.stockChange, update.id]
-                );
-            }
-            await client.query('COMMIT');
-        } catch (e) {
-            await client.query('ROLLBACK');
-            throw e;
-        } finally {
-            client.release();
+    static async updateMultipleStocks(updates: { id: string; stockChange: number }[], client: PoolClient = pool as any): Promise<void> {
+        // If a client is passed, use it (for transactions). Otherwise, use the pool.
+        const queryRunner = client === (pool as any) ? pool : client;
+
+        for (const update of updates) {
+            await queryRunner.query(
+                'UPDATE products SET stock = stock + $1 WHERE id = $2',
+                [update.stockChange, update.id]
+            );
         }
     }
 

@@ -125,7 +125,7 @@ export default function BuyersDuePage() {
             clearTimeout(printCancelTimer.current);
         }
     };
-  }, [paymentStatus, pendingPayment, addPayment, toast, getInvoicesForBuyer]);
+  }, [paymentStatus, pendingPayment, addPayment, toast, getInvoicesForBuyer, t]);
 
   // Reset status when selections change
   useEffect(() => {

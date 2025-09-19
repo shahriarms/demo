@@ -3,24 +3,100 @@
 
 import { Pool } from 'pg';
 import type { Product, Invoice, Buyer, Expense, Employee, SalaryPayment, Payment } from '@/lib/types';
+import PostgresDataService from '@/services/data-service.postgres';
 
 // This is a Server Action file. It will only run on the server.
 const usePostgres = !!process.env.POSTGRES_URL;
 
 interface BackupData {
     products: Product[];
-    // Future tables can be added here
-    // invoices: Invoice[];
-    // buyers: Buyer[];
-    // expenses: Expense[];
-    // employees: Employee[];
-    // salaryPayments: SalaryPayment[];
-    // payments: Payment[];
+    invoices: Invoice[];
+    buyers: Buyer[];
+    expenses: Expense[];
+    employees: Employee[];
+    salaryPayments: SalaryPayment[];
+    payments: Payment[];
 }
 
-let pool: Pool;
-if (usePostgres) {
-    pool = new Pool({ connectionString: process.env.POSTGRES_URL });
+export async function getAllData(): Promise<Omit<BackupData, 'products'>> {
+    if (!usePostgres) {
+        throw new Error("Database not connected. Cannot fetch data.");
+    }
+    return PostgresDataService.getAllData();
+}
+
+export async function addInvoice(invoiceData: Omit<Invoice, 'id'>, items: any[]): Promise<Invoice> {
+    if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    return PostgresDataService.addInvoice(invoiceData, items);
+}
+
+export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expense> {
+    if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    return PostgresDataService.addExpense(expenseData);
+}
+
+export async function updateExpense(expenseId: string, updatedData: Omit<Expense, 'id'>): Promise<Expense | null> {
+    if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    return PostgresDataService.updateExpense(expenseId, updatedData);
+}
+
+export async function deleteExpense(expenseId: string): Promise<{ success: boolean }> {
+    if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    await PostgresDataService.deleteExpense(expenseId);
+    return { success: true };
+}
+
+
+export async function addEmployee(employeeData: Omit<Employee, 'id'>): Promise<Employee> {
+    if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    return PostgresDataService.addEmployee(employeeData);
+}
+
+export async function updateEmployee(employeeId: string, updatedData: Omit<Employee, 'id'>): Promise<Employee | null> {
+    if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    return PostgresDataService.updateEmployee(employeeId, updatedData);
+}
+
+export async function deleteEmployee(employeeId: string): Promise<{ success: boolean }> {
+    if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    await PostgresDataService.deleteEmployee(employeeId);
+    return { success: true };
+}
+
+
+export async function addSalaryPayment(paymentData: Omit<SalaryPayment, 'id'>): Promise<SalaryPayment> {
+    if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    return PostgresDataService.addSalaryPayment(paymentData);
+}
+
+export async function addPayment(paymentData: Omit<Payment, 'id' | 'date'>): Promise<Payment> {
+     if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    return PostgresDataService.addPayment(paymentData);
+}
+
+export async function markAttendance(attendanceData: Omit<Attendance, 'id'>): Promise<Attendance> {
+     if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    return PostgresDataService.markAttendance(attendanceData);
 }
 
 
@@ -28,13 +104,15 @@ export async function exportAllData(): Promise<BackupData> {
     if (!usePostgres) {
         throw new Error("Database not connected. Cannot export data.");
     }
-    const products = await pool.query('SELECT * FROM products');
-    // In the future, query all other tables here
+    
+    const [products, otherData] = await Promise.all([
+        PostgresDataService.getAllProducts(),
+        PostgresDataService.getAllData()
+    ]);
     
     return {
-        products: products.rows,
-        // invoices: invoices.rows,
-        // ... and so on for other tables
+        products,
+        ...otherData
     };
 }
 
@@ -44,39 +122,5 @@ export async function importAllData(data: BackupData): Promise<{ success: boolea
         throw new Error("Database not connected. Cannot import data.");
     }
     
-    const client = await pool.connect();
-
-    try {
-        await client.query('BEGIN');
-
-        // Clear existing data from tables in the correct order to avoid foreign key constraints
-        // Example: await client.query('TRUNCATE payments, salaryPayments, invoices, buyers, expenses, employees, products RESTART IDENTITY CASCADE');
-        await client.query('TRUNCATE products RESTART IDENTITY CASCADE');
-        console.log('Truncated existing tables.');
-
-        // Import products
-        if (data.products && data.products.length > 0) {
-            for (const p of data.products) {
-                 await client.query(
-                    'INSERT INTO products (id, name, sku, "buyingPrice", "profitMargin", "sellingPrice", stock, "mainCategory", category, "subCategory") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-                    [p.id, p.name, p.sku, p.buyingPrice, p.profitMargin, p.sellingPrice, p.stock, p.mainCategory, p.category, p.subCategory]
-                );
-            }
-            console.log(`Imported ${data.products.length} products.`);
-        }
-        
-        // Add loops for other data types here in the future
-        // e.g., for (const invoice of data.invoices) { ... }
-
-        await client.query('COMMIT');
-        return { success: true, message: "Data imported successfully." };
-    } catch (e: any) {
-        await client.query('ROLLBACK');
-        console.error('Import failed, transaction rolled back.', e);
-        return { success: false, message: e.message || "An unknown error occurred during import." };
-    } finally {
-        client.release();
-    }
+    return PostgresDataService.importAllData(data);
 }
-
-    
