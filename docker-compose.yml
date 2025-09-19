@@ -9,7 +9,8 @@ services:
     environment:
       POSTGRES_URL: postgresql://user:password@db:5432/stockpilot_db
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: always
 
   db:
@@ -24,6 +25,11 @@ services:
     ports:
       - "5432:5432"
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d stockpilot_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4
@@ -34,7 +40,8 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     restart: always
