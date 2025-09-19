@@ -428,19 +428,19 @@ export default function InvoicePage() {
   );
 
   const desktopLayout = (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
       {/* Left Column */}
       <div className="lg:col-span-1 flex flex-col gap-4">
         {customerInfoCard}
         {addProductsCard}
       </div>
 
-      {/* Middle & Right Column Wrapper */}
-      <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-         <div className="md:col-span-1 h-full">
+      {/* Right Column */}
+      <div className="lg:col-span-1 grid grid-cols-1 md:grid-cols-2 gap-4 h-full overflow-hidden">
+         <div className="md:col-span-1 h-full min-h-0">
             {invoiceItemsCard}
          </div>
-         <div className="md:col-span-1 h-full">
+         <div className="md:col-span-1 h-full min-h-0">
             {livePreviewCard}
          </div>
       </div>
