@@ -21,6 +21,7 @@ interface AppDataContextType {
     payments: Payment[];
     isAppDataLoading: boolean;
     isDbConnected: boolean;
+    lastInvoiceId: number;
     
     // Product Functions
     addProduct: (product: Omit<Product, 'id' | 'sellingPrice'>) => Promise<void>;
@@ -96,6 +97,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [payments, setPayments] = useState<Payment[]>([]);
     const [isAppDataLoading, setIsAppDataLoading] = useState(true);
     const [isDbConnected, setIsDbConnected] = useState(false);
+    const [lastInvoiceId, setLastInvoiceId] = useState(0);
 
     const loadAllData = useCallback(async () => {
         setIsAppDataLoading(true);
@@ -116,6 +118,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 setAttendance(serverData.attendance);
                 setSalaryPayments(serverData.salaryPayments);
                 setPayments(serverData.payments);
+                setLastInvoiceId(serverData.invoices[0]?.id || 0);
             } else {
                 toast({ variant: 'destructive', title: 'Database not connected', description: 'Running in offline mode. Data will not be saved.' });
             }
@@ -366,7 +369,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [getPaymentsForMonth]);
 
     const value = useMemo(() => ({
-        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
+        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected, lastInvoiceId,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
         addInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
@@ -374,7 +377,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate,
         addSalaryPayment, getPaymentsForMonth, getSalaryPaymentsForDateRange, getDueSalaryForMonth,
     }), [
-        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected,
+        products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected, lastInvoiceId,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
         addInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,

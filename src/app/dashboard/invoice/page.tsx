@@ -296,7 +296,7 @@ export default function InvoicePage() {
             <Card>
                 <CardHeader>
                     <CardTitle>{activeDraft.label}</CardTitle>
-                    <CardDescription>{t('invoice_no_label')}: {typeof draftId === 'number' ? draftId : '...'}</CardDescription>
+                    <CardDescription>{t('invoice_no_label')}: {draftId}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -519,3 +519,4 @@ export default function InvoicePage() {
     </div>
   );
 }
+
