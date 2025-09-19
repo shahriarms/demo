@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useContext, ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
@@ -17,7 +16,7 @@ export interface DraftInvoice {
     customerName: string;
     customerAddress: string;
     customerPhone: string;
-    paidAmount: number;
+    paidAmount?: number;
     subtotal: number;
     dueAmount: number;
     cashReceived?: number;
@@ -50,16 +49,16 @@ const createNewDraft = (index: number = 0): DraftInvoice => ({
     customerName: '',
     customerAddress: '',
     customerPhone: '',
-    paidAmount: 0,
+    paidAmount: undefined,
     subtotal: 0,
     dueAmount: 0,
     cashReceived: undefined,
     changeAmount: 0,
 });
 
-const calculateTotals = (items: DraftInvoiceItem[], paidAmount: number, cashReceived?: number) => {
+const calculateTotals = (items: DraftInvoiceItem[], paidAmount?: number, cashReceived?: number) => {
     const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const dueAmount = subtotal - paidAmount;
+    const dueAmount = subtotal - (paidAmount || 0);
     const changeAmount = (cashReceived && cashReceived > subtotal) ? cashReceived - subtotal : 0;
     return { subtotal, dueAmount, changeAmount };
 };

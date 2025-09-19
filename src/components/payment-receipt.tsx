@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -21,8 +20,8 @@ interface PaymentReceiptProps {
 }
 
 export const PaymentReceipt = React.forwardRef<HTMLDivElement, PaymentReceiptProps>(
-  ({ buyer, invoice, paymentHistory, newPaymentAmount = 0 }, ref) => {
-    const totalPaid = invoice.paidAmount + newPaymentAmount;
+  ({ buyer, invoice, paymentHistory, newPaymentAmount }, ref) => {
+    const totalPaid = (invoice.paidAmount || 0) + (newPaymentAmount || 0);
     const currentDue = invoice.subtotal - totalPaid;
 
     return (

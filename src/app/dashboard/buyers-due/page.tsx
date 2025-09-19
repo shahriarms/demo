@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
@@ -310,7 +309,7 @@ export default function BuyersDuePage() {
                                       buyer={selectedBuyer}
                                       invoice={selectedInvoice}
                                       paymentHistory={receiptPaymentHistory}
-                                      newPaymentAmount={pendingPayment?.amount || 0}
+                                      newPaymentAmount={pendingPayment?.amount}
                                   />
                               </div>
                           ) : (

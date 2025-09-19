@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react';
@@ -53,23 +52,23 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
     const form = useForm<ExpenseFormValues>({
         resolver: zodResolver(expenseSchema),
         defaultValues: isEditMode
-            ? { ...expense, date: new Date(expense.date) }
+            ? { ...expense, date: new Date(expense.date), amount: expense.amount || undefined }
             : {
                 mainCategory: 'Shop',
                 name: '',
                 description: '',
-                amount: 0,
+                amount: undefined,
                 date: new Date(),
             },
     });
 
     useEffect(() => {
         if (open) {
-            form.reset(isEditMode ? { ...expense, date: new Date(expense.date) } : {
+            form.reset(isEditMode ? { ...expense, date: new Date(expense.date), amount: expense.amount || undefined } : {
                 mainCategory: 'Shop',
                 name: '',
                 description: '',
-                amount: 0,
+                amount: undefined,
                 date: new Date(),
             });
         }
@@ -151,7 +150,7 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
                                     <FormItem>
                                         <FormLabel>{t('amount_label')}</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="0.00" {...field} />
+                                            <Input type="number" placeholder="0.00" {...field} value={field.value ?? ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

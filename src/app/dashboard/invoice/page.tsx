@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -380,8 +379,8 @@ export default function InvoicePage() {
                             id='paidAmount' 
                             type="text"
                             inputMode='decimal'
-                            value={paidAmount || ''} 
-                            onChange={e => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || 0 })} 
+                            value={paidAmount ?? ''} 
+                            onChange={e => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || undefined })} 
                             className="h-9 pl-5 text-right font-medium"
                             placeholder='0'
                         />
@@ -416,7 +415,7 @@ export default function InvoicePage() {
                         customerPhone={customerPhone}
                         invoiceItems={items}
                         subtotal={subtotal}
-                        paidAmount={paidAmount}
+                        paidAmount={paidAmount || 0}
                         dueAmount={dueAmount}
                         printFormat={settings.printFormat}
                         locale={settings.locale}
@@ -505,7 +504,7 @@ export default function InvoicePage() {
                                 id='cashReceived' 
                                 type="text"
                                 inputMode='decimal'
-                                value={cashReceived || ''} 
+                                value={cashReceived ?? ''} 
                                 onChange={e => updateActiveDraft({ cashReceived: parseFloat(e.target.value) || undefined })} 
                                 className="pl-5 text-right font-bold text-lg h-11"
                                 placeholder='0'
