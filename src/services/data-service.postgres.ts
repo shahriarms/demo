@@ -1,14 +1,24 @@
 
+'use server';
+
 import { Pool } from 'pg';
 import type { Product, Invoice, Buyer, Expense, Employee, SalaryPayment, Payment, Attendance, AttendanceStatus } from '@/lib/types';
 import PostgresProductService from './product-service.postgres';
 
-let pool: Pool;
+// This is a Server Action file. It will only run on the server.
+const usePostgres = !!process.env.POSTGRES_URL;
 
-if (process.env.POSTGRES_URL) {
-    pool = new Pool({
-        connectionString: process.env.POSTGRES_URL,
-    });
+const pool = usePostgres ? new Pool({ connectionString: process.env.POSTGRES_URL }) : null;
+
+
+interface BackupData {
+    products: Product[];
+    invoices: Invoice[];
+    buyers: Buyer[];
+    expenses: Expense[];
+    employees: Employee[];
+    salaryPayments: SalaryPayment[];
+    payments: Payment[];
 }
 
 // Helper function to format row data from snake_case to camelCase if needed, and parse JSON
@@ -42,6 +52,7 @@ function formatRow(row: any) {
 class PostgresDataService {
 
     static async getAllData() {
+        if (!pool) throw new Error("Database not connected.");
         const invoices = (await pool.query('SELECT * FROM invoices ORDER BY id DESC')).rows.map(formatRow) as Invoice[];
         const buyers = (await pool.query('SELECT * FROM buyers ORDER BY name ASC')).rows.map(formatRow) as Buyer[];
         const expenses = (await pool.query('SELECT * FROM expenses ORDER BY date DESC')).rows.map(formatRow) as Expense[];
@@ -58,6 +69,7 @@ class PostgresDataService {
     }
     
     static async addInvoice(invoiceData: Omit<Invoice, 'id'>, items: any[]): Promise<Invoice> {
+        if (!pool) throw new Error("Database not connected.");
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -109,6 +121,7 @@ class PostgresDataService {
     }
 
     static async addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expense> {
+        if (!pool) throw new Error("Database not connected.");
         const newId = `exp-${Date.now()}`;
         const newExpense = { ...expenseData, id: newId };
         await pool.query(
@@ -119,6 +132,7 @@ class PostgresDataService {
     }
 
     static async updateExpense(expenseId: string, updatedData: Omit<Expense, 'id'>): Promise<Expense | null> {
+        if (!pool) throw new Error("Database not connected.");
         const { mainCategory, name, description, amount, date } = updatedData;
         const result = await pool.query(
             'UPDATE expenses SET main_category = $1, name = $2, description = $3, amount = $4, date = $5 WHERE id = $6 RETURNING *',
@@ -128,10 +142,12 @@ class PostgresDataService {
     }
 
     static async deleteExpense(expenseId: string): Promise<void> {
+        if (!pool) throw new Error("Database not connected.");
         await pool.query('DELETE FROM expenses WHERE id = $1', [expenseId]);
     }
 
      static async addEmployee(employeeData: Omit<Employee, 'id'>): Promise<Employee> {
+        if (!pool) throw new Error("Database not connected.");
         const newId = `emp-${Date.now()}`;
         const newEmployee = { ...employeeData, id: newId };
         await pool.query(
@@ -142,6 +158,7 @@ class PostgresDataService {
     }
 
     static async updateEmployee(employeeId: string, updatedData: Omit<Employee, 'id'>): Promise<Employee | null> {
+        if (!pool) throw new Error("Database not connected.");
         const { name, phone, address, role, salary, joiningDate } = updatedData;
         const result = await pool.query(
             'UPDATE employees SET name = $1, phone = $2, address = $3, role = $4, salary = $5, joining_date = $6 WHERE id = $7 RETURNING *',
@@ -151,10 +168,12 @@ class PostgresDataService {
     }
 
     static async deleteEmployee(employeeId: string): Promise<void> {
+        if (!pool) throw new Error("Database not connected.");
         await pool.query('DELETE FROM employees WHERE id = $1', [employeeId]);
     }
     
     static async addSalaryPayment(paymentData: Omit<SalaryPayment, 'id'>): Promise<SalaryPayment> {
+        if (!pool) throw new Error("Database not connected.");
         const newId = `sal-${Date.now()}`;
         const newPayment = { ...paymentData, id: newId };
         await pool.query(
@@ -165,6 +184,7 @@ class PostgresDataService {
     }
 
     static async addPayment(paymentData: Omit<Payment, 'id' | 'date'>): Promise<Payment> {
+        if (!pool) throw new Error("Database not connected.");
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -193,6 +213,7 @@ class PostgresDataService {
     }
 
     static async markAttendance(attendanceData: Omit<Attendance, 'id'>): Promise<Attendance> {
+        if (!pool) throw new Error("Database not connected.");
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -233,6 +254,7 @@ class PostgresDataService {
     }
 
     static async importAllData(data: { products?: Product[], invoices?: Invoice[], buyers?: Buyer[], expenses?: Expense[], employees?: Employee[], salaryPayments?: SalaryPayment[], payments?: Payment[], attendance?: Attendance[] }): Promise<{ success: boolean; message: string }> {
+        if (!pool) throw new Error("Database not connected.");
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
