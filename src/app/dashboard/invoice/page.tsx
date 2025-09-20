@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAppData } from '@/hooks/use-app-data';
 import { Plus, Trash2, Printer, X, Loader2, Search } from 'lucide-react';
-import { useInvoiceForm } from '@/hooks/use-invoice-form';
+import { useInvoiceForm, InvoiceFormProvider } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useSettings } from '@/hooks/use-settings';
@@ -31,7 +31,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Separator } from '@/components/ui/separator';
 
 
-export default function InvoicePage() {
+function InvoicePage() {
   const { addInvoice } = useAppData();
   const { settings } = useSettings();
   const { toast } = useToast();
@@ -517,5 +517,13 @@ export default function InvoicePage() {
           </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+export default function InvoicePageWrapper() {
+  return (
+    <InvoiceFormProvider>
+      <InvoicePage />
+    </InvoiceFormProvider>
   );
 }
