@@ -278,7 +278,7 @@ export default function InvoicePage() {
           </div>
 
           {/* Main Content Area */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Column 1: Customer Info & Product Adder */}
             <div className="flex flex-col gap-4">
               <Card>
@@ -363,7 +363,7 @@ export default function InvoicePage() {
             </div>
 
             {/* Column 2: Invoice Items & Preview */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="flex flex-col gap-4">
                 <Card className="flex flex-col">
                   <CardHeader>
                       <CardTitle>Invoice Items</CardTitle>
@@ -475,23 +475,23 @@ export default function InvoicePage() {
           </div>
       </div>
 
-      <div className="print-source">
-        {invoiceToPrint && (
-          <InvoicePrintLayout
-            invoiceId={invoiceToPrint.id}
-            currentDate={new Date().toLocaleDateString()}
-            customerName={invoiceToPrint.customerName}
-            customerAddress={invoiceToPrint.customerAddress}
-            customerPhone={invoiceToPrint.customerPhone}
-            invoiceItems={invoiceToPrint.items}
-            subtotal={invoiceToPrint.subtotal}
-            paidAmount={invoiceToPrint.paidAmount || 0}
-            dueAmount={invoiceToPrint.dueAmount}
-            printFormat={settings.printFormat}
-            locale={settings.locale}
-          />
-        )}
-      </div>
+      {invoiceToPrint && (
+        <div className="print-source">
+            <InvoicePrintLayout
+                invoiceId={invoiceToPrint.id}
+                currentDate={new Date().toLocaleDateString()}
+                customerName={invoiceToPrint.customerName}
+                customerAddress={invoiceToPrint.customerAddress}
+                customerPhone={invoiceToPrint.customerPhone}
+                invoiceItems={invoiceToPrint.items}
+                subtotal={invoiceToPrint.subtotal}
+                paidAmount={invoiceToPrint.paidAmount || 0}
+                dueAmount={invoiceToPrint.dueAmount}
+                printFormat={settings.printFormat}
+                locale={settings.locale}
+            />
+        </div>
+      )}
 
       <AlertDialog open={!!draftToDelete} onOpenChange={() => setDraftToDelete(null)}>
           <AlertDialogContent>
@@ -527,5 +527,3 @@ export default function InvoicePage() {
     </main>
   );
 }
-
-    
