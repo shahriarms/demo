@@ -4,6 +4,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import type { AppSettings } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from 'lucide-react';
 
 const SETTINGS_STORAGE_KEY = 'stockpilot-settings';
 
@@ -32,15 +33,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     try {
       const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
       if (savedSettings) {
-        // Merge saved settings with defaults to ensure all keys are present
         const parsedSettings = JSON.parse(savedSettings);
         setSettings({ ...defaultSettings, ...parsedSettings });
-      } else {
-        setSettings(defaultSettings);
       }
     } catch (error) {
       console.error("Failed to load settings from localStorage", error);
-      setSettings(defaultSettings);
     }
     setIsLoading(false);
   }, []);
@@ -48,17 +45,34 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
-    if (newSettings.locale) {
-        document.documentElement.lang = newSettings.locale;
+    try {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+        if (newSettings.locale) {
+            document.documentElement.lang = newSettings.locale;
+        }
+        toast({
+            title: "Settings Updated",
+            description: "Your changes have been saved.",
+        });
+    } catch (error) {
+        console.error("Failed to save settings to localStorage", error);
+        toast({
+            variant: "destructive",
+            title: "Error Saving Settings",
+            description: "Could not save your settings.",
+        });
     }
-    toast({
-        title: "Settings Updated",
-        description: "Your changes have been saved.",
-    });
   }, [settings, toast]);
   
   const value = useMemo(() => ({ settings, updateSettings, isLoading }), [settings, updateSettings, isLoading]);
+
+  if (isLoading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    );
+  }
 
   return (
     <SettingsContext.Provider value={value}>
