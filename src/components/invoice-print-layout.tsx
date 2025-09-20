@@ -54,9 +54,9 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
 
     const memoStyles: React.CSSProperties = {
         background: '#fff',
+        color: '#000',
         fontFamily: 'sans-serif',
         fontSize: '14px',
-        color: '#333',
         maxWidth: isPos ? '80mm' : '800px',
         margin: 'auto',
         padding: isPos ? '0.25rem' : '2rem',

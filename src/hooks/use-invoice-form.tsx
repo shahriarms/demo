@@ -32,11 +32,11 @@ interface InvoiceFormContextType {
     addNewDraft: () => void;
     removeDraft: (draftId: string | number) => void;
     setActiveDraftIndex: (index: number) => void;
-    updateActiveDraft: (update: Partial<Omit<DraftInvoice, 'id' | 'subtotal' | 'dueAmount' | 'changeAmount' | 'label'>>) => void;
+    updateActiveDraft: (update: Partial<Omit<DraftInvoice, 'subtotal' | 'dueAmount' | 'changeAmount' | 'label'>>) => void;
     addInvoiceItem: (product: Product) => void;
     updateInvoiceItem: (itemId: string, update: Partial<DraftInvoiceItem>) => void;
     removeInvoiceItem: (itemId: string) => void;
-    resetActiveDraft: (newInvoiceId?: number) => void;
+    resetActiveDraft: () => void;
     isFormLoading: boolean;
     products: Product[];
 }
@@ -179,7 +179,7 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         });
     }, [activeDraftIndex, lastInvoiceId, isAppDataLoading]);
 
-    const updateActiveDraft = useCallback((update: Partial<Omit<DraftInvoice, 'id' | 'subtotal' | 'dueAmount' | 'changeAmount' | 'label'>>) => {
+    const updateActiveDraft = useCallback((update: Partial<Omit<DraftInvoice, 'subtotal' | 'dueAmount' | 'changeAmount' | 'label'>>) => {
         setDrafts(prev => prev.map((draft, index) => {
             if (index === activeDraftIndex) {
                 const updatedDraft = { ...draft, ...update };
@@ -238,12 +238,9 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         }));
     }, [activeDraftIndex]);
 
-    const resetActiveDraft = useCallback((newInvoiceId?: number) => {
+    const resetActiveDraft = useCallback(() => {
         setDrafts(prev => prev.map((draft, index) => {
             if (index === activeDraftIndex) {
-                if (newInvoiceId) {
-                    return {...createNewDraft(index, 0, false), id: newInvoiceId, label: `Inv #${newInvoiceId}`};
-                }
                 return createNewDraft(index, lastInvoiceId, isAppDataLoading);
             }
             return draft;

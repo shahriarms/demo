@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAppData } from '@/hooks/use-app-data';
-import { Plus, Trash2, Printer, X, Loader2, Search } from 'lucide-react';
+import { Plus, Trash2, Printer, X, Loader2, Search, RotateCcw } from 'lucide-react';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
@@ -54,7 +54,7 @@ export default function InvoicePage() {
   } = useInvoiceForm();
   
   const [draftToDelete, setDraftToDelete] = useState<DraftInvoice | null>(null);
-  const [isPrinting, setIsPrinting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isPrintConfirmOpen, setPrintConfirmOpen] = useState(false);
   
   const { id: draftId, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount, items, cashReceived, changeAmount } = activeDraft || {};
@@ -80,7 +80,7 @@ export default function InvoicePage() {
     if (!validateInvoice() || !activeDraft) return;
 
     setPrintConfirmOpen(false);
-    setIsPrinting(true);
+    setIsProcessing(true);
 
     try {
         const newInvoiceId = await addInvoice(activeDraft);
@@ -93,7 +93,7 @@ export default function InvoicePage() {
             
             // This is a crucial step. We update the draft with the final ID
             // so the printed version has the correct invoice number.
-            resetActiveDraft(newInvoiceId);
+            updateActiveDraft({id: newInvoiceId});
 
             // We need a short delay to allow React to re-render the print layout with the new ID.
             await new Promise(resolve => setTimeout(resolve, 50));
@@ -108,10 +108,17 @@ export default function InvoicePage() {
             description: error.message || 'Failed to save or print the invoice.',
         });
     } finally {
-        // This will now run regardless of print success or cancellation.
-        setIsPrinting(false);
+        setIsProcessing(false);
     }
   };
+
+  const handleReset = () => {
+    resetActiveDraft();
+    toast({
+        title: "Memo Reset",
+        description: "A new, empty memo is ready for you.",
+    });
+  }
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -418,10 +425,16 @@ export default function InvoicePage() {
                        <span>৳{(dueAmount ?? 0).toFixed(2)}</span>
                    </div>
                 </div>
-                <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isPrinting}>
-                    {isPrinting ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
-                    {isPrinting ? 'Printing...' : t('save_and_print_button')}
-                </Button>
+                <div className="flex gap-2">
+                    <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isProcessing} className="flex-1">
+                        {isProcessing ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
+                        {isProcessing ? 'Processing...' : t('save_and_print_button')}
+                    </Button>
+                    <Button onClick={handleReset} variant="outline">
+                        <RotateCcw className="mr-2" />
+                        Reset
+                    </Button>
+                </div>
             </CardFooter>
           </Card>
         </div>
