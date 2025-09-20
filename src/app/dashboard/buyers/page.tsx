@@ -61,14 +61,14 @@ export default function BuyersPage() {
   // whenever a new invoice is selected.
   useEffect(() => {
     const originalTitle = document.title;
-    if (selectedInvoice) {
+    if (isPrinting && selectedInvoice) {
       document.title = `invoice-${selectedInvoice.id}`;
     }
     // Cleanup function to restore title when component unmounts or selection changes
     return () => {
       document.title = originalTitle;
     };
-  }, [selectedInvoice]);
+  }, [selectedInvoice, isPrinting]);
 
   const filteredInvoices = useMemo(() => {
     if (!invoiceSearchTerm) return invoices;
@@ -200,12 +200,24 @@ export default function BuyersPage() {
                     {t('print_invoice_button')}
                 </Button>
             </CardHeader>
-            <CardContent className="flex-1">
+            <CardContent className="flex-1 overflow-auto">
                 {selectedInvoice ? (
                    <ScrollArea className="h-full">
-                     <div className="p-4 bg-muted/50 rounded-lg overflow-auto">
-                        <div className="min-w-[820px] transform scale-[0.8] sm:scale-[0.9] origin-top">
-                           {/* This layout is used for on-screen preview only. The `print-source` div handles actual printing */}
+                     <div className="p-4 bg-muted/50 rounded-lg">
+                        <div className="transform scale-[0.9] origin-top">
+                           <InvoicePrintLayout 
+                                invoiceId={selectedInvoice.id}
+                                currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                                customerName={selectedInvoice.customerName}
+                                customerAddress={selectedInvoice.customerAddress}
+                                customerPhone={selectedInvoice.customerPhone}
+                                invoiceItems={selectedInvoice.items}
+                                subtotal={selectedInvoice.subtotal}
+                                paidAmount={selectedInvoice.paidAmount}
+                                dueAmount={selectedInvoice.dueAmount}
+                                printFormat={settings.printFormat}
+                                locale={settings.locale}
+                            />
                         </div>
                      </div>
                    </ScrollArea>
