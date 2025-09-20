@@ -17,11 +17,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter as UiTableFooter,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileDown } from 'lucide-react';
 import type { Invoice } from '@/lib/types';
-import { format, isSameDay, startOfMonth, endOfMonth } from 'date-fns';
+import { format, isSameDay, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -37,11 +38,7 @@ interface MonthlySalesDialogProps {
 
 interface ReportItem {
   date: string;
-  customerName: string;
-  itemName: string;
-  quantity: number;
-  rate: number;
-  total: number;
+  totalSales: number;
 }
 
 export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: MonthlySalesDialogProps) {
@@ -63,27 +60,34 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: 
 
     const reportData = useMemo((): ReportItem[] => {
         if (!invoices) return [];
-        return invoices.flatMap(invoice => 
-            invoice.items.map(item => ({
-                date: format(new Date(invoice.date), 'PP'),
-                customerName: invoice.customerName,
-                itemName: item.name,
-                quantity: item.quantity,
-                rate: item.price,
-                total: item.price * item.quantity,
+        const salesByDay = new Map<string, number>();
+
+        invoices.forEach(invoice => {
+            const dateKey = format(parseISO(invoice.date), 'yyyy-MM-dd');
+            salesByDay.set(dateKey, (salesByDay.get(dateKey) || 0) + invoice.subtotal);
+        });
+        
+        return Array.from(salesByDay.entries())
+            .map(([date, totalSales]) => ({
+                date: format(parseISO(date), 'PP'),
+                totalSales,
             }))
-        ).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
     }, [invoices]);
+
+    const totalSales = useMemo(() => reportData.reduce((sum, item) => sum + item.totalSales, 0), [reportData]);
 
     const handleExportExcel = () => {
         const worksheet = XLSX.utils.json_to_sheet(reportData.map(item => ({
             "Date": item.date,
-            "Customer Name": item.customerName,
-            "Item Name": item.itemName,
-            "Quantity": item.quantity,
-            "Rate": item.rate,
-            "Total": item.total,
+            "Total Sales": item.totalSales,
         })));
+        
+        // Add total row
+        const totalRow = { "Date": "Grand Total", "Total Sales": totalSales };
+        XLSX.utils.sheet_add_json(worksheet, [totalRow], { skipHeader: true, origin: -1 });
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Sales Report");
         XLSX.writeFile(workbook, `sales_report.xlsx`);
@@ -93,29 +97,26 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: 
         const doc = new jsPDF();
         doc.text(rangeTitle, 14, 16);
         (doc as any).autoTable({
-            head: [['Date', 'Customer Name', 'Item Name', 'Quantity', 'Rate', 'Total']],
+            head: [['Date', 'Total Sales']],
             body: reportData.map(item => [
                 item.date,
-                item.customerName,
-                item.itemName,
-                item.quantity,
-                '৳ '+item.rate.toFixed(2),
-                '৳ '+item.total.toFixed(2),
+                '৳ '+item.totalSales.toFixed(2),
             ]),
+            foot: [['Grand Total', '৳ '+totalSales.toFixed(2)]],
+            footStyles: { fontStyle: 'bold' },
             startY: 22,
         });
         doc.save(`sales_report.pdf`);
     };
 
-    const totalSales = useMemo(() => reportData.reduce((sum, item) => sum + item.total, 0), [reportData]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A detailed list of all items sold in the selected date range. Total Sales: <strong>৳ {totalSales.toFixed(2)}</strong>
+            A summary of total sales per day within the selected date range. Grand Total: <strong>৳ {totalSales.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -129,33 +130,33 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: 
             <TableHeader className="sticky top-0 bg-background">
               <TableRow>
                 <TableHead>Date</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Item</TableHead>
-                <TableHead className="text-right">Qty</TableHead>
-                <TableHead className="text-right">Rate</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-right">Total Sales</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {reportData.length > 0 ? (
                 reportData.map((item, index) => (
                   <TableRow key={index}>
-                    <TableCell className="font-mono text-xs">{item.date}</TableCell>
-                    <TableCell>{item.customerName}</TableCell>
-                    <TableCell className="font-medium">{item.itemName}</TableCell>
-                    <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right font-mono"><span className="text-muted-foreground">৳</span> {item.rate.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold"><span className="text-muted-foreground">৳</span> {item.total.toFixed(2)}</TableCell>
+                    <TableCell className="font-mono text-sm">{item.date}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold"><span className="text-muted-foreground">৳</span> {item.totalSales.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={2} className="h-24 text-center">
                     No sales recorded for this date range.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
+            {reportData.length > 0 && (
+                <UiTableFooter>
+                    <TableRow>
+                        <TableCell className="font-bold">Grand Total</TableCell>
+                        <TableCell className="text-right font-bold font-mono">৳ {totalSales.toFixed(2)}</TableCell>
+                    </TableRow>
+                </UiTableFooter>
+            )}
           </Table>
         </ScrollArea>
 
@@ -168,5 +169,3 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: 
     </Dialog>
   );
 }
-
-    
