@@ -133,14 +133,6 @@ export default function InvoicePage() {
     }
   }, [invoiceToPrint, resetActiveDraft, toast]);
 
-  const handleReset = () => {
-    resetActiveDraft();
-    toast({
-        title: "Memo Reset",
-        description: "A new, empty memo is ready for you.",
-    });
-  }
-
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
@@ -458,10 +450,6 @@ export default function InvoicePage() {
                                 {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>} 
                                 {isProcessing ? 'Processing...' : t('save_and_print_button')}
                             </Button>
-                            <Button onClick={handleReset} variant="outline">
-                                <RotateCcw className="mr-2 h-4 w-4" />
-                                Reset
-                            </Button>
                         </div>
                     </CardHeader>
                     <CardContent className="p-4 bg-muted/50 rounded-lg overflow-auto">
@@ -538,3 +526,5 @@ export default function InvoicePage() {
     </main>
   );
 }
+
+    
