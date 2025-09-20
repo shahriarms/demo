@@ -426,7 +426,13 @@ export default function InvoicePage() {
                         <span>৳{(dueAmount ?? 0).toFixed(2)}</span>
                     </div>
                     </div>
-                    <div className="flex gap-2">
+                </CardFooter>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex-row items-center justify-between">
+                    <CardTitle>{t('live_print_preview_title')}</CardTitle>
+                     <div className="flex gap-2">
                         <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isProcessing} className="flex-1">
                             {isProcessing ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
                             {isProcessing ? 'Processing...' : t('save_and_print_button')}
@@ -436,12 +442,6 @@ export default function InvoicePage() {
                             Reset
                         </Button>
                     </div>
-                </CardFooter>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                    <CardTitle>{t('live_print_preview_title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <InvoicePrintLayout
