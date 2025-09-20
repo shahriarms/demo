@@ -232,7 +232,7 @@ export default function BuyersPage() {
         </Card>
       </div>
     </div>
-    {selectedInvoice && isPrinting && (
+    {selectedInvoice && (
         <div className="print-source">
              <InvoicePrintLayout 
                 invoiceId={selectedInvoice.id}
