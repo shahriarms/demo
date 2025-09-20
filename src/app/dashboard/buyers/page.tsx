@@ -24,7 +24,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function BuyersPage() {
-  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice } = useAppData();
+  const { buyers, getInvoicesForBuyer, isAppDataLoading } = useAppData();
   const { settings } = useSettings();
   const { t } = useTranslation();
 
@@ -34,12 +34,13 @@ export default function BuyersPage() {
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
   const [isPrinting, setIsPrinting] = useState(false);
+  const [invoiceToPrint, setInvoiceToPrint] = useState<Invoice | null>(null);
   
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
     const buyerInvoices = getInvoicesForBuyer(buyer.id);
     setInvoices(buyerInvoices);
-    setSelectedInvoice(null);
+    setSelectedInvoice(null); // Reset invoice selection when buyer changes
     setInvoiceSearchTerm('');
   };
   
@@ -47,18 +48,27 @@ export default function BuyersPage() {
     setSelectedInvoice(invoice);
   }
 
-  const handlePrint = async () => {
-    if (!selectedInvoice || isPrinting) return;
-    
+  const handlePrint = () => {
+    if (!selectedInvoice) return;
     setIsPrinting(true);
-    try {
-        await printInvoice(selectedInvoice);
-    } catch (error) {
-        console.error("Printing failed:", error);
-    } finally {
-        setIsPrinting(false);
-    }
+    setInvoiceToPrint(selectedInvoice);
   };
+  
+  useEffect(() => {
+    if (invoiceToPrint) {
+      const originalTitle = document.title;
+      document.title = `invoice-${invoiceToPrint.id}`;
+      
+      const timer = setTimeout(() => {
+        window.print();
+        document.title = originalTitle;
+        setInvoiceToPrint(null);
+        setIsPrinting(false);
+      }, 50); // Delay to ensure DOM update
+      
+      return () => clearTimeout(timer);
+    }
+  }, [invoiceToPrint]);
   
   const filteredInvoices = useMemo(() => {
     if (!invoiceSearchTerm) return invoices;
@@ -81,7 +91,8 @@ export default function BuyersPage() {
   }
 
   return (
-    <div className="flex flex-col h-full gap-4">
+    <>
+      <div className="flex flex-col h-full gap-4 no-print">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold flex items-center gap-2">
               <Users className="w-6 h-6" />
@@ -219,7 +230,23 @@ export default function BuyersPage() {
           </Card>
         </div>
       </div>
+      {invoiceToPrint && (
+        <div className="print-source">
+            <InvoicePrintLayout
+                invoiceId={invoiceToPrint.id}
+                currentDate={new Date(invoiceToPrint.date).toLocaleDateString()}
+                customerName={invoiceToPrint.customerName}
+                customerAddress={invoiceToPrint.customerAddress}
+                customerPhone={invoiceToPrint.customerPhone}
+                invoiceItems={invoiceToPrint.items}
+                subtotal={invoiceToPrint.subtotal}
+                paidAmount={invoiceToPrint.paidAmount}
+                dueAmount={invoiceToPrint.dueAmount}
+                printFormat={settings.printFormat}
+                locale={settings.locale}
+            />
+        </div>
+      )}
+    </>
   );
 }
-
-    
