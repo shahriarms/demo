@@ -15,7 +15,7 @@ export default function PosTerminalPage() {
                 <CardHeader>
                     <CardTitle className="flex items-center justify-center gap-2 text-2xl">
                         <AlertCircle className="w-8 h-8 text-amber-500" />
-                        Page Deprecated
+                        Page Obsolete
                     </CardTitle>
                     <CardDescription className="text-base">
                         This POS Terminal page is no longer in use.
@@ -23,10 +23,10 @@ export default function PosTerminalPage() {
                 </CardHeader>
                 <CardContent>
                     <p className="mb-4">
-                        All printing functionality has been integrated directly into the <strong>Invoice Page</strong>. You can now create, save, and print invoices (both A4 and POS receipts) from a single location.
+                        All printing functionality has been integrated directly into the <strong>Invoice Page</strong> and <strong>Buyer Purchases</strong> page. You can now create, save, and print invoices (both A4 and POS receipts) from a single location.
                     </p>
                     <p className="mb-6">
-                        Please configure your printer in the <strong>Settings</strong> page and then head to the Invoice page to create and print a new invoice.
+                        Please configure your printer in the <strong>Settings</strong> page and then head to the Invoice or Buyer Purchases page to print an invoice.
                     </p>
                     <div className="flex gap-4 justify-center">
                         <Button asChild>

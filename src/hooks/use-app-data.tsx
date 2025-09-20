@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
@@ -33,6 +34,7 @@ interface AppDataContextType {
 
     // Invoice & Buyer Functions
     addInvoice: (draftInvoice: DraftInvoice) => Promise<number | null>;
+    printInvoice: (invoice: Invoice) => Promise<void>;
     getBuyerById: (buyerId: string) => Buyer | undefined;
     getInvoicesForBuyer: (buyerId: string) => Invoice[];
     getInvoicesForDateRange: (startDate: Date, endDate: Date) => Invoice[];
@@ -65,32 +67,6 @@ interface AppDataContextType {
 
 const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
 const LOCAL_STORAGE_KEY = 'stockpilot-offline-data';
-
-async function printPosReceipt(settings: any, orderData: any) {
-    // For normal browser printing, just trigger the print dialog.
-    if (settings.printFormat === 'normal' || settings.posPrinterType === 'disabled') {
-        window.print();
-        return;
-    }
-
-    // For direct-to-POS printing via the API route
-    const printerConfig = {
-        type: settings.posPrinterType,
-        options: {
-            host: settings.posPrinterHost,
-            port: settings.posPrinterPort,
-        }
-    };
-    const response = await fetch('/api/print', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ printer: printerConfig, data: orderData }),
-    });
-    if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.message || 'An unknown error occurred during printing.');
-    }
-}
 
 const getOfflineData = () => {
     const data = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -162,6 +138,37 @@ export function DataProvider({ children }: { children: ReactNode }) {
         loadAllData();
     }, [loadAllData]);
     
+    const printInvoice = useCallback(async (invoice: Invoice) => {
+        if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
+            const printerConfig = {
+                type: settings.posPrinterType,
+                options: { host: settings.posPrinterHost, port: settings.posPrinterPort }
+            };
+            const orderData = {
+                orderId: String(invoice.id),
+                customerName: invoice.customerName,
+                items: invoice.items,
+                subtotal: invoice.subtotal,
+                tax: 0,
+                total: invoice.subtotal
+            };
+
+            const response = await fetch('/api/print', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ printer: printerConfig, data: orderData }),
+            });
+
+            if (!response.ok) {
+                const result = await response.json();
+                toast({ variant: 'destructive', title: 'POS Print Error', description: result.message || 'Failed to print to POS device.' });
+                throw new Error(result.message || 'Failed to print to POS device.');
+            } else {
+                 toast({ title: 'Print Job Sent', description: 'Sent to POS printer successfully.' });
+            }
+        }
+    }, [settings, toast]);
+
 
     const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {
         if (isDbConnected) {
@@ -260,15 +267,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 const newInvoice = await dataActions.addInvoice(invoiceToSave, invoiceToSave.items);
                 await loadAllData();
                 
-                if (settings.printFormat === 'pos') {
-                    const orderData = { orderId: newInvoice.id, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
-                    try {
-                        await printPosReceipt(settings, orderData);
-                    } catch(e: any) {
-                        console.error("POS printing failed but invoice was saved:", e);
-                        toast({ variant: 'destructive', title: 'Printing Failed', description: e.message || 'Invoice saved, but printing failed.' });
-                    }
-                }
+                await printInvoice(newInvoice);
                 return newInvoice.id;
             } else {
                 // Offline logic
@@ -313,8 +312,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 toast({ title: "Invoice Saved (Offline)", description: `Invoice #${newId} saved locally.` });
     
                  if (settings.printFormat === 'pos') {
-                    // This will trigger window.print() in offline mode for POS format
-                    await printPosReceipt(settings, {}); 
+                    await printInvoice(newInvoice); 
                 }
                 return newId;
             }
@@ -322,7 +320,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             console.error("Failed to save invoice:", error);
             throw error; // Re-throw to be caught by the calling function
         }
-    }, [isDbConnected, loadAllData, settings, toast]);
+    }, [isDbConnected, loadAllData, settings, toast, printInvoice]);
     
     const getBuyerById = useCallback((buyerId: string) => buyers.find(b => b.id === buyerId), [buyers]);
 
@@ -554,7 +552,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const value = useMemo(() => ({
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected, lastInvoiceId,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
-        addInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
+        addInvoice, printInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate,
@@ -562,7 +560,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }), [
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected, lastInvoiceId,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
-        addInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
+        addInvoice, printInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate,

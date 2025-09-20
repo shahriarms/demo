@@ -24,7 +24,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function BuyersPage() {
-  const { buyers, getInvoicesForBuyer, isAppDataLoading } = useAppData();
+  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice } = useAppData();
   const { settings } = useSettings();
   const { t } = useTranslation();
 
@@ -48,14 +48,31 @@ export default function BuyersPage() {
     setSelectedInvoice(invoice);
   }
 
-  const handlePrint = () => {
-    if (!selectedInvoice) return;
+  const handlePrint = async () => {
+    if (!selectedInvoice || isPrinting) return;
     setIsPrinting(true);
     setInvoiceToPrint(selectedInvoice);
+
+    // If POS printer is configured, the API will handle it.
+    // If not, the useEffect below will trigger window.print().
+    try {
+        await printInvoice(selectedInvoice);
+    } catch (error: any) {
+        console.error(error.message);
+    } finally {
+        if (settings.posPrinterType === 'disabled' || settings.printFormat === 'normal') {
+            // Let useEffect handle printing for non-POS
+        } else {
+             // For POS, printing is done via API, so we can reset here.
+            setIsPrinting(false);
+            setInvoiceToPrint(null);
+        }
+    }
   };
   
+  // This useEffect handles the browser's print dialog for non-POS printing
   useEffect(() => {
-    if (invoiceToPrint) {
+    if (invoiceToPrint && (settings.posPrinterType === 'disabled' || settings.printFormat === 'normal')) {
       const originalTitle = document.title;
       document.title = `invoice-${invoiceToPrint.id}`;
       
@@ -68,7 +85,7 @@ export default function BuyersPage() {
       
       return () => clearTimeout(timer);
     }
-  }, [invoiceToPrint]);
+  }, [invoiceToPrint, settings.printFormat, settings.posPrinterType]);
   
   const filteredInvoices = useMemo(() => {
     if (!invoiceSearchTerm) return invoices;
@@ -230,7 +247,7 @@ export default function BuyersPage() {
           </Card>
         </div>
       </div>
-      {invoiceToPrint && (
+      {invoiceToPrint && (settings.posPrinterType === 'disabled' || settings.printFormat === 'normal') && (
         <div className="print-source">
             <InvoicePrintLayout
                 invoiceId={invoiceToPrint.id}
