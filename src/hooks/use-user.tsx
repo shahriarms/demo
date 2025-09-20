@@ -71,16 +71,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
             }
         }
          // If user is on login/signup page, redirect to dashboard
-        if (pathname === '/login' || pathname === '/signup') {
+        if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
             router.replace('/dashboard');
         }
 
       } else {
         setUser(null);
         sessionStorage.removeItem('user-role');
-        // Clear profile picture on logout for privacy
-        // localStorage.removeItem(PROFILE_PIC_STORAGE_KEY); 
-        if (pathname !== '/login' && pathname !== '/signup') {
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
             router.replace('/login');
         }
       }
@@ -88,8 +86,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth]);
+  }, [auth, router]);
 
   const logout = useCallback(async () => {
     setIsLoading(true);
