@@ -2,8 +2,6 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
-import ReactDOM from 'react-dom';
-import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import type { Product, Invoice, Buyer, Expense, Employee, Attendance, SalaryPayment, Payment, AttendanceStatus } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import type { DraftInvoice } from './use-invoice-form';
@@ -11,6 +9,7 @@ import { isSameDay, isWithinInterval, startOfDay, endOfDay, startOfMonth, endOfM
 import { useSettings } from './use-settings';
 import * as productActions from '@/lib/actions/product-actions';
 import * as dataActions from '@/lib/actions/data-actions';
+import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 
 interface AppDataContextType {
     products: Product[];
@@ -165,6 +164,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [loadAllData]);
     
     const printInvoice = useCallback(async (invoice: Invoice) => {
+        const ReactDOM = (await import('react-dom')).default;
+        
         return new Promise<void>((resolve, reject) => {
             const iframe = document.createElement('iframe');
             iframe.style.position = 'absolute';
@@ -213,7 +214,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
                         />
                     );
                     
-                    ReactDOM.render(PrintComponent, printRoot, () => {
+                    (ReactDOM as any).render(PrintComponent, printRoot, () => {
                         // Small timeout to ensure everything is rendered
                         setTimeout(() => {
                             try {
@@ -658,5 +659,3 @@ export function useAppData() {
     }
     return context;
 }
-
-    
