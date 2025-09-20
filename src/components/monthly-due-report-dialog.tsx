@@ -50,7 +50,7 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
         if (isSameDay(from, to)) {
             return `Due Report (${format(from, 'PPP')})`;
         }
-        return `Grand Total Due Report`;
+        return `Due Report (${format(from, 'PP')} - ${format(to, 'PP')})`;
     }, [dateRange]);
 
     const reportData = useMemo(() => {

@@ -103,10 +103,10 @@ export default function Dashboard() {
     const totalSalaryPaid = rangeSalaries.reduce((sum, sal) => sum + sal.amount, 0);
     const grossProfit = getGrossProfitForDateRange(rangeInvoices);
     const profit = grossProfit - totalExpenses - totalSalaryPaid;
-    const totalDue = allInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
+    const totalDue = rangeInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
     const { materialSoldKg, hardwareSoldPcs } = calculateUnitsSold(rangeInvoices, products);
     return { totalSales, totalExpenses, totalSalaryPaid, profit, totalDue, materialSoldKg, hardwareSoldPcs };
-  }, [rangeInvoices, rangeExpenses, rangeSalaries, getGrossProfitForDateRange, products, calculateUnitsSold, allInvoices]);
+  }, [rangeInvoices, rangeExpenses, rangeSalaries, getGrossProfitForDateRange, products, calculateUnitsSold]);
   
   const todayStats = useMemo(() => {
       const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
@@ -336,14 +336,14 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{rangeSalaries.length} salary payments</p>
                 </CardContent>
               </Card>
-               <Card as="button" onClick={() => grandTotalDue > 0.001 && setMonthlyDueReportOpen(true)} disabled={grandTotalDue <= 0.001} className="text-left hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+               <Card as="button" onClick={() => rangeStats.totalDue > 0.001 && setMonthlyDueReportOpen(true)} disabled={rangeStats.totalDue <= 0.001} className="text-left hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Grand Total Due</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Due</CardTitle>
                   <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600">৳ {grandTotalDue.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">Total outstanding from all invoices</p>
+                  <div className="text-2xl font-bold text-red-600">৳ {rangeStats.totalDue.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">Total outstanding from this range</p>
                 </CardContent>
               </Card>
                <Card as="button" onClick={() => setMonthlyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/so transition-colors">
@@ -466,7 +466,7 @@ export default function Dashboard() {
       <MonthlyDueDialog
         open={isMonthlyDueReportOpen}
         onOpenChange={setMonthlyDueReportOpen}
-        invoices={allDueInvoices}
+        invoices={rangeInvoices}
         dateRange={dateRange}
       />
       <MonthlyUnitsSoldDialog
