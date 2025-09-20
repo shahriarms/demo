@@ -165,58 +165,77 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [loadAllData]);
     
     const printInvoice = useCallback(async (invoice: Invoice) => {
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'absolute';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
-        iframe.style.border = '0';
-        document.body.appendChild(iframe);
+        return new Promise<void>((resolve, reject) => {
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'absolute';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            iframe.name = `print-invoice-${invoice.id}`;
+            document.body.appendChild(iframe);
     
-        const doc = iframe.contentDocument;
-        if (doc) {
-            doc.write('<html><head><title>Print Invoice</title>');
-            // Copy stylesheets
-            Array.from(document.styleSheets).forEach(sheet => {
-                try {
-                    if (sheet.cssRules) {
-                        const style = doc.createElement('style');
-                        style.textContent = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
-                        doc.head.appendChild(style);
+            const doc = iframe.contentDocument;
+            if (doc) {
+                doc.open();
+                doc.write('<html><head><title>Print Invoice</title>');
+                // Copy stylesheets
+                Array.from(document.styleSheets).forEach(sheet => {
+                    try {
+                        if (sheet.href) {
+                            doc.write(`<link rel="stylesheet" href="${sheet.href}">`);
+                        } else if (sheet.cssRules) {
+                            doc.write('<style>');
+                            doc.write(Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n'));
+                            doc.write('</style>');
+                        }
+                    } catch (e) {
+                        console.warn('Could not copy stylesheet:', e);
                     }
-                } catch (e) {
-                    console.warn('Could not copy stylesheet:', e);
-                }
-            });
-            doc.write('</head><body><div id="print-root"></div></body></html>');
-            doc.close();
-    
-            const printRoot = doc.getElementById('print-root');
-            if (printRoot) {
-                const PrintComponent = (
-                    <InvoicePrintLayout
-                        invoiceId={invoice.id}
-                        currentDate={new Date(invoice.date).toLocaleDateString()}
-                        customerName={invoice.customerName}
-                        customerAddress={invoice.customerAddress}
-                        customerPhone={invoice.customerPhone}
-                        invoiceItems={invoice.items}
-                        subtotal={invoice.subtotal}
-                        paidAmount={invoice.paidAmount}
-                        dueAmount={invoice.dueAmount}
-                        printFormat={settings.printFormat}
-                        locale={settings.locale}
-                    />
-                );
-                
-                ReactDOM.render(PrintComponent, printRoot, () => {
-                    setTimeout(() => {
-                        iframe.contentWindow?.focus();
-                        iframe.contentWindow?.print();
-                        document.body.removeChild(iframe);
-                    }, 100); 
                 });
+                doc.write('</head><body style="margin: 0;"><div id="print-root"></div></body></html>');
+                doc.close();
+        
+                const printRoot = doc.getElementById('print-root');
+                if (printRoot) {
+                    const PrintComponent = (
+                        <InvoicePrintLayout
+                            invoiceId={invoice.id}
+                            currentDate={new Date(invoice.date).toLocaleDateString()}
+                            customerName={invoice.customerName}
+                            customerAddress={invoice.customerAddress}
+                            customerPhone={invoice.customerPhone}
+                            invoiceItems={invoice.items}
+                            subtotal={invoice.subtotal}
+                            paidAmount={invoice.paidAmount}
+                            dueAmount={invoice.dueAmount}
+                            printFormat={settings.printFormat}
+                            locale={settings.locale}
+                        />
+                    );
+                    
+                    ReactDOM.render(PrintComponent, printRoot, () => {
+                        // Small timeout to ensure everything is rendered
+                        setTimeout(() => {
+                            try {
+                                iframe.contentWindow?.focus();
+                                iframe.contentWindow?.print();
+                            } catch (e) {
+                                reject(e);
+                            } finally {
+                                document.body.removeChild(iframe);
+                                resolve();
+                            }
+                        }, 500); 
+                    });
+                } else {
+                    document.body.removeChild(iframe);
+                    reject(new Error("Print root not found in iframe."));
+                }
+            } else {
+                document.body.removeChild(iframe);
+                reject(new Error("Could not access iframe document."));
             }
-        }
+        });
     }, [settings.printFormat, settings.locale]);
 
     const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {

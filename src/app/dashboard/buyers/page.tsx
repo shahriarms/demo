@@ -51,8 +51,13 @@ export default function BuyersPage() {
     if (!selectedInvoice || isPrinting) return;
     
     setIsPrinting(true);
-    await printInvoice(selectedInvoice);
-    setIsPrinting(false);
+    try {
+        await printInvoice(selectedInvoice);
+    } catch (error) {
+        console.error("Printing failed:", error);
+    } finally {
+        setIsPrinting(false);
+    }
   };
   
   const filteredInvoices = useMemo(() => {
