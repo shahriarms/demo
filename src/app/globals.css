@@ -81,20 +81,34 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
-  body > *:not(.print-source) {
-    display: none !important;
-  }
-  
+
   .print-source {
     display: block !important;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
+    background: white; /* Ensure background is white for printing */
+    color: black;
+  }
+  
+  /* Hide everything that is not meant for printing */
+  .no-print {
+    display: none !important;
   }
 
-  .no-print {
-      display: none !important;
+  /* Make sure the main layout and its parents are visible */
+  body, #__next, main {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Override any hiding styles on the parents of .print-source */
+  body > *:not(.print-source), main > *:not(.print-source) {
+      visibility: hidden;
+      height: 0;
+      overflow: hidden;
   }
 }
