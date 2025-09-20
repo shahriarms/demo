@@ -66,6 +66,13 @@ const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
 const LOCAL_STORAGE_KEY = 'stockpilot-offline-data';
 
 async function printPosReceipt(settings: any, orderData: any) {
+    // For normal browser printing, just trigger the print dialog.
+    if (settings.printFormat === 'normal' || settings.posPrinterType === 'disabled') {
+        window.print();
+        return;
+    }
+
+    // For direct-to-POS printing via the API route
     const printerConfig = {
         type: settings.posPrinterType,
         options: {
@@ -251,13 +258,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 const newInvoice = await dataActions.addInvoice(invoiceToSave, invoiceToSave.items);
                 await loadAllData();
                 
-                if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
+                if (settings.printFormat === 'pos') {
                     const orderData = { orderId: newInvoice.id, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
                     try {
+                        // This will now use the browser's print dialog for POS format
+                        // Or attempt to print to a configured POS printer via the API route
                         await printPosReceipt(settings, orderData);
-                    } catch(e) {
+                    } catch(e: any) {
                         console.error("POS printing failed but invoice was saved:", e);
-                        toast({ variant: 'destructive', title: 'Printing Failed', description: 'Invoice saved, but POS printing failed. Check printer connection.' });
+                        toast({ variant: 'destructive', title: 'Printing Failed', description: e.message || 'Invoice saved, but printing failed.' });
                     }
                 }
                 return newInvoice.id;
@@ -282,14 +291,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 setOfflineData(offlineData);
                 toast({ title: "Invoice Saved (Offline)", description: `Invoice #${newId} saved locally.` });
 
-                 if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
-                    const orderData = { orderId: newId, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
-                     try {
-                        await printPosReceipt(settings, orderData);
-                    } catch(e) {
-                        console.error("POS printing failed but invoice was saved:", e);
-                        toast({ variant: 'destructive', title: 'Printing Failed', description: 'Invoice saved, but POS printing failed. Check printer connection.' });
-                    }
+                 if (settings.printFormat === 'pos') {
+                    // This will trigger window.print() in offline mode for POS format
+                    await printPosReceipt(settings, {}); 
                 }
                 return newId;
             }
