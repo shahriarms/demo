@@ -302,7 +302,7 @@ export default function InvoicePage() {
             </Card>
 
             <Card className="flex-1 flex flex-col">
-                <CardHeader>
+                <CardHeader className="flex-shrink-0">
                     <CardTitle>{t('add_products_label')}</CardTitle>
                     <RadioGroup
                         value={mainCategoryFilter}
@@ -313,7 +313,7 @@ export default function InvoicePage() {
                         <div className="flex items-center space-x-2"><RadioGroupItem value="Hardware" id="r-hardware" /><Label htmlFor="r-hardware">{t('hardware_tab')}</Label></div>
                     </RadioGroup>
                 </CardHeader>
-                <CardContent className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <CardContent className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4 min-h-0">
                         {/* Category List */}
                         <div className="flex flex-col gap-2">
                            <Label>{t('category_header')}</Label>
@@ -518,4 +518,5 @@ export default function InvoicePage() {
       </AlertDialog>
     </>
   );
-}
+
+    
