@@ -88,27 +88,21 @@
     top: 0;
     left: 0;
     width: 100%;
+    height: 100%;
+    z-index: 9999;
     background: white; /* Ensure background is white for printing */
     color: black;
+    padding: 0;
+    margin: 0;
   }
   
   /* Hide everything that is not meant for printing */
-  .no-print {
+  .no-print, body > *:not(.print-source) {
     display: none !important;
   }
 
-  /* Make sure the main layout and its parents are visible */
-  body, #__next, main {
-    display: block !important;
-    visibility: visible !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-
-  /* Override any hiding styles on the parents of .print-source */
-  body > *:not(.print-source), main > *:not(.print-source) {
-      visibility: hidden;
-      height: 0;
-      overflow: hidden;
+  /* Ensure the print source itself is visible */
+  .print-source > * {
+    visibility: visible;
   }
 }
