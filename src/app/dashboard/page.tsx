@@ -20,6 +20,7 @@ import { DailySalesDialog } from '@/components/daily-sales-report-dialog';
 import { DailyExpensesReportDialog } from '@/components/daily-expenses-report-dialog';
 import { DailyDueReportDialog } from '@/components/daily-due-report-dialog';
 import { DailyUnitsSoldReportDialog } from '@/components/daily-units-sold-report-dialog';
+import { DailyAttendanceReportDialog } from '@/components/daily-attendance-report-dialog';
 import { MonthlySalesDialog } from '@/components/monthly-sales-report-dialog';
 import { MonthlyExpensesDialog } from '@/components/monthly-expenses-report-dialog';
 import { MonthlyDueDialog } from '@/components/monthly-due-report-dialog';
@@ -46,6 +47,7 @@ export default function Dashboard() {
   const [isDailyExpensesReportOpen, setDailyExpensesReportOpen] = useState(false);
   const [isDailyDueReportOpen, setDailyDueReportOpen] = useState(false);
   const [isDailyUnitsSoldReportOpen, setDailyUnitsSoldReportOpen] = useState(false);
+  const [isDailyAttendanceReportOpen, setDailyAttendanceReportOpen] = useState(false);
   
   const [isMonthlySalesReportOpen, setMonthlySalesReportOpen] = useState(false);
   const [isMonthlyExpensesReportOpen, setMonthlyExpensesReportOpen] = useState(false);
@@ -249,7 +251,7 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{t('total_items_footer')}</p>
                   </CardContent>
                 </Card>
-                 <Card>
+                 <Card as="button" onClick={() => setDailyAttendanceReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Today's Attendance</CardTitle>
                       <Users className="h-4 w-4 text-muted-foreground" />
@@ -408,6 +410,12 @@ export default function Dashboard() {
         onOpenChange={setDailyUnitsSoldReportOpen}
         invoices={todayInvoices}
         products={products}
+      />
+      <DailyAttendanceReportDialog
+        open={isDailyAttendanceReportOpen}
+        onOpenChange={setDailyAttendanceReportOpen}
+        attendance={todayAttendance}
+        employees={employees}
       />
 
       {/* Monthly/Date Range Report Dialogs */}
