@@ -39,7 +39,7 @@ export function DailyDueReportDialog({ open, onOpenChange, invoices }: DailyDueR
     const reportData = useMemo(() => {
         if (!invoices) return [];
         return invoices
-          .filter(invoice => invoice.dueAmount > 0)
+          .filter(invoice => invoice.dueAmount > 0.001) // Use a small epsilon for float comparison
           .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [invoices]);
 
