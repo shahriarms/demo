@@ -56,6 +56,8 @@ export default function InvoicePage() {
   const [draftToDelete, setDraftToDelete] = useState<DraftInvoice | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPrintConfirmOpen, setPrintConfirmOpen] = useState(false);
+  const [invoiceToPrint, setInvoiceToPrint] = useState<DraftInvoice | null>(null);
+
   
   const { id: draftId, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount, items, cashReceived, changeAmount } = activeDraft || {};
 
@@ -91,11 +93,11 @@ export default function InvoicePage() {
               description: t('invoice_saved_toast_description', { invoiceId: newInvoiceId }),
             });
             
+            const finalInvoiceState = {...activeDraft, id: newInvoiceId };
             updateActiveDraft({id: newInvoiceId});
-
-            await new Promise(resolve => setTimeout(resolve, 50));
             
-            window.print();
+            // Set the invoice to be printed, which will trigger the useEffect for printing
+            setInvoiceToPrint(finalInvoiceState);
         }
     } catch (error: any) {
         console.error("Failed to save or print invoice:", error);
@@ -108,6 +110,17 @@ export default function InvoicePage() {
         setIsProcessing(false);
     }
   };
+  
+  // Effect to handle the printing after state is updated
+  useEffect(() => {
+    if (invoiceToPrint) {
+      const timer = setTimeout(() => {
+        window.print();
+        setInvoiceToPrint(null); // Reset after printing
+      }, 50); // Small delay to ensure the DOM is updated
+      return () => clearTimeout(timer);
+    }
+  }, [invoiceToPrint]);
 
   const handleReset = () => {
     resetActiveDraft();
@@ -461,20 +474,23 @@ export default function InvoicePage() {
             </div>
           </div>
       </div>
+
       <div className="print-source">
-          {activeDraft && <InvoicePrintLayout 
-              invoiceId={activeDraft.id}
-              currentDate={new Date().toLocaleDateString()}
-              customerName={activeDraft.customerName}
-              customerAddress={activeDraft.customerAddress}
-              customerPhone={activeDraft.customerPhone}
-              invoiceItems={activeDraft.items}
-              subtotal={activeDraft.subtotal}
-              paidAmount={activeDraft.paidAmount || 0}
-              dueAmount={activeDraft.dueAmount}
-              printFormat={settings.printFormat}
-              locale={settings.locale}
-          />}
+        {invoiceToPrint && (
+          <InvoicePrintLayout
+            invoiceId={invoiceToPrint.id}
+            currentDate={new Date().toLocaleDateString()}
+            customerName={invoiceToPrint.customerName}
+            customerAddress={invoiceToPrint.customerAddress}
+            customerPhone={invoiceToPrint.customerPhone}
+            invoiceItems={invoiceToPrint.items}
+            subtotal={invoiceToPrint.subtotal}
+            paidAmount={invoiceToPrint.paidAmount || 0}
+            dueAmount={invoiceToPrint.dueAmount}
+            printFormat={settings.printFormat}
+            locale={settings.locale}
+          />
+        )}
       </div>
 
       <AlertDialog open={!!draftToDelete} onOpenChange={() => setDraftToDelete(null)}>
@@ -511,3 +527,5 @@ export default function InvoicePage() {
     </main>
   );
 }
+
+    
