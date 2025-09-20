@@ -36,8 +36,6 @@ export default function InvoicePage() {
   const { settings } = useSettings();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const componentToPrintRef = useRef<HTMLDivElement>(null);
-  const printCancelTimer = useRef<NodeJS.Timeout | null>(null);
 
   const {
     drafts,
@@ -79,69 +77,41 @@ export default function InvoicePage() {
   };
   
   const handleSaveAndPrint = async () => {
-     if (!validateInvoice() || !activeDraft) return;
-     setPrintConfirmOpen(false);
-     setIsPrinting(true);
-  };
+    if (!validateInvoice() || !activeDraft) return;
 
-  useEffect(() => {
-    let printInitiated = false;
+    setPrintConfirmOpen(false);
+    setIsPrinting(true);
 
-    const handleBeforePrint = () => {
-      printInitiated = true;
-      printCancelTimer.current = setTimeout(() => {
-        if (isPrinting && printInitiated) {
-          toast({ variant: 'destructive', title: 'Print Cancelled', description: 'Invoice was not saved.' });
-          setIsPrinting(false);
-          printInitiated = false;
-        }
-      }, 1000);
-    };
-
-    const handleAfterPrint = async () => {
-      if (printCancelTimer.current) {
-        clearTimeout(printCancelTimer.current);
-      }
-      
-      if (isPrinting && activeDraft && printInitiated) {
-        try {
-          const newInvoiceId = await addInvoice(activeDraft);
-          if (newInvoiceId) {
+    try {
+        const newInvoiceId = await addInvoice(activeDraft);
+        
+        if (newInvoiceId) {
             toast({
               title: t('invoice_saved_toast_title'),
               description: t('invoice_saved_toast_description', { invoiceId: newInvoiceId }),
             });
+            
+            // This is a crucial step. We update the draft with the final ID
+            // so the printed version has the correct invoice number.
             resetActiveDraft(newInvoiceId);
-          }
-        } catch (error: any) {
-          toast({
+
+            // We need a short delay to allow React to re-render the print layout with the new ID.
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            window.print();
+        }
+    } catch (error: any) {
+        console.error("Failed to save or print invoice:", error);
+        toast({
             variant: 'destructive',
             title: 'Error',
             description: error.message || 'Failed to save or print the invoice.',
-          });
-        } finally {
-          setIsPrinting(false);
-          printInitiated = false;
-        }
-      } else if (isPrinting) {
-          setIsPrinting(false);
-      }
-    };
-    
-    if (isPrinting) {
-      window.addEventListener('beforeprint', handleBeforePrint);
-      window.addEventListener('afterprint', handleAfterPrint);
-      window.print();
+        });
+    } finally {
+        // This will now run regardless of print success or cancellation.
+        setIsPrinting(false);
     }
-
-    return () => {
-      window.removeEventListener('beforeprint', handleBeforePrint);
-      window.removeEventListener('afterprint', handleAfterPrint);
-      if (printCancelTimer.current) {
-        clearTimeout(printCancelTimer.current);
-      }
-    };
-  }, [isPrinting, activeDraft, addInvoice, resetActiveDraft, toast, t]);
+  };
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -490,20 +460,22 @@ export default function InvoicePage() {
 
     </div>
     <div className="print-source">
-        <InvoicePrintLayout 
-            invoiceId={draftId}
+        {activeDraft && <InvoicePrintLayout 
+            invoiceId={activeDraft.id}
             currentDate={new Date().toLocaleDateString()}
-            customerName={customerName}
-            customerAddress={customerAddress}
-            customerPhone={customerPhone}
-            invoiceItems={items}
-            subtotal={subtotal}
-            paidAmount={paidAmount || 0}
-            dueAmount={dueAmount}
+            customerName={activeDraft.customerName}
+            customerAddress={activeDraft.customerAddress}
+            customerPhone={activeDraft.customerPhone}
+            invoiceItems={activeDraft.items}
+            subtotal={activeDraft.subtotal}
+            paidAmount={activeDraft.paidAmount || 0}
+            dueAmount={activeDraft.dueAmount}
             printFormat={settings.printFormat}
             locale={settings.locale}
-        />
+        />}
     </div>
     </>
   );
 }
+
+    
