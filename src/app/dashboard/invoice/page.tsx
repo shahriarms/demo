@@ -211,7 +211,7 @@ export default function InvoicePage() {
 
   return (
     <>
-    <div className="flex flex-col gap-4 h-full no-print">
+      <div className="flex flex-col gap-4 h-full no-print">
         {/* Memo Tabs */}
         <div className="flex items-center gap-2 border-b pb-2 flex-wrap">
             {drafts.map((draft, index) => (
