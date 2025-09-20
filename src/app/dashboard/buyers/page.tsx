@@ -204,22 +204,20 @@ export default function BuyersPage() {
             <CardContent className="flex-1 overflow-auto">
                 {selectedInvoice ? (
                    <ScrollArea className="h-full">
-                     <div className="p-4 bg-muted/50 rounded-lg">
-                        <div className="transform scale-[0.9] origin-top">
-                           <InvoicePrintLayout 
-                                invoiceId={selectedInvoice.id}
-                                currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                                customerName={selectedInvoice.customerName}
-                                customerAddress={selectedInvoice.customerAddress}
-                                customerPhone={selectedInvoice.customerPhone}
-                                invoiceItems={selectedInvoice.items}
-                                subtotal={selectedInvoice.subtotal}
-                                paidAmount={selectedInvoice.paidAmount}
-                                dueAmount={selectedInvoice.dueAmount}
-                                printFormat={settings.printFormat}
-                                locale={settings.locale}
-                            />
-                        </div>
+                     <div className="p-4 bg-muted/50 rounded-lg min-w-[820px]">
+                       <InvoicePrintLayout 
+                            invoiceId={selectedInvoice.id}
+                            currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                            customerName={selectedInvoice.customerName}
+                            customerAddress={selectedInvoice.customerAddress}
+                            customerPhone={selectedInvoice.customerPhone}
+                            invoiceItems={selectedInvoice.items}
+                            subtotal={selectedInvoice.subtotal}
+                            paidAmount={selectedInvoice.paidAmount}
+                            dueAmount={selectedInvoice.dueAmount}
+                            printFormat={settings.printFormat}
+                            locale={settings.locale}
+                        />
                      </div>
                    </ScrollArea>
                 ) : (
