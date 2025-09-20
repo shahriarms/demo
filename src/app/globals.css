@@ -103,7 +103,7 @@
     z-index: 9999;
   }
   
-  [data-radix-toast-viewport] {
+  body > [data-radix-toast-viewport] {
     display: none !important;
   }
 }
