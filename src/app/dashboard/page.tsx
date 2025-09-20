@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/chart';
 import { useAppData } from '@/hooks/use-app-data';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, Package, HandCoins, Receipt, Loader2, BadgeIndianRupee, Container, Wallet, RotateCw } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, Package, HandCoins, Receipt, Loader2, BadgeIndianRupee, Container, Wallet, RotateCw, Users } from 'lucide-react';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -26,11 +26,11 @@ import { MonthlyDueDialog } from '@/components/monthly-due-report-dialog';
 import { MonthlyUnitsSoldDialog } from '@/components/monthly-units-sold-report-dialog';
 import { MonthlySalaryReportDialog } from '@/components/monthly-salary-report-dialog';
 import type { DateRange } from 'react-day-picker';
-import type { Invoice, Expense, SalaryPayment } from '@/lib/types';
+import type { Invoice, Expense, SalaryPayment, Attendance } from '@/lib/types';
 
 
 export default function Dashboard() {
-  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading } = useAppData();
+  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading, getAttendanceForDate } = useAppData();
   const { t } = useTranslation();
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [rangeSalaries, setRangeSalaries] = useState<SalaryPayment[]>([]);
   const [todayInvoices, setTodayInvoices] = useState<Invoice[]>([]);
   const [todayExpenses, setTodayExpenses] = useState<Expense[]>([]);
+  const [todayAttendance, setTodayAttendance] = useState<Attendance[]>([]);
   
   const [isDailySalesReportOpen, setDailySalesReportOpen] = useState(false);
   const [isDailyExpensesReportOpen, setDailyExpensesReportOpen] = useState(false);
@@ -64,7 +65,8 @@ export default function Dashboard() {
     const today = new Date();
     setTodayInvoices(getInvoicesForDateRange(today, today));
     setTodayExpenses(getExpensesForDateRange(today, today));
-  }, [getInvoicesForDateRange, getExpensesForDateRange]);
+    setTodayAttendance(getAttendanceForDate(today));
+  }, [getInvoicesForDateRange, getExpensesForDateRange, getAttendanceForDate]);
 
   // This useEffect updates the date range data when the range changes.
   useEffect(() => {
@@ -94,8 +96,9 @@ export default function Dashboard() {
       const profit = grossProfit - totalExpenses;
       const totalDue = todayInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
       const unitsSold = todayInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-      return { totalSales, totalExpenses, profit, totalDue, unitsSold };
-  }, [todayInvoices, todayExpenses, getGrossProfitForDateRange]);
+      const presentToday = todayAttendance.filter(a => a.status === 'Present').length;
+      return { totalSales, totalExpenses, profit, totalDue, unitsSold, presentToday };
+  }, [todayInvoices, todayExpenses, todayAttendance, getGrossProfitForDateRange]);
   
   const { salesChartData, expensesChartData } = useMemo(() => {
     if (!dateRange?.from || !dateRange?.to) return { salesChartData: [], expensesChartData: [] };
@@ -205,7 +208,7 @@ export default function Dashboard() {
         {/* Today's Summary Cards */}
         <div>
             <h2 className="text-lg font-semibold mb-4">Today's Summary</h2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                 <Card as="button" onClick={() => setDailySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('todays_sales_card_title')}</CardTitle>
@@ -244,6 +247,16 @@ export default function Dashboard() {
                   <CardContent>
                       <div className="text-2xl font-bold text-green-600">{todayStats.unitsSold}</div>
                       <p className="text-xs text-muted-foreground">{t('total_items_footer')}</p>
+                  </CardContent>
+                </Card>
+                 <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Today's Attendance</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold text-green-600">{todayStats.presentToday}</div>
+                      <p className="text-xs text-muted-foreground">{t('out_of_total_employees_footer', { total: employees.length })}</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -433,5 +446,3 @@ export default function Dashboard() {
     </>
   );
 }
-
-    
