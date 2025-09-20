@@ -21,7 +21,9 @@ interface PaymentReceiptProps {
 
 export const PaymentReceipt = React.forwardRef<HTMLDivElement, PaymentReceiptProps>(
   ({ buyer, invoice, paymentHistory, newPaymentAmount }, ref) => {
-    const totalPaid = (invoice.paidAmount || 0) + (newPaymentAmount || 0);
+    // The `invoice` prop is already the *updated* invoice from the server or local state.
+    // Its `paidAmount` includes the new payment. No need to add `newPaymentAmount` again.
+    const totalPaid = invoice.paidAmount || 0;
     const currentDue = invoice.subtotal - totalPaid;
 
     return (
@@ -106,5 +108,3 @@ export const PaymentReceipt = React.forwardRef<HTMLDivElement, PaymentReceiptPro
 );
 
 PaymentReceipt.displayName = 'PaymentReceipt';
-
-    
