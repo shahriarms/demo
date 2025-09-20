@@ -34,7 +34,7 @@ interface InvoiceFormContextType {
     setActiveDraftIndex: (index: number) => void;
     updateActiveDraft: (update: Partial<Omit<DraftInvoice, 'subtotal' | 'dueAmount' | 'changeAmount' | 'label'>>) => void;
     addInvoiceItem: (product: Product) => void;
-    updateInvoiceItem: (itemId: string, update: Partial<DraftInvoiceItem>) => void;
+    updateInvoiceItem: (itemId: string, update: { [key: string]: string }) => void;
     removeInvoiceItem: (itemId: string) => void;
     resetActiveDraft: () => void;
     isFormLoading: boolean;
@@ -220,10 +220,25 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         }));
     }, [activeDraftIndex]);
     
-    const updateInvoiceItem = useCallback((itemId: string, itemUpdate: Partial<DraftInvoiceItem>) => {
+    const updateInvoiceItem = useCallback((itemId: string, itemUpdate: { [key: string]: string }) => {
         setDrafts(prev => prev.map((draft, index) => {
             if (index !== activeDraftIndex) return draft;
-            const newItems = draft.items.map(item => item.id === itemId ? { ...item, ...itemUpdate } : item);
+    
+            const newItems = draft.items.map(item => {
+                if (item.id === itemId) {
+                    const updatedItem = { ...item };
+                    const key = Object.keys(itemUpdate)[0];
+                    const value = itemUpdate[key];
+                    
+                    if (key === 'quantity' || key === 'price') {
+                        // @ts-ignore
+                        updatedItem[key] = parseFloat(value) || 0;
+                    }
+                    return updatedItem;
+                }
+                return item;
+            });
+    
             const { subtotal, dueAmount, changeAmount } = calculateTotals(newItems, draft.paidAmount, draft.cashReceived);
             return { ...draft, items: newItems, subtotal, dueAmount, changeAmount };
         }));

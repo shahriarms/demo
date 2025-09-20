@@ -388,12 +388,12 @@ export default function InvoicePage() {
                                               <p className='text-xs text-muted-foreground'>Suggested: &#2547; {(item.originalPrice || 0).toFixed(2)}</p>
                                           </TableCell>
                                           <TableCell>
-                                              <Input type="text" inputMode="decimal" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseFloat(e.target.value) || 0 })} className="h-9" />
+                                              <Input type="text" inputMode="decimal" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: e.target.value })} className="h-9" />
                                           </TableCell>
                                           <TableCell className="hidden sm:table-cell">
                                               <div className="relative flex items-center">
                                                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">&#2547;</span>
-                                                  <Input type="text" inputMode="decimal" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium h-9" />
+                                                  <Input type="text" inputMode="decimal" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: e.target.value })} className="pl-5 text-right font-medium h-9" />
                                               </div>
                                           </TableCell>
                                           <TableCell className="text-right font-semibold">&#2547; {(item.price * item.quantity).toFixed(2)}</TableCell>
@@ -527,5 +527,3 @@ export default function InvoicePage() {
     </main>
   );
 }
-
-    
