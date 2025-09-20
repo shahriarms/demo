@@ -81,8 +81,7 @@ export default function BuyersPage() {
   }
 
   return (
-    <>
-      <div className="flex flex-col h-full gap-4">
+    <div className="flex flex-col h-full gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold flex items-center gap-2">
               <Users className="w-6 h-6" />
@@ -220,6 +219,7 @@ export default function BuyersPage() {
           </Card>
         </div>
       </div>
-    </>
   );
 }
+
+    
