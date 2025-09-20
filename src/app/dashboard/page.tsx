@@ -31,13 +31,10 @@ import type { Invoice, Expense, SalaryPayment, Attendance, Product } from '@/lib
 
 
 export default function Dashboard() {
-  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading, getAttendanceForDate, invoices: allInvoices } = useAppData();
+  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading, getAttendanceForDate, invoices: allInvoices } from useAppData();
   const { t } = useTranslation();
 
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date()),
-  });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
   const [rangeInvoices, setRangeInvoices] = useState<Invoice[]>([]);
   const [rangeExpenses, setRangeExpenses] = useState<Expense[]>([]);
@@ -60,6 +57,11 @@ export default function Dashboard() {
   
   // This useEffect ensures all date-sensitive operations run only on the client, preventing hydration errors.
   useEffect(() => {
+    // Set the initial date range to the current month on the client-side
+    setDateRange({
+        from: startOfMonth(new Date()),
+        to: endOfMonth(new Date()),
+    });
     // Set today's data on client-side
     const today = new Date();
     setTodayInvoices(getInvoicesForDateRange(today, today));
