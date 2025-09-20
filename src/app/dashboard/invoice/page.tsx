@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -131,9 +131,9 @@ export default function InvoicePage() {
   const resetFilters = () => {
     setCategoryFilter('');
     setSubCategoryFilter('');
-    setProductSearch('');
-    setCategorySearch('');
-    setSubCategorySearch('');
+    productSearch && setProductSearch('');
+    categorySearch && setCategorySearch('');
+    subCategorySearch && setSubCategorySearch('');
   };
   
   useEffect(() => {
@@ -204,7 +204,7 @@ export default function InvoicePage() {
     <>
       <div className="flex flex-col gap-4 no-print">
           {/* Memo Tabs */}
-          <div className="flex items-center gap-2 border-b pb-2 flex-wrap no-print">
+          <div className="flex items-center gap-2 border-b pb-2 flex-wrap">
               {drafts.map((draft, index) => (
                   <div key={draft.id} className="relative group">
                       <Button 
@@ -233,7 +233,7 @@ export default function InvoicePage() {
           </div>
 
           {/* Change Calculator */}
-          <div className="py-4 no-print">
+          <div className="py-4">
               <Card>
                   <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-center gap-4">
                       <div className="text-center sm:text-left">
@@ -359,7 +359,7 @@ export default function InvoicePage() {
                       <CardTitle>Invoice Items</CardTitle>
                   </CardHeader>
                   <CardContent className='p-0 flex-1'>
-                      <ScrollArea className="h-full">
+                      <ScrollArea className="h-full max-h-96">
                           <Table>
                               <TableHeader>
                                   <TableRow>
@@ -443,7 +443,7 @@ export default function InvoicePage() {
                             </Button>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-4 bg-muted/50 rounded-lg overflow-hidden">
+                    <CardContent className="p-4 bg-muted/50 rounded-lg overflow-auto">
                         <div className="transform scale-[0.9] origin-top">
                             {activeDraft && <InvoicePrintLayout 
                                 invoiceId={activeDraft.id}
@@ -463,40 +463,7 @@ export default function InvoicePage() {
                 </Card>
             </div>
           </div>
-
-          <AlertDialog open={!!draftToDelete} onOpenChange={() => setDraftToDelete(null)}>
-              <AlertDialogContent>
-                  <AlertDialogHeader>
-                      <AlertDialogTitle>{t('are_you_sure_title')}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                         Are you sure you want to delete this memo? This action cannot be undone.
-                      </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                      <AlertDialogCancel>{t('cancel_button')}</AlertDialogCancel>
-                      <AlertDialogAction onClick={confirmDeleteDraft} className="bg-destructive hover:bg-destructive/90">{t('delete_button')}</AlertDialogAction>
-                  </AlertDialogFooter>
-              </AlertDialogContent>
-          </AlertDialog>
-
-          <AlertDialog open={isPrintConfirmOpen} onOpenChange={setPrintConfirmOpen}>
-              <AlertDialogContent>
-                  <AlertDialogHeader>
-                      <AlertDialogTitle>Confirm Print</AlertDialogTitle>
-                      <AlertDialogDescription>
-                         Are you sure you want to save and print this invoice? This will finalize the invoice.
-                      </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSaveAndPrint}>
-                         Yes, Print
-                      </AlertDialogAction>
-                  </AlertDialogFooter>
-              </AlertDialogContent>
-          </AlertDialog>
       </div>
-
       <div className="print-source">
           {activeDraft && <InvoicePrintLayout 
               invoiceId={activeDraft.id}
@@ -512,6 +479,40 @@ export default function InvoicePage() {
               locale={settings.locale}
           />}
       </div>
+
+      <AlertDialog open={!!draftToDelete} onOpenChange={() => setDraftToDelete(null)}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>{t('are_you_sure_title')}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                     Are you sure you want to delete this memo? This action cannot be undone.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>{t('cancel_button')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={confirmDeleteDraft} className="bg-destructive hover:bg-destructive/90">{t('delete_button')}</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isPrintConfirmOpen} onOpenChange={setPrintConfirmOpen}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Print</AlertDialogTitle>
+                  <AlertDialogDescription>
+                     Are you sure you want to save and print this invoice? This will finalize the invoice.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleSaveAndPrint}>
+                     Yes, Print
+                  </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
+
+    
