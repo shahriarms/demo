@@ -72,12 +72,12 @@ export default function InvoicePage() {
   };
   
   const handlePrintConfirm = () => {
-     if (!validateInvoice()) return;
+     if (!validateInvoice() || isProcessing) return;
      setPrintConfirmOpen(true);
   };
   
   const handleSaveAndPrint = async () => {
-    if (!validateInvoice() || !activeDraft) return;
+    if (!validateInvoice() || !activeDraft || isProcessing) return;
 
     setPrintConfirmOpen(false);
     setIsProcessing(true);
@@ -268,7 +268,7 @@ export default function InvoicePage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Column 1: Customer Info & Product Adder */}
           <div className="flex flex-col gap-4">
             <Card>
@@ -490,5 +490,3 @@ export default function InvoicePage() {
     </>
   );
 }
-
-    

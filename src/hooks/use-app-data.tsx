@@ -246,47 +246,56 @@ export function DataProvider({ children }: { children: ReactNode }) {
           date: new Date().toISOString(),
         };
         
-        if (isDbConnected) {
-            const newInvoice = await dataActions.addInvoice(invoiceToSave, invoiceToSave.items);
-            await loadAllData();
-            
-            if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
-                const orderData = { orderId: newInvoice.id, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
-                try {
-                    await printPosReceipt(settings, orderData);
-                } catch(e) {
-                    console.error("POS printing failed:", e);
-                    throw e;
+        try {
+            if (isDbConnected) {
+                const newInvoice = await dataActions.addInvoice(invoiceToSave, invoiceToSave.items);
+                await loadAllData();
+                
+                if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
+                    const orderData = { orderId: newInvoice.id, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
+                    try {
+                        await printPosReceipt(settings, orderData);
+                    } catch(e) {
+                        console.error("POS printing failed but invoice was saved:", e);
+                        toast({ variant: 'destructive', title: 'Printing Failed', description: 'Invoice saved, but POS printing failed. Check printer connection.' });
+                    }
                 }
-            }
-            return newInvoice.id;
-        } else {
-            // Offline logic
-            const offlineData = getOfflineData();
-            const newId = (offlineData.invoices[0]?.id || 0) + 1;
-            const newInvoice = { ...invoiceToSave, id: newId };
+                return newInvoice.id;
+            } else {
+                // Offline logic
+                const offlineData = getOfflineData();
+                const newId = (offlineData.invoices[0]?.id || 0) + 1;
+                const newInvoice = { ...invoiceToSave, id: newId };
 
-            // Update product stock
-            newInvoice.items.forEach(item => {
-                const productIndex = offlineData.products.findIndex((p: Product) => p.id === item.id);
-                if (productIndex !== -1) {
-                    offlineData.products[productIndex].stock -= item.quantity;
+                // Update product stock
+                newInvoice.items.forEach(item => {
+                    const productIndex = offlineData.products.findIndex((p: Product) => p.id === item.id);
+                    if (productIndex !== -1) {
+                        offlineData.products[productIndex].stock -= item.quantity;
+                    }
+                });
+                setProducts(offlineData.products);
+
+                offlineData.invoices.unshift(newInvoice);
+                setInvoices(offlineData.invoices);
+                
+                setOfflineData(offlineData);
+                toast({ title: "Invoice Saved (Offline)", description: `Invoice #${newId} saved locally.` });
+
+                 if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
+                    const orderData = { orderId: newId, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
+                     try {
+                        await printPosReceipt(settings, orderData);
+                    } catch(e) {
+                        console.error("POS printing failed but invoice was saved:", e);
+                        toast({ variant: 'destructive', title: 'Printing Failed', description: 'Invoice saved, but POS printing failed. Check printer connection.' });
+                    }
                 }
-            });
-            setProducts(offlineData.products);
-
-            offlineData.invoices.unshift(newInvoice);
-            setInvoices(offlineData.invoices);
-            
-            setOfflineData(offlineData);
-            toast({ title: "Invoice Saved (Offline)", description: `Invoice #${newId} saved locally.` });
-
-             if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
-                const orderData = { orderId: newId, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
-                await printPosReceipt(settings, orderData);
+                return newId;
             }
-            
-            return newId;
+        } catch (error) {
+            console.error("Failed to save invoice:", error);
+            throw error; // Re-throw to be caught by the calling function
         }
     }, [isDbConnected, loadAllData, settings, toast]);
     
