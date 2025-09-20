@@ -32,19 +32,6 @@ export default function BuyersPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
-
-  const handlePrint = () => {
-    if (!selectedInvoice) return;
-    window.print();
-  };
-  
-  useEffect(() => {
-    if (selectedInvoice) {
-      document.title = `invoice-${selectedInvoice.id}`;
-    } else {
-      document.title = 'StockPilot';
-    }
-  }, [selectedInvoice]);
   
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
@@ -80,16 +67,16 @@ export default function BuyersPage() {
 
   return (
     <>
-    <div className="flex flex-col h-full gap-4 no-print">
+    <div className="flex flex-col h-full gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Users className="w-6 h-6" />
             {t('buyers_page_title')}
         </h1>
       </div>
-      <div className="grid md:grid-cols-5 gap-6 flex-1">
+      <div className="grid md:grid-cols-2 gap-6 flex-1">
         {/* Buyers List */}
-        <Card className="md:col-span-2 lg:col-span-1 flex flex-col">
+        <Card className="md:col-span-1 flex flex-col">
           <CardHeader className="flex-shrink-0">
             <CardTitle>{t('all_buyers_title')}</CardTitle>
             <div className="relative pt-2">
@@ -129,7 +116,7 @@ export default function BuyersPage() {
         </Card>
 
         {/* Invoice List */}
-        <Card className="md:col-span-3 lg:col-span-1 flex flex-col">
+        <Card className="md:col-span-1 flex flex-col">
           <CardHeader className="flex-shrink-0">
             <CardTitle className="truncate">{selectedBuyer ? t('buyers_invoices_title', { name: selectedBuyer.name }) : t('invoice_log_title')}</CardTitle>
             <div className="relative pt-2">
@@ -178,67 +165,8 @@ export default function BuyersPage() {
               </ScrollArea>
           </CardContent>
         </Card>
-
-        {/* Invoice Display */}
-        <Card className="md:col-span-5 lg:col-span-3 flex flex-col">
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle>{t('invoice_details_title')}</CardTitle>
-              {selectedInvoice && (
-                  <Button onClick={handlePrint} disabled={!selectedInvoice}>
-                      <Printer className="mr-2 h-4 w-4" />
-                      {t('print_invoice_button')}
-                  </Button>
-              )}
-            </CardHeader>
-            <CardContent className="flex-1 p-4 bg-muted/50 rounded-lg overflow-auto">
-              {selectedInvoice ? (
-                  <div className="min-w-[820px] print:min-w-0 print:p-0">
-                    <div className="transform scale-[0.9] origin-top print:hidden">
-                        <InvoicePrintLayout
-                            invoiceId={selectedInvoice.id}
-                            currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                            customerName={selectedInvoice.customerName}
-                            customerAddress={selectedInvoice.customerAddress}
-                            customerPhone={selectedInvoice.customerPhone}
-                            invoiceItems={selectedInvoice.items}
-                            subtotal={selectedInvoice.subtotal}
-                            paidAmount={selectedInvoice.paidAmount}
-                            dueAmount={selectedInvoice.dueAmount}
-                            printFormat={settings.printFormat} 
-                            locale={settings.locale}
-                        />
-                    </div>
-                  </div>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground h-full flex flex-col justify-center items-center rounded-lg border">
-                    <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
-                    <p className="font-semibold">{t('no_invoice_selected_title')}</p>
-                    <p className="text-sm">{t('no_invoice_selected_description')}</p>
-                </div>
-              )}
-            </CardContent>
-        </Card>
       </div>
     </div>
-    
-    {/* This div below is now the single source for printing */}
-    {selectedInvoice && (
-        <div className="print-source">
-           <InvoicePrintLayout
-              invoiceId={selectedInvoice.id}
-              currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-              customerName={selectedInvoice.customerName}
-              customerAddress={selectedInvoice.customerAddress}
-              customerPhone={selectedInvoice.customerPhone}
-              invoiceItems={selectedInvoice.items}
-              subtotal={selectedInvoice.subtotal}
-              paidAmount={selectedInvoice.paidAmount}
-              dueAmount={selectedInvoice.dueAmount}
-              printFormat={settings.printFormat}
-              locale={settings.locale}
-            />
-        </div>
-    )}
     </>
   );
 }
