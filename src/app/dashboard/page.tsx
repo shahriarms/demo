@@ -34,7 +34,10 @@ export default function Dashboard() {
   const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading, getAttendanceForDate, invoices: allInvoices } = useAppData();
   const { t } = useTranslation();
 
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
+  });
   
   const [rangeInvoices, setRangeInvoices] = useState<Invoice[]>([]);
   const [rangeExpenses, setRangeExpenses] = useState<Expense[]>([]);
@@ -57,12 +60,6 @@ export default function Dashboard() {
   
   // This useEffect ensures all date-sensitive operations run only on the client, preventing hydration errors.
   useEffect(() => {
-    // Set initial date range on client-side
-    setDateRange({
-      from: startOfMonth(new Date()),
-      to: endOfMonth(new Date()),
-    });
-    
     // Set today's data on client-side
     const today = new Date();
     setTodayInvoices(getInvoicesForDateRange(today, today));
@@ -106,10 +103,10 @@ export default function Dashboard() {
     const totalSalaryPaid = rangeSalaries.reduce((sum, sal) => sum + sal.amount, 0);
     const grossProfit = getGrossProfitForDateRange(rangeInvoices);
     const profit = grossProfit - totalExpenses - totalSalaryPaid;
-    const totalDue = rangeInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
+    const totalDue = allInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
     const { materialSoldKg, hardwareSoldPcs } = calculateUnitsSold(rangeInvoices, products);
     return { totalSales, totalExpenses, totalSalaryPaid, profit, totalDue, materialSoldKg, hardwareSoldPcs };
-  }, [rangeInvoices, rangeExpenses, rangeSalaries, getGrossProfitForDateRange, products, calculateUnitsSold]);
+  }, [rangeInvoices, rangeExpenses, rangeSalaries, getGrossProfitForDateRange, products, calculateUnitsSold, allInvoices]);
   
   const todayStats = useMemo(() => {
       const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
@@ -349,7 +346,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">Total outstanding from all invoices</p>
                 </CardContent>
               </Card>
-               <Card as="button" onClick={() => setMonthlyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+               <Card as="button" onClick={() => setMonthlyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/so transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Units Sold</CardTitle>
                   <Container className="h-4 w-4 text-muted-foreground" />
