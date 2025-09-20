@@ -191,9 +191,9 @@ export default function BuyersPage() {
                   </Button>
               )}
             </CardHeader>
-            <CardContent className="flex-1 overflow-auto">
+            <CardContent className="flex-1 p-4 bg-muted/50 rounded-lg overflow-auto">
               {selectedInvoice ? (
-                  <div>
+                  <div className="transform scale-[0.9] origin-top">
                     <InvoicePrintLayout
                         invoiceId={selectedInvoice.id}
                         currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
