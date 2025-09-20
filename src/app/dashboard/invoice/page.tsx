@@ -315,45 +315,45 @@ export default function InvoicePage() {
                 </CardHeader>
                 <CardContent className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4 min-h-0">
                         {/* Category List */}
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2 min-h-0">
                            <Label>{t('category_header')}</Label>
                             <div className="relative">
                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                <Input placeholder="Search..." className="pl-8 h-9" value={categorySearch} onChange={e => setCategorySearch(e.target.value)} />
                             </div>
-                           <ScrollArea className="border rounded-md flex-1">
+                           <div className="overflow-y-auto border rounded-md flex-1">
                                <div className="p-2 space-y-1">
                                     <Button variant={!categoryFilter ? 'secondary' : 'ghost'} className="w-full justify-start h-8 text-xs" onClick={() => setCategoryFilter('')}>{t('all_categories')}</Button>
                                     {categories.map(c => <Button key={c} variant={categoryFilter === c ? 'secondary' : 'ghost'} className="w-full justify-start h-8 text-xs" onClick={() => setCategoryFilter(c)}>{c}</Button>)}
                                </div>
-                           </ScrollArea>
+                           </div>
                         </div>
                         {/* Sub-Category List */}
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2 min-h-0">
                             <Label>{t('subcategory_header')}</Label>
                             <div className="relative">
                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                <Input placeholder="Search..." className="pl-8 h-9" value={subCategorySearch} onChange={e => setSubCategorySearch(e.target.value)} disabled={!categoryFilter}/>
                             </div>
-                           <ScrollArea className="border rounded-md flex-1">
+                           <div className="overflow-y-auto border rounded-md flex-1">
                                 <div className="p-2 space-y-1">
                                      <Button variant={!subCategoryFilter ? 'secondary' : 'ghost'} className="w-full justify-start h-8 text-xs" onClick={() => setSubCategoryFilter('')} disabled={!categoryFilter}>{t('all_subcategories')}</Button>
                                      {categoryFilter && subCategories.map(sc => <Button key={sc} variant={subCategoryFilter === sc ? 'secondary' : 'ghost'} className="w-full justify-start h-8 text-xs" onClick={() => setSubCategoryFilter(sc)}>{sc}</Button>)}
                                 </div>
-                           </ScrollArea>
+                           </div>
                         </div>
                         {/* Product List */}
-                         <div className="flex flex-col gap-2">
+                         <div className="flex flex-col gap-2 min-h-0">
                             <Label>{t('products_sidebar')}</Label>
                             <div className="relative">
                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                <Input placeholder="Search..." className="pl-8 h-9" value={productSearch} onChange={e => setProductSearch(e.target.value)} />
                             </div>
-                           <ScrollArea className="border rounded-md flex-1">
+                           <div className="overflow-y-auto border rounded-md flex-1">
                                 <div className="p-2 space-y-1">
                                      {filteredProducts.map(p => <Button key={p.id} variant="ghost" className="w-full justify-start h-8 text-xs" onClick={() => handleAddProduct(p)}>{p.name}</Button>)}
                                 </div>
-                           </ScrollArea>
+                           </div>
                         </div>
                 </CardContent>
             </Card>
