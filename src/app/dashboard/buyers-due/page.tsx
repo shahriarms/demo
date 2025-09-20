@@ -243,7 +243,7 @@ export default function BuyersDuePage() {
                         <button key={invoice.id} onClick={() => handleSelectInvoice(invoice)} className={`w-full text-left p-4 hover:bg-muted transition-colors ${selectedInvoice?.id === invoice.id ? 'bg-muted' : '' }`}>
                           <div className="flex justify-between font-medium">
                               <span>{t('inv_short')}: {invoice.id}</span>
-                              <span className="text-destructive">৳{invoice.dueAmount.toFixed(2)}</span>
+                              <span className="text-destructive">&#2547; {invoice.dueAmount.toFixed(2)}</span>
                           </div>
                           <div className="text-sm text-muted-foreground">{new Date(invoice.date).toLocaleDateString()}</div>
                         </button>
@@ -270,16 +270,16 @@ export default function BuyersDuePage() {
                           <div className="flex justify-between items-start p-4 bg-muted/50 rounded-lg">
                             <div>
                                 <p>{t('invoice_label')}: <span className="font-mono">{selectedInvoice.id}</span></p>
-                                <p>Original Due: <span className="font-mono">৳{selectedInvoice.dueAmount.toFixed(2)}</span></p>
+                                <p>Original Due: <span className="font-mono">&#2547; {selectedInvoice.dueAmount.toFixed(2)}</span></p>
                             </div>
                             <div className="text-right">
                                 <p className="text-lg">New Due:</p>
-                                <p className="font-bold text-destructive text-2xl">৳{currentDueForSelectedInvoice.toFixed(2)}</p>
+                                <p className="font-bold text-destructive text-2xl">&#2547; {currentDueForSelectedInvoice.toFixed(2)}</p>
                             </div>
                           </div>
                           <div className="flex flex-col sm:flex-row items-center gap-2">
                               <div className="relative flex-1 w-full">
-                                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">৳</span>
+                                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">&#2547;</span>
                                   <Input 
                                     type="text" 
                                     inputMode="decimal" 
@@ -348,11 +348,11 @@ export default function BuyersDuePage() {
               <AlertDialogHeader>
                   <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
                   <AlertDialogDescription>
-                      You are about to receive a payment of <strong>৳{typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00'}</strong> for invoice <strong>#{selectedInvoice?.id}</strong>.
+                      You are about to receive a payment of <strong>&#2547; {typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00'}</strong> for invoice <strong>#{selectedInvoice?.id}</strong>.
                       <br />
-                      Original Due: ৳{selectedInvoice?.dueAmount.toFixed(2)}
+                      Original Due: &#2547; {selectedInvoice?.dueAmount.toFixed(2)}
                       <br />
-                      New Due will be: <strong>৳{currentDueForSelectedInvoice.toFixed(2)}</strong>
+                      New Due will be: <strong>&#2547; {currentDueForSelectedInvoice.toFixed(2)}</strong>
                       <br /><br />
                       This will save the payment and print a receipt.
                   </AlertDialogDescription>
@@ -369,3 +369,5 @@ export default function BuyersDuePage() {
     </>
   );
 }
+
+    

@@ -66,8 +66,8 @@ export default function BuyersPage() {
         const itemData = [
             item.name,
             item.quantity,
-            '৳'+item.price.toFixed(2),
-            '৳'+(item.price * item.quantity).toFixed(2)
+            '৳ '+item.price.toFixed(2),
+            '৳ '+(item.price * item.quantity).toFixed(2)
         ];
         tableRows.push(itemData);
     });
@@ -83,13 +83,13 @@ export default function BuyersPage() {
     const finalY = (doc as any).lastAutoTable.finalY;
     doc.setFontSize(12);
     doc.text(`${t('subtotal_label')}:`, 150, finalY + 10, { align: 'right' });
-    doc.text('৳'+selectedInvoice.subtotal.toFixed(2), 200, finalY + 10, { align: 'right' });
+    doc.text('৳ '+selectedInvoice.subtotal.toFixed(2), 200, finalY + 10, { align: 'right' });
     doc.text(`${t('paid_label')}:`, 150, finalY + 17, { align: 'right' });
-    doc.text('৳'+selectedInvoice.paidAmount.toFixed(2), 200, finalY + 17, { align: 'right' });
+    doc.text('৳ '+selectedInvoice.paidAmount.toFixed(2), 200, finalY + 17, { align: 'right' });
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text(`${t('due_label')}:`, 150, finalY + 25, { align: 'right' });
-    doc.text('৳'+selectedInvoice.dueAmount.toFixed(2), 200, finalY + 25, { align: 'right' });
+    doc.text('৳ '+selectedInvoice.dueAmount.toFixed(2), 200, finalY + 25, { align: 'right' });
 
     // Footer
     doc.setFontSize(10);
@@ -217,7 +217,7 @@ export default function BuyersPage() {
                             </div>
                             <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                                 <DollarSign className="w-3.5 h-3.5"/>
-                                <span>&#2547;{invoice.subtotal.toFixed(2)}</span>
+                                <span>&#2547; {invoice.subtotal.toFixed(2)}</span>
                             </div>
                         </button>
                       ))
@@ -273,3 +273,4 @@ export default function BuyersPage() {
     </div>
   );
 }
+    

@@ -93,7 +93,7 @@ export function MonthlySalaryReportDialog({ open, onOpenChange, salaryPayments, 
             body: reportData.map(item => [
                 item.date,
                 item.employeeName,
-                '&#2547;'+item.amount.toFixed(2),
+                '&#2547; '+item.amount.toFixed(2),
                 item.paidBy,
             ]),
             startY: 22,
@@ -109,7 +109,7 @@ export function MonthlySalaryReportDialog({ open, onOpenChange, salaryPayments, 
         <DialogHeader>
           <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A detailed list of all salary payments made in this range. Total Paid: <strong>&#2547;{totalPaid.toFixed(2)}</strong>
+            A detailed list of all salary payments made in this range. Total Paid: <strong>&#2547; {totalPaid.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -135,7 +135,7 @@ export function MonthlySalaryReportDialog({ open, onOpenChange, salaryPayments, 
                     <TableCell className="font-mono text-xs">{item.date}</TableCell>
                     <TableCell className="font-medium">{item.employeeName}</TableCell>
                     <TableCell className="text-muted-foreground">{item.paidBy}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold">&#2547;{item.amount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold">&#2547; {item.amount.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -158,3 +158,5 @@ export function MonthlySalaryReportDialog({ open, onOpenChange, salaryPayments, 
     </Dialog>
   );
 }
+
+    

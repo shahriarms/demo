@@ -263,7 +263,7 @@ export default function EmployeesPage() {
                                         <TableCell className="hidden md:table-cell">{employee.role}</TableCell>
                                         <TableCell className="hidden lg:table-cell">{employee.phone}</TableCell>
                                         <TableCell className="hidden lg:table-cell">{format(new Date(employee.joiningDate), 'PP')}</TableCell>
-                                        <TableCell className="text-right font-mono">${employee.salary.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right font-mono">&#2547; {employee.salary.toFixed(2)}</TableCell>
                                         <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
@@ -309,5 +309,7 @@ export default function EmployeesPage() {
         </div>
     );
 }
+
+    
 
     

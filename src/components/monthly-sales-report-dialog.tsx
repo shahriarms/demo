@@ -99,8 +99,8 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: 
                 item.customerName,
                 item.itemName,
                 item.quantity,
-                '&#2547;'+item.rate.toFixed(2),
-                '&#2547;'+item.total.toFixed(2),
+                '&#2547; '+item.rate.toFixed(2),
+                '&#2547; '+item.total.toFixed(2),
             ]),
             startY: 22,
         });
@@ -115,7 +115,7 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: 
         <DialogHeader>
           <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A detailed list of all items sold in the selected date range. Total Sales: <strong>&#2547;{totalSales.toFixed(2)}</strong>
+            A detailed list of all items sold in the selected date range. Total Sales: <strong>&#2547; {totalSales.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -144,8 +144,8 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: 
                     <TableCell>{item.customerName}</TableCell>
                     <TableCell className="font-medium">{item.itemName}</TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right font-mono"><span className="text-muted-foreground">&#2547;</span>{item.rate.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold"><span className="text-muted-foreground">&#2547;</span>{item.total.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono"><span className="text-muted-foreground">&#2547;</span> {item.rate.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold"><span className="text-muted-foreground">&#2547;</span> {item.total.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -168,3 +168,5 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: 
     </Dialog>
   );
 }
+
+    

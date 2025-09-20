@@ -181,3 +181,5 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
         </Dialog>
     );
 }
+
+    

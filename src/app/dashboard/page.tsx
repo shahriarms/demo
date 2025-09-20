@@ -212,7 +212,7 @@ export default function Dashboard() {
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold text-green-600">&#2547;{todayStats.totalSales.toFixed(2)}</div>
+                      <div className="text-2xl font-bold text-green-600">&#2547; {todayStats.totalSales.toFixed(2)}</div>
                       <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
                   </CardContent>
                 </Card>
@@ -222,7 +222,7 @@ export default function Dashboard() {
                       <Receipt className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold text-green-600">&#2547;{todayStats.totalExpenses.toFixed(2)}</div>
+                      <div className="text-2xl font-bold text-green-600">&#2547; {todayStats.totalExpenses.toFixed(2)}</div>
                       <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
                   </CardContent>
                 </Card>
@@ -232,7 +232,7 @@ export default function Dashboard() {
                       <HandCoins className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold text-green-600">&#2547;{todayStats.totalDue.toFixed(2)}</div>
+                      <div className="text-2xl font-bold text-green-600">&#2547; {todayStats.totalDue.toFixed(2)}</div>
                       <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
                   </CardContent>
                 </Card>
@@ -253,7 +253,7 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                       <div className={`text-2xl font-bold ${todayStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          &#2547;{todayStats.profit.toFixed(2)}
+                          &#2547; {todayStats.profit.toFixed(2)}
                       </div>
                       <p className="text-xs text-muted-foreground">Sales - Expenses</p>
                   </CardContent>
@@ -271,7 +271,7 @@ export default function Dashboard() {
                   <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">&#2547;{rangeStats.totalSales.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-green-600">&#2547; {rangeStats.totalSales.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">{rangeInvoices.length} invoices in range</p>
                 </CardContent>
               </Card>
@@ -281,7 +281,7 @@ export default function Dashboard() {
                   <TrendingDown className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">&#2547;{rangeStats.totalExpenses.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-green-600">&#2547; {rangeStats.totalExpenses.toFixed(2)}</div>
                    <p className="text-xs text-muted-foreground">{rangeExpenses.length} entries in range</p>
                 </CardContent>
               </Card>
@@ -291,7 +291,7 @@ export default function Dashboard() {
                   <Wallet className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">&#2547;{rangeStats.totalSalaryPaid.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-green-600">&#2547; {rangeStats.totalSalaryPaid.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">{rangeSalaries.length} salary payments</p>
                 </CardContent>
               </Card>
@@ -301,7 +301,7 @@ export default function Dashboard() {
                   <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">&#2547;{rangeStats.totalDue.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-green-600">&#2547; {rangeStats.totalDue.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">Outstanding from this range</p>
                 </CardContent>
               </Card>
@@ -322,7 +322,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className={`text-2xl font-bold ${rangeStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      &#2547;{rangeStats.profit.toFixed(2)}
+                      &#2547; {rangeStats.profit.toFixed(2)}
                   </div>
                   <p className="text-xs text-muted-foreground">Gross Profit - (Expenses + Salaries)</p>
                 </CardContent>
@@ -433,3 +433,5 @@ export default function Dashboard() {
     </>
   );
 }
+
+    

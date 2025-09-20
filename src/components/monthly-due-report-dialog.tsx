@@ -82,9 +82,9 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
                 format(new Date(item.date), 'PP'),
                 String(item.id),
                 item.customerName,
-                '৳'+item.subtotal.toFixed(2),
-                '৳'+item.paidAmount.toFixed(2),
-                '৳'+item.dueAmount.toFixed(2),
+                '৳ '+item.subtotal.toFixed(2),
+                '৳ '+item.paidAmount.toFixed(2),
+                '৳ '+item.dueAmount.toFixed(2),
             ]),
             startY: 22,
         });
@@ -99,7 +99,7 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
         <DialogHeader>
           <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A detailed list of all invoices from this range with an outstanding balance. Total Due: <strong>৳{totalDue.toFixed(2)}</strong>
+            A detailed list of all invoices from this range with an outstanding balance. Total Due: <strong>&#2547; {totalDue.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -127,9 +127,9 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
                     <TableCell className="font-mono text-xs">{format(new Date(item.date), 'PP')}</TableCell>
                     <TableCell className="font-mono text-xs">{String(item.id)}</TableCell>
                     <TableCell className="font-medium">{item.customerName}</TableCell>
-                    <TableCell className="text-right font-mono">৳{item.subtotal.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-mono text-green-600">৳{item.paidAmount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-destructive">৳{item.dueAmount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono">&#2547; {item.subtotal.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono text-green-600">&#2547; {item.paidAmount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold text-destructive">&#2547; {item.dueAmount.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -152,3 +152,5 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
     </Dialog>
   );
 }
+
+    

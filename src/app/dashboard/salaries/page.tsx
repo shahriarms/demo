@@ -189,9 +189,9 @@ export default function SalariesPage() {
                     <div className="space-y-4">
                         <h3 className="font-semibold text-lg">{t('payment_details_title')}</h3>
                         <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-                            <div className="flex justify-between text-sm"><span>{t('monthly_salary_label')}:</span> <span className="font-mono">&#2547;{selectedEmployee.salary.toFixed(2)}</span></div>
-                            <div className="flex justify-between text-sm"><span>{t('paid_this_month_label')}:</span> <span className="font-mono">&#2547;{paidThisMonth.toFixed(2)}</span></div>
-                            <div className="flex justify-between font-bold text-base border-t pt-2 mt-2"><span>{t('due_this_month_label')}:</span> <span className="font-mono text-primary">&#2547;{dueSalary.toFixed(2)}</span></div>
+                            <div className="flex justify-between text-sm"><span>{t('monthly_salary_label')}:</span> <span className="font-mono">&#2547; {selectedEmployee.salary.toFixed(2)}</span></div>
+                            <div className="flex justify-between text-sm"><span>{t('paid_this_month_label')}:</span> <span className="font-mono">&#2547; {paidThisMonth.toFixed(2)}</span></div>
+                            <div className="flex justify-between font-bold text-base border-t pt-2 mt-2"><span>{t('due_this_month_label')}:</span> <span className="font-mono text-primary">&#2547; {dueSalary.toFixed(2)}</span></div>
                         </div>
 
                         <div className="relative">
@@ -239,7 +239,7 @@ export default function SalariesPage() {
                                         paymentsThisMonth.map(payment => (
                                             <TableRow key={payment.id}>
                                                 <TableCell>{format(new Date(payment.date), 'PP')}</TableCell>
-                                                <TableCell className="text-right font-mono">&#2547;{payment.amount.toFixed(2)}</TableCell>
+                                                <TableCell className="text-right font-mono">&#2547; {payment.amount.toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))
                                     ) : (
@@ -264,7 +264,7 @@ export default function SalariesPage() {
             <AlertDialogHeader>
                 <AlertDialogTitle>{t('are_you_sure_title')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                    You are about to pay <strong>&#2547;{typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00'}</strong> to <strong>{selectedEmployee?.name}</strong>. This action cannot be undone.
+                    You are about to pay <strong>&#2547; {typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00'}</strong> to <strong>{selectedEmployee?.name}</strong>. This action cannot be undone.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -278,3 +278,5 @@ export default function SalariesPage() {
     </>
   );
 }
+
+    
