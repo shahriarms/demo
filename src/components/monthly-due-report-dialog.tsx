@@ -152,5 +152,3 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
     </Dialog>
   );
 }
-
-    
