@@ -80,8 +80,8 @@ export function DailySalesDialog({ open, onOpenChange, invoices }: DailySalesDia
                 body: invoice.items.map(item => [
                     item.name,
                     item.quantity,
-                    '৳ '+item.rate.toFixed(2),
-                    '৳ '+item.total.toFixed(2),
+                    '৳ '+item.price.toFixed(2),
+                    '৳ '+(item.price * item.quantity).toFixed(2),
                 ]),
                 startY: finalY,
                 theme: 'grid',
