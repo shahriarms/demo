@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/chart';
 import { useAppData } from '@/hooks/use-app-data';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, Package, HandCoins, Receipt, Loader2, BadgeIndianRupee, Container, Wallet, RotateCw, Users } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, Package, HandCoins, Receipt, Loader2, BadgeIndianRupee, Container, Wallet, RotateCw, Users, ThumbsUp, Weight } from 'lucide-react';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -27,7 +27,7 @@ import { MonthlyDueDialog } from '@/components/monthly-due-report-dialog';
 import { MonthlyUnitsSoldDialog } from '@/components/monthly-units-sold-report-dialog';
 import { MonthlySalaryReportDialog } from '@/components/monthly-salary-report-dialog';
 import type { DateRange } from 'react-day-picker';
-import type { Invoice, Expense, SalaryPayment, Attendance } from '@/lib/types';
+import type { Invoice, Expense, SalaryPayment, Attendance, Product } from '@/lib/types';
 
 
 export default function Dashboard() {
@@ -80,6 +80,26 @@ export default function Dashboard() {
   }, [isLoading, dateRange, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange]);
 
 
+  const calculateUnitsSold = useCallback((invoices: Invoice[], products: Product[]) => {
+      let materialSoldKg = 0;
+      let hardwareSoldPcs = 0;
+      const productMap = new Map(products.map(p => [p.id, p]));
+
+      invoices.forEach(invoice => {
+          invoice.items.forEach(item => {
+              const product = productMap.get(item.id);
+              if (product) {
+                  if (product.mainCategory === 'Material') {
+                      materialSoldKg += item.quantity;
+                  } else if (product.mainCategory === 'Hardware') {
+                      hardwareSoldPcs += item.quantity;
+                  }
+              }
+          });
+      });
+      return { materialSoldKg, hardwareSoldPcs };
+  }, []);
+
   const rangeStats = useMemo(() => {
     const totalSales = rangeInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
     const totalExpenses = rangeExpenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -87,9 +107,9 @@ export default function Dashboard() {
     const grossProfit = getGrossProfitForDateRange(rangeInvoices);
     const profit = grossProfit - totalExpenses - totalSalaryPaid;
     const totalDue = rangeInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
-    const unitsSold = rangeInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-    return { totalSales, totalExpenses, totalSalaryPaid, profit, totalDue, unitsSold };
-  }, [rangeInvoices, rangeExpenses, rangeSalaries, getGrossProfitForDateRange]);
+    const { materialSoldKg, hardwareSoldPcs } = calculateUnitsSold(rangeInvoices, products);
+    return { totalSales, totalExpenses, totalSalaryPaid, profit, totalDue, materialSoldKg, hardwareSoldPcs };
+  }, [rangeInvoices, rangeExpenses, rangeSalaries, getGrossProfitForDateRange, products, calculateUnitsSold]);
   
   const todayStats = useMemo(() => {
       const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
@@ -97,10 +117,10 @@ export default function Dashboard() {
       const grossProfit = getGrossProfitForDateRange(todayInvoices);
       const profit = grossProfit - totalExpenses;
       const totalDue = todayInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
-      const unitsSold = todayInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+      const { materialSoldKg, hardwareSoldPcs } = calculateUnitsSold(todayInvoices, products);
       const presentToday = todayAttendance.filter(a => a.status === 'Present').length;
-      return { totalSales, totalExpenses, profit, totalDue, unitsSold, presentToday };
-  }, [todayInvoices, todayExpenses, todayAttendance, getGrossProfitForDateRange]);
+      return { totalSales, totalExpenses, profit, totalDue, materialSoldKg, hardwareSoldPcs, presentToday };
+  }, [todayInvoices, todayExpenses, todayAttendance, getGrossProfitForDateRange, products, calculateUnitsSold]);
   
   const { salesChartData, expensesChartData } = useMemo(() => {
     if (!dateRange?.from || !dateRange?.to) return { salesChartData: [], expensesChartData: [] };
@@ -247,8 +267,14 @@ export default function Dashboard() {
                       <Package className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold text-green-600">{todayStats.unitsSold}</div>
-                      <p className="text-xs text-muted-foreground">{t('total_items_footer')}</p>
+                      <div className="flex items-baseline gap-2">
+                        <div className="text-xl font-bold text-green-600">{todayStats.materialSoldKg.toFixed(2)}</div>
+                        <span className="text-xs text-muted-foreground">kg</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <div className="text-xl font-bold text-green-600">{todayStats.hardwareSoldPcs}</div>
+                        <span className="text-xs text-muted-foreground">pcs</span>
+                      </div>
                   </CardContent>
                 </Card>
                  <Card as="button" onClick={() => setDailyAttendanceReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
@@ -326,8 +352,14 @@ export default function Dashboard() {
                   <Container className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{rangeStats.unitsSold}</div>
-                  <p className="text-xs text-muted-foreground">Total items sold in range</p>
+                     <div className="flex items-baseline gap-2">
+                        <div className="text-xl font-bold text-green-600">{rangeStats.materialSoldKg.toFixed(2)}</div>
+                        <span className="text-xs text-muted-foreground">kg</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <div className="text-xl font-bold text-green-600">{rangeStats.hardwareSoldPcs}</div>
+                        <span className="text-xs text-muted-foreground">pcs</span>
+                      </div>
                 </CardContent>
               </Card>
               <Card>

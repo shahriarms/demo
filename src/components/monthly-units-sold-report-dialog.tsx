@@ -18,9 +18,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter as UiTableFooter,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FileDown } from 'lucide-react';
+import { FileDown, ThumbsUp, Weight } from 'lucide-react';
 import type { Invoice, Product } from '@/lib/types';
 import { format, isSameDay, startOfMonth, endOfMonth } from 'date-fns';
 import * as XLSX from 'xlsx';
@@ -41,7 +42,6 @@ interface ReportItem {
     id: string;
     name: string;
     totalQuantity: number;
-    unit: 'kg' | 'pcs';
 }
 
 export function MonthlyUnitsSoldDialog({ open, onOpenChange, invoices, products, dateRange }: MonthlyUnitsSoldDialogProps) {
@@ -61,64 +61,91 @@ export function MonthlyUnitsSoldDialog({ open, onOpenChange, invoices, products,
         return `Units Sold Report (${format(from, 'PP')} - ${format(to, 'PP')})`;
     }, [dateRange]);
 
-    const reportData = useMemo((): ReportItem[] => {
-        if (!invoices || !products) return [];
+    const { hardwareItems, materialItems, totalHardwarePcs, totalMaterialKg } = useMemo(() => {
+        if (!invoices || !products) return { hardwareItems: [], materialItems: [], totalHardwarePcs: 0, totalMaterialKg: 0 };
         
-        const soldItemsMap = new Map<string, number>();
+        const soldItemsMap = new Map<string, { totalQuantity: number; mainCategory: 'Hardware' | 'Material' }>();
+        const productMap = new Map(products.map(p => [p.id, p]));
 
         invoices.forEach(invoice => {
             invoice.items.forEach(item => {
-                soldItemsMap.set(item.id, (soldItemsMap.get(item.id) || 0) + item.quantity);
+                const product = productMap.get(item.id);
+                if (product) {
+                    const existing = soldItemsMap.get(item.id) || { totalQuantity: 0, mainCategory: product.mainCategory };
+                    existing.totalQuantity += item.quantity;
+                    soldItemsMap.set(item.id, existing);
+                }
             });
         });
 
-        return Array.from(soldItemsMap.entries()).map(([productId, totalQuantity]) => {
-            const product = products.find(p => p.id === productId);
-            return {
-                id: productId,
-                name: product?.name || 'Unknown Product',
-                totalQuantity,
-                unit: product?.mainCategory === 'Material' ? 'kg' : 'pcs',
-            };
-        }).sort((a,b) => b.totalQuantity - a.totalQuantity);
+        const allItems: (ReportItem & { mainCategory: 'Hardware' | 'Material' })[] = Array.from(soldItemsMap.entries()).map(([productId, data]) => ({
+            id: productId,
+            name: productMap.get(productId)?.name || 'Unknown Product',
+            totalQuantity: data.totalQuantity,
+            mainCategory: data.mainCategory,
+        })).sort((a,b) => b.totalQuantity - a.totalQuantity);
+
+        const hardwareItems = allItems.filter(item => item.mainCategory === 'Hardware');
+        const materialItems = allItems.filter(item => item.mainCategory === 'Material');
+        const totalHardwarePcs = hardwareItems.reduce((sum, item) => sum + item.totalQuantity, 0);
+        const totalMaterialKg = materialItems.reduce((sum, item) => sum + item.totalQuantity, 0);
+
+        return { hardwareItems, materialItems, totalHardwarePcs, totalMaterialKg };
 
     }, [invoices, products]);
 
     const handleExportExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(reportData.map(item => ({
-            "Item Name": item.name,
-            "Total Quantity Sold": item.totalQuantity,
-            "Unit": item.unit,
-        })));
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Units Sold Report");
-        XLSX.writeFile(workbook, `units_sold_report.xlsx`);
+        const wb = XLSX.utils.book_new();
+        if (hardwareItems.length > 0) {
+            const hwSheet = XLSX.utils.json_to_sheet(hardwareItems.map(item => ({ "Item Name": item.name, "Total Quantity Sold (pcs)": item.totalQuantity })));
+            XLSX.utils.book_append_sheet(wb, hwSheet, "Hardware Items");
+        }
+        if (materialItems.length > 0) {
+            const matSheet = XLSX.utils.json_to_sheet(materialItems.map(item => ({ "Item Name": item.name, "Total Quantity Sold (kg)": item.totalQuantity })));
+            XLSX.utils.book_append_sheet(wb, matSheet, "Material Items");
+        }
+        XLSX.writeFile(wb, `units_sold_report.xlsx`);
     };
 
     const handleExportPdf = () => {
         const doc = new jsPDF();
         doc.text(rangeTitle, 14, 16);
-        (doc as any).autoTable({
-            head: [['Item Name', 'Total Quantity Sold', 'Unit']],
-            body: reportData.map(item => [
-                item.name,
-                item.totalQuantity,
-                item.unit,
-            ]),
-            startY: 22,
-        });
+        let startY = 22;
+
+        if (hardwareItems.length > 0) {
+            doc.setFontSize(12);
+            doc.text("Hardware Items", 14, startY);
+            startY += 6;
+            (doc as any).autoTable({
+                head: [['Item Name', 'Total Quantity Sold (pcs)']],
+                body: hardwareItems.map(item => [item.name, item.totalQuantity]),
+                startY,
+            });
+            startY = (doc as any).lastAutoTable.finalY + 10;
+        }
+
+        if (materialItems.length > 0) {
+             if (startY > 250) { doc.addPage(); startY = 22; }
+            doc.setFontSize(12);
+            doc.text("Material Items", 14, startY);
+            startY += 6;
+            (doc as any).autoTable({
+                head: [['Item Name', 'Total Quantity Sold (kg)']],
+                body: materialItems.map(item => [item.name, item.totalQuantity.toFixed(2)]),
+                startY,
+            });
+        }
+        
         doc.save(`units_sold_report.pdf`);
     };
     
-    const totalUnits = useMemo(() => reportData.reduce((sum, item) => sum + item.totalQuantity, 0), [reportData]);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A summary of total quantities sold for each item in this range. Total Units: <strong>{totalUnits}</strong>
+            A summary of total quantities sold for each item in this range.
           </DialogDescription>
         </DialogHeader>
         
@@ -127,33 +154,45 @@ export function MonthlyUnitsSoldDialog({ open, onOpenChange, invoices, products,
             <Button variant="outline" size="sm" onClick={handleExportPdf}><FileDown className="mr-2 h-4 w-4" /> Export as PDF</Button>
         </div>
 
-        <ScrollArea className="h-[60vh] rounded-md border">
-          <Table>
-            <TableHeader className="sticky top-0 bg-background">
-              <TableRow>
-                <TableHead>Item Name</TableHead>
-                <TableHead className="text-right">Total Quantity Sold</TableHead>
-                <TableHead>Unit</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reportData.length > 0 ? (
-                reportData.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-right font-semibold">{item.totalQuantity}</TableCell>
-                    <TableCell className="text-muted-foreground">{item.unit}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center">
-                    No units sold in this date range.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+         <ScrollArea className="h-[60vh] rounded-md border p-4 space-y-6">
+          <div>
+            <h3 className="font-semibold flex items-center gap-2 mb-2"><ThumbsUp /> Hardware Items (pcs)</h3>
+            <Table>
+                <TableHeader><TableRow><TableHead>Item Name</TableHead><TableHead className="text-right">Quantity</TableHead></TableRow></TableHeader>
+                <TableBody>
+                {hardwareItems.length > 0 ? (
+                    hardwareItems.map(item => (
+                        <TableRow key={item.id}><TableCell className="font-medium">{item.name}</TableCell><TableCell className="text-right font-semibold">{item.totalQuantity}</TableCell></TableRow>
+                    ))
+                ) : (<TableRow><TableCell colSpan={2} className="h-24 text-center">No hardware items sold.</TableCell></TableRow>)}
+                </TableBody>
+                <UiTableFooter>
+                    <TableRow>
+                        <TableCell className="font-bold">Total Hardware</TableCell>
+                        <TableCell className="text-right font-bold">{totalHardwarePcs} pcs</TableCell>
+                    </TableRow>
+                </UiTableFooter>
+            </Table>
+          </div>
+          <div>
+            <h3 className="font-semibold flex items-center gap-2 mb-2"><Weight /> Material Items (kg)</h3>
+            <Table>
+                <TableHeader><TableRow><TableHead>Item Name</TableHead><TableHead className="text-right">Quantity</TableHead></TableRow></TableHeader>
+                <TableBody>
+                {materialItems.length > 0 ? (
+                    materialItems.map(item => (
+                        <TableRow key={item.id}><TableCell className="font-medium">{item.name}</TableCell><TableCell className="text-right font-semibold">{item.totalQuantity.toFixed(2)}</TableCell></TableRow>
+                    ))
+                ) : (<TableRow><TableCell colSpan={2} className="h-24 text-center">No material items sold.</TableCell></TableRow>)}
+                </TableBody>
+                <UiTableFooter>
+                    <TableRow>
+                        <TableCell className="font-bold">Total Material</TableCell>
+                        <TableCell className="text-right font-bold">{totalMaterialKg.toFixed(2)} kg</TableCell>
+                    </TableRow>
+                </UiTableFooter>
+            </Table>
+          </div>
         </ScrollArea>
 
         <DialogFooter>
