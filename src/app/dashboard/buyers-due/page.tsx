@@ -77,7 +77,8 @@ export default function BuyersDuePage() {
       toast({ variant: 'destructive', title: t('invalid_amount_toast_title'), description: t('invalid_amount_toast_description') });
       return;
     }
-    if (numericPaymentAmount > selectedInvoice.dueAmount) {
+    // Add a small tolerance for floating point comparisons
+    if (numericPaymentAmount > selectedInvoice.dueAmount + 0.001) {
         toast({ variant: 'destructive', title: t('overpayment_error_toast_title'), description: t('overpayment_error_toast_description', { amount: selectedInvoice.dueAmount.toFixed(2) }) });
         return;
     }
@@ -370,5 +371,7 @@ export default function BuyersDuePage() {
     </>
   );
 }
+
+    
 
     
