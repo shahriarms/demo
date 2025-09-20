@@ -20,6 +20,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useTranslation } from '@/hooks/use-translation';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 
 export default function BuyersPage() {
@@ -36,7 +38,71 @@ export default function BuyersPage() {
   const componentToPrintRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
-    window.print();
+    if (!selectedInvoice) return;
+
+    const doc = new jsPDF();
+    const t = (key: Parameters<typeof useTranslation>[0]['t']>[0], options?: any) => {
+        return translations[settings.locale || 'en'][key] || translations['en'][key];
+    };
+    const { translations } = require('@/lib/i18n/all');
+
+
+    // Header
+    doc.setFontSize(22);
+    doc.text(t('shop_name'), doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(t('shop_description'), doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
+    doc.text(`Email: engmahmud.mmm@gmail.com`, doc.internal.pageSize.getWidth() / 2, 33, { align: 'center' });
+
+
+    // Customer Info
+    doc.setFontSize(12);
+    doc.text(`${t('customer_name_label')}: ${selectedInvoice.customerName}`, 14, 45);
+    doc.text(`${t('customer_address_label')}: ${selectedInvoice.customerAddress}`, 14, 52);
+    doc.text(`${t('customer_phone_label')}: ${selectedInvoice.customerPhone}`, 14, 59);
+
+    doc.text(`${t('invoice_no_label')}: ${selectedInvoice.id}`, doc.internal.pageSize.getWidth() - 14, 45, { align: 'right' });
+    doc.text(`${t('date_label')}: ${new Date(selectedInvoice.date).toLocaleDateString()}`, doc.internal.pageSize.getWidth() - 14, 52, { align: 'right' });
+
+    // Table
+    const tableColumn = [t('item_header'), t('quantity_header'), t('rate_header'), t('amount_header')];
+    const tableRows: (string | number)[][] = [];
+
+    selectedInvoice.items.forEach(item => {
+        const itemData = [
+            item.name,
+            item.quantity,
+            `৳${item.price.toFixed(2)}`,
+            `৳${(item.price * item.quantity).toFixed(2)}`
+        ];
+        tableRows.push(itemData);
+    });
+
+    (doc as any).autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 65,
+        headStyles: { fillColor: [22, 163, 74] },
+    });
+    
+    // Totals
+    const finalY = (doc as any).lastAutoTable.finalY;
+    doc.setFontSize(12);
+    doc.text(`${t('subtotal_label')}:`, 150, finalY + 10, { align: 'right' });
+    doc.text(`৳${selectedInvoice.subtotal.toFixed(2)}`, 200, finalY + 10, { align: 'right' });
+    doc.text(`${t('paid_label')}:`, 150, finalY + 17, { align: 'right' });
+    doc.text(`৳${selectedInvoice.paidAmount.toFixed(2)}`, 200, finalY + 17, { align: 'right' });
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${t('due_label')}:`, 150, finalY + 25, { align: 'right' });
+    doc.text(`৳${selectedInvoice.dueAmount.toFixed(2)}`, 200, finalY + 25, { align: 'right' });
+
+    // Footer
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Thank you for your business!', doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+
+    doc.save(`invoice-${selectedInvoice.id}.pdf`);
   };
 
 
