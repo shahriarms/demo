@@ -25,7 +25,6 @@ export async function checkDbConnection(): Promise<boolean> {
 
 export async function getAllProducts(): Promise<Product[]> {
     if (!usePostgres) {
-        console.warn("POSTGRES_URL not set. Running without a database. Product data will not be persisted.");
         return [];
     }
     try {

@@ -66,22 +66,6 @@ interface AppDataContextType {
 }
 
 const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
-const LOCAL_STORAGE_KEY = 'stockpilot-offline-data';
-
-const getOfflineData = () => {
-    // This check ensures localStorage is only accessed on the client-side
-    if (typeof window === 'undefined') {
-        return { products: [], invoices: [], buyers: [], expenses: [], employees: [], attendance: [], salaryPayments: [], payments: [] };
-    }
-    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return data ? JSON.parse(data) : { products: [], invoices: [], buyers: [], expenses: [], employees: [], attendance: [], salaryPayments: [], payments: [] };
-};
-
-const setOfflineData = (data: any) => {
-    if (typeof window !== 'undefined') {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-    }
-};
 
 export function DataProvider({ children }: { children: ReactNode }) {
     const { toast } = useToast();
@@ -100,7 +84,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [lastInvoiceId, setLastInvoiceId] = useState(0);
 
     const loadAllData = useCallback(async () => {
-        // No need to set loading to true here, it's already true initially
+        setIsAppDataLoading(true);
         try {
             const isConnected = await productActions.checkDbConnection();
             setIsDbConnected(isConnected);
@@ -120,17 +104,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 setPayments(serverData.payments);
                 setLastInvoiceId(serverData.invoices[0]?.id || 0);
             } else {
-                toast({ variant: 'destructive', title: 'Running in Offline Mode', description: 'Database not connected. Using local storage.' });
-                const offlineData = getOfflineData();
-                setProducts(offlineData.products || []);
-                setInvoices(offlineData.invoices || []);
-                setBuyers(offlineData.buyers || []);
-                setExpenses(offlineData.expenses || []);
-                setEmployees(offlineData.employees || []);
-                setAttendance(offlineData.attendance || []);
-                setSalaryPayments(offlineData.salaryPayments || []);
-                setPayments(offlineData.payments || []);
-                setLastInvoiceId(offlineData.invoices?.[0]?.id || 0);
+                toast({ variant: 'destructive', title: 'Database Connection Failed', description: 'Could not connect to the database. Please ensure it is running and accessible.' });
             }
         } catch (error) {
             console.error("Failed to load app data:", error);
@@ -177,81 +151,47 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
 
     const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {
-        if (isDbConnected) {
-            try {
-                await productActions.addProduct(productData);
-                await loadAllData();
-                toast({ title: "Product Added", description: `${productData.name} has been added.` });
-            } catch (error) {
-                console.error("Failed to add product:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to add product.' });
-            }
-        } else {
-            const sellingPrice = productData.buyingPrice + (productData.buyingPrice * productData.profitMargin / 100);
-            const newProduct = { ...productData, sellingPrice, id: `prod-${Date.now()}`};
-            const offlineData = getOfflineData();
-            offlineData.products.push(newProduct);
-            setOfflineData(offlineData);
-            setProducts(offlineData.products);
-            toast({ title: "Product Added (Offline)", description: `${newProduct.name} has been saved locally.` });
+        try {
+            await productActions.addProduct(productData);
+            await loadAllData();
+            toast({ title: "Product Added", description: `${productData.name} has been added.` });
+        } catch (error) {
+            console.error("Failed to add product:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to add product. Check DB connection.' });
         }
-    }, [isDbConnected, toast, loadAllData]);
+    }, [toast, loadAllData]);
 
     const addMultipleProducts = useCallback(async (productsData: Omit<Product, 'id' | 'sellingPrice'>[]) => {
-        if(isDbConnected) {
-            try {
-                await productActions.addMultipleProducts(productsData);
-                await loadAllData();
-            } catch (error) {
-                 console.error("Failed to add multiple products:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to add products in bulk.' });
-            }
-        } else {
-             toast({ variant: 'destructive', title: 'Offline Mode', description: 'Bulk upload is not available offline.' });
+        try {
+            await productActions.addMultipleProducts(productsData);
+            await loadAllData();
+        } catch (error) {
+             console.error("Failed to add multiple products:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to add products in bulk. Check DB connection.' });
         }
-    }, [isDbConnected, toast, loadAllData]);
+    }, [toast, loadAllData]);
 
     const updateProduct = useCallback(async (productId: string, updatedData: Omit<Product, 'id' | 'sellingPrice'>) => {
-        if (isDbConnected) {
-            try {
-                await productActions.updateProduct(productId, updatedData);
-                await loadAllData();
-                toast({ title: "Product Updated", description: `Details for ${updatedData.name} have been updated.` });
-            } catch (error) {
-                console.error("Failed to update product:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to update product.' });
-            }
-        } else {
-            const offlineData = getOfflineData();
-            const sellingPrice = updatedData.buyingPrice + (updatedData.buyingPrice * updatedData.profitMargin / 100);
-            const productIndex = offlineData.products.findIndex((p: Product) => p.id === productId);
-            if (productIndex !== -1) {
-                offlineData.products[productIndex] = { ...offlineData.products[productIndex], ...updatedData, sellingPrice };
-                setOfflineData(offlineData);
-                setProducts(offlineData.products);
-                toast({ title: "Product Updated (Offline)", description: `Details for ${updatedData.name} have been updated locally.` });
-            }
+        try {
+            await productActions.updateProduct(productId, updatedData);
+            await loadAllData();
+            toast({ title: "Product Updated", description: `Details for ${updatedData.name} have been updated.` });
+        } catch (error) {
+            console.error("Failed to update product:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to update product. Check DB connection.' });
         }
-    }, [isDbConnected, toast, loadAllData]);
+    }, [toast, loadAllData]);
 
     const deleteProduct = useCallback(async (productId: string) => {
-        if (isDbConnected) {
-            try {
-                await productActions.deleteProduct(productId);
-                await loadAllData();
-                toast({ title: "Product Deleted", description: `The product has been removed.` });
-            } catch (error) {
-                 console.error("Failed to delete product:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete product.' });
-            }
-        } else {
-             const offlineData = getOfflineData();
-            offlineData.products = offlineData.products.filter((p: Product) => p.id !== productId);
-            setOfflineData(offlineData);
-            setProducts(offlineData.products);
-            toast({ title: "Product Deleted (Offline)" });
+        try {
+            await productActions.deleteProduct(productId);
+            await loadAllData();
+            toast({ title: "Product Deleted", description: `The product has been removed.` });
+        } catch (error) {
+             console.error("Failed to delete product:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete product. Check DB connection.' });
         }
-    }, [isDbConnected, toast, loadAllData]);
+    }, [toast, loadAllData]);
 
     const getProductById = useCallback((productId: string) => products.find(p => p.id === productId), [products]);
 
@@ -269,68 +209,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         };
         
         try {
-            if (isDbConnected) {
-                const newInvoice = await dataActions.addInvoice(invoiceToSave, invoiceToSave.items);
-                await loadAllData();
-                
-                // Don't auto-print here; let the UI decide
-                if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
-                   await printInvoice(newInvoice);
-                }
-
-                return newInvoice.id;
-            } else {
-                // Offline logic
-                const offlineData = getOfflineData();
-                const newId = (offlineData.invoices[0]?.id || 0) + 1;
-                const newInvoice = { ...invoiceToSave, id: newId };
-    
-                // Update product stock
-                newInvoice.items.forEach(item => {
-                    const productIndex = offlineData.products.findIndex((p: Product) => p.id === item.id);
-                    if (productIndex !== -1) {
-                        offlineData.products[productIndex].stock -= item.quantity;
-                    }
-                });
-                setProducts(offlineData.products);
-    
-                // Upsert buyer
-                if (newInvoice.customerName) {
-                    const buyerIndex = offlineData.buyers.findIndex((b: Buyer) => b.name === newInvoice.customerName && b.phone === newInvoice.customerPhone);
-                    if (buyerIndex !== -1) {
-                        offlineData.buyers[buyerIndex].invoiceIds.push(String(newId));
-                        newInvoice.buyerId = offlineData.buyers[buyerIndex].id;
-                    } else {
-                        const newBuyerId = `buyer-${Date.now()}`;
-                        const newBuyer: Buyer = {
-                            id: newBuyerId,
-                            name: newInvoice.customerName,
-                            address: newInvoice.customerAddress,
-                            phone: newInvoice.customerPhone,
-                            invoiceIds: [String(newId)],
-                        };
-                        offlineData.buyers.push(newBuyer);
-                        newInvoice.buyerId = newBuyerId;
-                    }
-                    setBuyers(offlineData.buyers);
-                }
-    
-                offlineData.invoices.unshift(newInvoice);
-                setInvoices(offlineData.invoices);
-                
-                setOfflineData(offlineData);
-                toast({ title: "Invoice Saved (Offline)", description: `Invoice #${newId} saved locally.` });
-    
-                 if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
-                    await printInvoice(newInvoice); 
-                }
-                return newId;
+            const newInvoice = await dataActions.addInvoice(invoiceToSave, invoiceToSave.items);
+            await loadAllData();
+            
+            if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
+               await printInvoice(newInvoice);
             }
+
+            return newInvoice.id;
         } catch (error) {
             console.error("Failed to save invoice:", error);
             throw error; // Re-throw to be caught by the calling function
         }
-    }, [isDbConnected, loadAllData, settings, toast, printInvoice]);
+    }, [loadAllData, settings, printInvoice]);
     
     const getBuyerById = useCallback((buyerId: string) => buyers.find(b => b.id === buyerId), [buyers]);
 
@@ -365,89 +256,51 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
 
     const addPayment = useCallback(async (paymentData: Omit<Payment, 'id' | 'date'>): Promise<{ payment: Payment; updatedInvoice: Invoice } | null> => {
-        if (isDbConnected) {
-            try {
-                const { payment: newPayment, updatedInvoice } = await dataActions.addPayment(paymentData);
-                // Instead of full reload, update state locally for immediate feedback
-                setPayments(prev => [newPayment, ...prev]);
-                setInvoices(prev => prev.map(inv => inv.id === updatedInvoice.id ? updatedInvoice : inv));
-                return { payment: newPayment, updatedInvoice };
-            } catch (error: any) {
-                toast({ variant: 'destructive', title: 'Payment Error', description: error.message || "Failed to process payment."});
-                return null;
-            }
-        } else {
-             const offlineData = getOfflineData();
-             const newId = `pay-${Date.now()}`;
-             const newPayment = { ...paymentData, id: newId, date: new Date().toISOString() };
-             offlineData.payments.unshift(newPayment);
-
-             let updatedInvoice: Invoice | undefined;
-             const invoiceIndex = offlineData.invoices.findIndex((i: Invoice) => i.id === newPayment.invoiceId);
-             if(invoiceIndex !== -1) {
-                offlineData.invoices[invoiceIndex].paidAmount += newPayment.amount;
-                offlineData.invoices[invoiceIndex].dueAmount -= newPayment.amount;
-                updatedInvoice = offlineData.invoices[invoiceIndex];
-             }
-             setOfflineData(offlineData);
-             setPayments(offlineData.payments);
-             setInvoices(offlineData.invoices);
-             if (updatedInvoice) {
-                return { payment: newPayment, updatedInvoice };
-             }
-             return null;
+        try {
+            const { payment: newPayment, updatedInvoice } = await dataActions.addPayment(paymentData);
+            // Instead of full reload, update state locally for immediate feedback
+            setPayments(prev => [newPayment, ...prev]);
+            setInvoices(prev => prev.map(inv => inv.id === updatedInvoice.id ? updatedInvoice : inv));
+            return { payment: newPayment, updatedInvoice };
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Payment Error', description: error.message || "Failed to process payment. Check DB connection."});
+            return null;
         }
-    }, [isDbConnected, toast]);
+    }, [toast]);
 
     const getPaymentsForInvoice = useCallback((invoiceId: number) => {
         return payments.filter(p => p.invoiceId === invoiceId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [payments]);
 
     const addExpense = useCallback(async (expenseData: Omit<Expense, 'id'>) => {
-        if (isDbConnected) {
+        try {
             await dataActions.addExpense(expenseData);
             await loadAllData();
             toast({ title: "Expense Added", description: `New expense of ৳ ${expenseData.amount} has been recorded.` });
-        } else {
-            const newExpense = {...expenseData, id: `exp-${Date.now()}`};
-            const offlineData = getOfflineData();
-            offlineData.expenses.unshift(newExpense);
-            setOfflineData(offlineData);
-            setExpenses(offlineData.expenses);
-            toast({ title: "Expense Added (Offline)" });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to add expense. Check DB connection.' });
         }
-    }, [toast, isDbConnected, loadAllData]);
+    }, [toast, loadAllData]);
 
     const updateExpense = useCallback(async (expenseId: string, updatedData: Omit<Expense, 'id'>) => {
-        if(isDbConnected) {
+        try {
             await dataActions.updateExpense(expenseId, updatedData);
             await loadAllData();
             toast({ title: "Expense Updated", description: "The expense details have been updated." });
-        } else {
-            const offlineData = getOfflineData();
-            const index = offlineData.expenses.findIndex((e: Expense) => e.id === expenseId);
-            if (index !== -1) {
-                offlineData.expenses[index] = { id: expenseId, ...updatedData };
-                setOfflineData(offlineData);
-                setExpenses(offlineData.expenses);
-                toast({ title: "Expense Updated (Offline)" });
-            }
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to update expense. Check DB connection.' });
         }
-    }, [toast, isDbConnected, loadAllData]);
+    }, [toast, loadAllData]);
 
     const deleteExpense = useCallback(async (expenseId: string) => {
-        if(isDbConnected) {
+        try {
             await dataActions.deleteExpense(expenseId);
             await loadAllData();
             toast({ title: "Expense Deleted", description: "The expense record has been removed." });
-        } else {
-            const offlineData = getOfflineData();
-            offlineData.expenses = offlineData.expenses.filter((e: Expense) => e.id !== expenseId);
-            setOfflineData(offlineData);
-            setExpenses(offlineData.expenses);
-            toast({ title: "Expense Deleted (Offline)" });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete expense. Check DB connection.' });
         }
-    }, [toast, isDbConnected, loadAllData]);
+    }, [toast, loadAllData]);
     
     const getExpensesForDateRange = useCallback((startDate: Date, endDate: Date) => {
         const start = startOfDay(startDate);
@@ -456,87 +309,57 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [expenses]);
 
     const addEmployee = useCallback(async (employeeData: Omit<Employee, 'id'>) => {
-        if (isDbConnected) {
+        try {
             await dataActions.addEmployee(employeeData);
             await loadAllData();
             toast({ title: "Employee Added", description: `${employeeData.name} has been added.` });
-        } else {
-            const newEmployee = { ...employeeData, id: `emp-${Date.now()}`};
-            const offlineData = getOfflineData();
-            offlineData.employees.push(newEmployee);
-            setOfflineData(offlineData);
-            setEmployees(offlineData.employees);
-            toast({ title: "Employee Added (Offline)" });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to add employee. Check DB connection.' });
         }
-    }, [toast, isDbConnected, loadAllData]);
+    }, [toast, loadAllData]);
 
     const updateEmployee = useCallback(async (employeeId: string, updatedData: Omit<Employee, 'id'>) => {
-        if (isDbConnected) {
+        try {
             await dataActions.updateEmployee(employeeId, updatedData);
             await loadAllData();
             toast({ title: "Employee Updated", description: "The employee details have been updated." });
-        } else {
-             const offlineData = getOfflineData();
-            const index = offlineData.employees.findIndex((e: Employee) => e.id === employeeId);
-            if (index !== -1) {
-                offlineData.employees[index] = { id: employeeId, ...updatedData };
-                setOfflineData(offlineData);
-                setEmployees(offlineData.employees);
-                toast({ title: "Employee Updated (Offline)" });
-            }
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to update employee. Check DB connection.' });
         }
-    }, [toast, isDbConnected, loadAllData]);
+    }, [toast, loadAllData]);
 
     const deleteEmployee = useCallback(async (employeeId: string) => {
-        if (isDbConnected) {
+        try {
             await dataActions.deleteEmployee(employeeId);
             await loadAllData();
             toast({ title: "Employee Deleted", description: "The employee record has been removed." });
-        } else {
-            const offlineData = getOfflineData();
-            offlineData.employees = offlineData.employees.filter((e: Employee) => e.id !== employeeId);
-            setOfflineData(offlineData);
-            setEmployees(offlineData.employees);
-            toast({ title: "Employee Deleted (Offline)" });
+        } catch (error) {
+             toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete employee. Check DB connection.' });
         }
-    }, [toast, isDbConnected, loadAllData]);
+    }, [toast, loadAllData]);
 
     const markAttendance = useCallback(async (employeeId: string, date: Date, status: AttendanceStatus) => {
         const attendanceData = { employeeId, date: date.toISOString(), status };
-        if (isDbConnected) {
+        try {
             await dataActions.markAttendance(attendanceData);
             await loadAllData();
-        } else {
-             const offlineData = getOfflineData();
-             const dateString = new Date(date).toISOString().split('T')[0];
-             const index = offlineData.attendance.findIndex((a: Attendance) => a.employeeId === employeeId && a.date.startsWith(dateString));
-             if (index !== -1) {
-                offlineData.attendance[index].status = status;
-             } else {
-                offlineData.attendance.push({id: `att-${Date.now()}`, ...attendanceData});
-             }
-             setOfflineData(offlineData);
-             setAttendance(offlineData.attendance);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to mark attendance. Check DB connection.' });
         }
-    }, [isDbConnected, loadAllData, toast]);
+    }, [loadAllData, toast]);
 
     const getAttendanceForDate = useCallback((date: Date) => {
         return attendance.filter(a => isSameDay(new Date(a.date), date));
     }, [attendance]);
 
     const addSalaryPayment = useCallback(async (paymentData: Omit<SalaryPayment, 'id'>) => {
-        if (isDbConnected) {
+        try {
             await dataActions.addSalaryPayment(paymentData);
             await loadAllData();
-        } else {
-            const newPayment = {...paymentData, id: `sal-${Date.now()}`};
-            const offlineData = getOfflineData();
-            offlineData.salaryPayments.unshift(newPayment);
-            setOfflineData(offlineData);
-            setSalaryPayments(offlineData.salaryPayments);
-            toast({ title: "Salary Paid (Offline)" });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to add salary payment. Check DB connection.' });
         }
-    }, [isDbConnected, loadAllData, toast]);
+    }, [loadAllData, toast]);
 
     const getPaymentsForMonth = useCallback((employeeId: string, startDate: Date, endDate: Date) => {
         return salaryPayments.filter(p => 
