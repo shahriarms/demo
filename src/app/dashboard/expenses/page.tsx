@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -73,7 +74,7 @@ export default function ExpensesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
     const [sortKey, setSortKey] = useState('date');
-    const [sortOrder, setSortOrder<'asc' | 'desc'>>('desc');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     
     const [summaryStats, setSummaryStats] = useState<SummaryStats | null>(null);
     const [monthChartData, setMonthChartData] = useState<any[] | null>(null);
@@ -174,7 +175,7 @@ export default function ExpensesPage() {
                     e.mainCategory,
                     e.name,
                     e.description || '-',
-                    '&#2547;'+e.amount.toFixed(2),
+                    '৳'+e.amount.toFixed(2),
                 ]),
             });
             doc.save('expenses.pdf');
@@ -227,7 +228,7 @@ export default function ExpensesPage() {
                 <CardContent>
                     {!summaryStats ? <div className="flex justify-center items-center min-h-[150px]"><Loader2 className="h-8 w-8 animate-spin"/></div> : (
                         <>
-                            <p className="text-3xl font-bold">&#2547;{summaryStats.todayTotal.toFixed(2)}</p>
+                            <p className="text-3xl font-bold">৳{summaryStats.todayTotal.toFixed(2)}</p>
                             {summaryStats.todayCategoryData.length > 0 ? (
                                 <ChartContainer config={{}} className="min-h-32 mt-4">
                                     <PieChart>
@@ -247,7 +248,7 @@ export default function ExpensesPage() {
             <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>{t('this_months_expenses_title')}</CardTitle>
-                     {!summaryStats ? <div className="h-5"/> : <CardDescription>{t('total_label')}: <span className="font-bold">&#2547;{summaryStats.monthTotal.toFixed(2)}</span></CardDescription>}
+                     {!summaryStats ? <div className="h-5"/> : <CardDescription>{t('total_label')}: <span className="font-bold">৳{summaryStats.monthTotal.toFixed(2)}</span></CardDescription>}
                 </CardHeader>
                 <CardContent>
                     {!monthChartData ? <div className="flex justify-center items-center min-h-[200px]"><Loader2 className="h-8 w-8 animate-spin"/></div> : (
@@ -316,7 +317,7 @@ export default function ExpensesPage() {
                                         </TableCell>
                                         <TableCell className="hidden sm:table-cell"><span className="text-sm text-muted-foreground">{expense.mainCategory}</span></TableCell>
                                         <TableCell className="hidden md:table-cell">{format(new Date(expense.date), 'PP')}</TableCell>
-                                        <TableCell className="text-right font-mono">&#2547;{expense.amount.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right font-mono">৳{expense.amount.toFixed(2)}</TableCell>
                                         <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
@@ -371,3 +372,5 @@ export default function ExpensesPage() {
       </div>
     )
 }
+
+    
