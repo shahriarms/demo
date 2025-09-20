@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo } from 'react';
@@ -63,7 +62,7 @@ export function DailyExpensesReportDialog({ open, onOpenChange, expenses }: Dail
                 format(new Date(item.date), 'p'),
                 item.mainCategory,
                 item.name,
-                `৳${item.amount.toFixed(2)}`,
+                '&#2547;'+item.amount.toFixed(2),
             ]),
             startY: 22,
         });
@@ -78,7 +77,7 @@ export function DailyExpensesReportDialog({ open, onOpenChange, expenses }: Dail
         <DialogHeader>
           <DialogTitle>Today's Expenses Report</DialogTitle>
           <DialogDescription>
-            A detailed list of all expenses recorded today. Total Expenses: <strong>৳{totalExpenses.toFixed(2)}</strong>
+            A detailed list of all expenses recorded today. Total Expenses: <strong>&#2547;{totalExpenses.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -104,7 +103,7 @@ export function DailyExpensesReportDialog({ open, onOpenChange, expenses }: Dail
                     <TableCell className="font-mono text-xs">{format(new Date(item.date), 'p')}</TableCell>
                     <TableCell>{item.mainCategory}</TableCell>
                     <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold">৳{item.amount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold">&#2547;{item.amount.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (

@@ -184,7 +184,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
                                     <FormItem>
                                         <FormLabel>{t('salary_label')}</FormLabel>
                                         <div className="relative">
-                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">৳</span>
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">&#2547;</span>
                                             <FormControl>
                                                 <Input type="number" placeholder="0.00" className="pl-8" {...field} value={field.value ?? ''} />
                                             </FormControl>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useRef } from 'react';
@@ -42,9 +41,9 @@ export default function BuyersPage() {
 
     const doc = new jsPDF();
     const t = (key: Parameters<typeof useTranslation>[0]['t']>[0], options?: any) => {
+        const { translations } = require('@/lib/i18n/all');
         return translations[settings.locale || 'en'][key] || translations['en'][key];
     };
-    const { translations } = require('@/lib/i18n/all');
 
 
     // Header
@@ -61,7 +60,7 @@ export default function BuyersPage() {
     doc.text(`${t('customer_address_label')}: ${selectedInvoice.customerAddress}`, 14, 52);
     doc.text(`${t('customer_phone_label')}: ${selectedInvoice.customerPhone}`, 14, 59);
 
-    doc.text(`${t('invoice_no_label')}: ${selectedInvoice.id}`, doc.internal.pageSize.getWidth() - 14, 45, { align: 'right' });
+    doc.text(`${t('invoice_no_label')}: ${String(selectedInvoice.id)}`, doc.internal.pageSize.getWidth() - 14, 45, { align: 'right' });
     doc.text(`${t('date_label')}: ${new Date(selectedInvoice.date).toLocaleDateString()}`, doc.internal.pageSize.getWidth() - 14, 52, { align: 'right' });
 
     // Table
@@ -72,8 +71,8 @@ export default function BuyersPage() {
         const itemData = [
             item.name,
             item.quantity,
-            `৳${item.price.toFixed(2)}`,
-            `৳${(item.price * item.quantity).toFixed(2)}`
+            '৳'+item.price.toFixed(2),
+            '৳'+(item.price * item.quantity).toFixed(2)
         ];
         tableRows.push(itemData);
     });
@@ -89,13 +88,13 @@ export default function BuyersPage() {
     const finalY = (doc as any).lastAutoTable.finalY;
     doc.setFontSize(12);
     doc.text(`${t('subtotal_label')}:`, 150, finalY + 10, { align: 'right' });
-    doc.text(`৳${selectedInvoice.subtotal.toFixed(2)}`, 200, finalY + 10, { align: 'right' });
+    doc.text('৳'+selectedInvoice.subtotal.toFixed(2), 200, finalY + 10, { align: 'right' });
     doc.text(`${t('paid_label')}:`, 150, finalY + 17, { align: 'right' });
-    doc.text(`৳${selectedInvoice.paidAmount.toFixed(2)}`, 200, finalY + 17, { align: 'right' });
+    doc.text('৳'+selectedInvoice.paidAmount.toFixed(2), 200, finalY + 17, { align: 'right' });
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text(`${t('due_label')}:`, 150, finalY + 25, { align: 'right' });
-    doc.text(`৳${selectedInvoice.dueAmount.toFixed(2)}`, 200, finalY + 25, { align: 'right' });
+    doc.text('৳'+selectedInvoice.dueAmount.toFixed(2), 200, finalY + 25, { align: 'right' });
 
     // Footer
     doc.setFontSize(10);

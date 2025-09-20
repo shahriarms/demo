@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo } from 'react';
@@ -84,8 +83,8 @@ export function DailySalesDialog({ open, onOpenChange, invoices }: DailySalesDia
                 item.customerName,
                 item.itemName,
                 item.quantity,
-                `৳${item.rate.toFixed(2)}`,
-                `৳${item.total.toFixed(2)}`,
+                '&#2547;'+item.rate.toFixed(2),
+                '&#2547;'+item.total.toFixed(2),
             ]),
             startY: 22,
         });
@@ -100,7 +99,7 @@ export function DailySalesDialog({ open, onOpenChange, invoices }: DailySalesDia
         <DialogHeader>
           <DialogTitle>Today's Sales Report</DialogTitle>
           <DialogDescription>
-            A detailed list of all items sold today. Total Sales: <strong>৳{totalSales.toFixed(2)}</strong>
+            A detailed list of all items sold today. Total Sales: <strong>&#2547;{totalSales.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -129,8 +128,8 @@ export function DailySalesDialog({ open, onOpenChange, invoices }: DailySalesDia
                     <TableCell>{item.customerName}</TableCell>
                     <TableCell className="font-medium">{item.itemName}</TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right font-mono"><span className="text-muted-foreground">৳</span>{item.rate.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold"><span className="text-muted-foreground">৳</span>{item.total.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono"><span className="text-muted-foreground">&#2547;</span>{item.rate.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold"><span className="text-muted-foreground">&#2547;</span>{item.total.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (
