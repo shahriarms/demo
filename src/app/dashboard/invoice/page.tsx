@@ -444,21 +444,7 @@ export default function InvoicePage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="print-live-preview">
-                        <InvoicePrintLayout
-                            invoiceId={activeDraft.id}
-                            currentDate={new Date().toLocaleDateString()}
-                            customerName={activeDraft.customerName}
-                            customerAddress={activeDraft.customerAddress}
-                            customerPhone={activeDraft.customerPhone}
-                            invoiceItems={activeDraft.items}
-                            subtotal={activeDraft.subtotal}
-                            paidAmount={activeDraft.paidAmount || 0}
-                            dueAmount={activeDraft.dueAmount}
-                            printFormat={settings.printFormat}
-                            locale={settings.locale}
-                        />
-                    </div>
+                    {/* Live preview is removed from here to avoid duplication. The printable version is handled by the print-source div below. */}
                 </CardContent>
               </Card>
           </div>
