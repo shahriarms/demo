@@ -268,7 +268,7 @@ export default function InvoicePage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Column 1: Customer Info & Product Adder */}
           <div className="flex flex-col gap-4">
             <Card>
@@ -352,91 +352,114 @@ export default function InvoicePage() {
             </Card>
           </div>
 
-          {/* Column 2: Invoice Items */}
-          <Card className="lg:col-span-2 flex flex-col">
-            <CardHeader>
-                <CardTitle>Invoice Items</CardTitle>
-            </CardHeader>
-            <CardContent className='p-0 flex-1'>
-                <ScrollArea className="h-full">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Item</TableHead>
-                                <TableHead className="w-24">Qty</TableHead>
-                                <TableHead className="w-32 hidden sm:table-cell">Price</TableHead>
-                                <TableHead className="text-right w-32">Total</TableHead>
-                                <TableHead className="w-12"></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {items && items.length > 0 ? items.map(item => (
-                                <TableRow key={item.id}>
-                                    <TableCell>
-                                        <p className="font-medium">{item.name}</p>
-                                        <p className='text-xs text-muted-foreground'>Suggested: ৳{(item.originalPrice || 0).toFixed(2)}</p>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Input type="text" inputMode="decimal" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
-                                    </TableCell>
-                                    <TableCell className="hidden sm:table-cell">
-                                         <div className="relative flex items-center">
-                                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">৳</span>
-                                             <Input type="text" inputMode="decimal" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium h-9" />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right font-semibold">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
-                                    <TableCell>
-                                         <Button variant="ghost" size="icon" onClick={() => removeInvoiceItem(item.id)} className="h-9 w-9">
-                                            <Trash2 className="w-4 h-4 text-destructive" />
-                                        </Button>
-                                    </TableCell>
+          {/* Column 2: Invoice Items & Preview */}
+          <div className="lg:col-span-2 space-y-4">
+              <Card className="flex flex-col">
+                <CardHeader>
+                    <CardTitle>Invoice Items</CardTitle>
+                </CardHeader>
+                <CardContent className='p-0 flex-1'>
+                    <ScrollArea className="h-full">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Item</TableHead>
+                                    <TableHead className="w-24">Qty</TableHead>
+                                    <TableHead className="w-32 hidden sm:table-cell">Price</TableHead>
+                                    <TableHead className="text-right w-32">Total</TableHead>
+                                    <TableHead className="w-12"></TableHead>
                                 </TableRow>
-                            )) : (
-                                <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">No items added yet.</TableCell></TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </ScrollArea>
-            </CardContent>
-            <CardFooter className="flex-col items-stretch space-y-2 pt-4">
-                <div className="w-full md:w-80 ml-auto space-y-2">
-                   <div className="flex justify-between items-center text-sm">
-                       <span className='text-muted-foreground'>{t('subtotal_label')}</span>
-                       <span className="font-medium">৳{(subtotal ?? 0).toFixed(2)}</span>
-                   </div>
-                   <div className="flex justify-between items-center">
-                       <Label htmlFor='paidAmount' className="shrink-0 text-muted-foreground text-sm">{t('paid_label')}</Label>
-                       <div className="relative w-32">
-                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
-                            <Input 
-                                id='paidAmount' 
-                                type="text"
-                                inputMode='decimal'
-                                value={paidAmount ?? ''} 
-                                onChange={e => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || undefined })} 
-                                className="h-9 pl-5 text-right font-medium"
-                                placeholder='0'
-                            />
-                       </div>
-                   </div>
-                   <div className="flex justify-between items-center font-bold text-base border-t pt-2 mt-2">
-                       <span>{t('due_label')}</span>
-                       <span>৳{(dueAmount ?? 0).toFixed(2)}</span>
-                   </div>
-                </div>
-                <div className="flex gap-2">
-                    <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isProcessing} className="flex-1">
-                        {isProcessing ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
-                        {isProcessing ? 'Processing...' : t('save_and_print_button')}
-                    </Button>
-                    <Button onClick={handleReset} variant="outline">
-                        <RotateCcw className="mr-2" />
-                        Reset
-                    </Button>
-                </div>
-            </CardFooter>
-          </Card>
+                            </TableHeader>
+                            <TableBody>
+                                {items && items.length > 0 ? items.map(item => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>
+                                            <p className="font-medium">{item.name}</p>
+                                            <p className='text-xs text-muted-foreground'>Suggested: ৳{(item.originalPrice || 0).toFixed(2)}</p>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Input type="text" inputMode="decimal" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
+                                        </TableCell>
+                                        <TableCell className="hidden sm:table-cell">
+                                            <div className="relative flex items-center">
+                                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">৳</span>
+                                                <Input type="text" inputMode="decimal" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium h-9" />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right font-semibold">৳{(item.price * item.quantity).toFixed(2)}</TableCell>
+                                        <TableCell>
+                                            <Button variant="ghost" size="icon" onClick={() => removeInvoiceItem(item.id)} className="h-9 w-9">
+                                                <Trash2 className="w-4 h-4 text-destructive" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">No items added yet.</TableCell></TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </ScrollArea>
+                </CardContent>
+                <CardFooter className="flex-col items-stretch space-y-2 pt-4">
+                    <div className="w-full md:w-80 ml-auto space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                        <span className='text-muted-foreground'>{t('subtotal_label')}</span>
+                        <span className="font-medium">৳{(subtotal ?? 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <Label htmlFor='paidAmount' className="shrink-0 text-muted-foreground text-sm">{t('paid_label')}</Label>
+                        <div className="relative w-32">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
+                                <Input 
+                                    id='paidAmount' 
+                                    type="text"
+                                    inputMode='decimal'
+                                    value={paidAmount ?? ''} 
+                                    onChange={e => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || undefined })} 
+                                    className="h-9 pl-5 text-right font-medium"
+                                    placeholder='0'
+                                />
+                        </div>
+                    </div>
+                    <div className="flex justify-between items-center font-bold text-base border-t pt-2 mt-2">
+                        <span>{t('due_label')}</span>
+                        <span>৳{(dueAmount ?? 0).toFixed(2)}</span>
+                    </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isProcessing} className="flex-1">
+                            {isProcessing ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
+                            {isProcessing ? 'Processing...' : t('save_and_print_button')}
+                        </Button>
+                        <Button onClick={handleReset} variant="outline">
+                            <RotateCcw className="mr-2" />
+                            Reset
+                        </Button>
+                    </div>
+                </CardFooter>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                    <CardTitle>{t('live_print_preview_title')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <InvoicePrintLayout
+                        invoiceId={activeDraft.id}
+                        currentDate={new Date().toLocaleDateString()}
+                        customerName={activeDraft.customerName}
+                        customerAddress={activeDraft.customerAddress}
+                        customerPhone={activeDraft.customerPhone}
+                        invoiceItems={activeDraft.items}
+                        subtotal={activeDraft.subtotal}
+                        paidAmount={activeDraft.paidAmount || 0}
+                        dueAmount={activeDraft.dueAmount}
+                        printFormat={settings.printFormat}
+                        locale={settings.locale}
+                    />
+                </CardContent>
+              </Card>
+          </div>
         </div>
 
         <AlertDialog open={!!draftToDelete} onOpenChange={() => setDraftToDelete(null)}>
