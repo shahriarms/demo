@@ -63,7 +63,7 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
     const handleExportExcel = () => {
         const worksheet = XLSX.utils.json_to_sheet(reportData.map(item => ({
             "Date": format(new Date(item.date), 'PP'),
-            "Invoice ID": item.id.slice(-6),
+            "Invoice ID": String(item.id).slice(-6),
             "Customer Name": item.customerName,
             "Total Amount": item.subtotal,
             "Paid Amount": item.paidAmount,
@@ -81,7 +81,7 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
             head: [['Date', 'Inv No', 'Customer Name', 'Total', 'Paid', 'Due']],
             body: reportData.map(item => [
                 format(new Date(item.date), 'PP'),
-                item.id.slice(-6),
+                String(item.id).slice(-6),
                 item.customerName,
                 `৳${item.subtotal.toFixed(2)}`,
                 `৳${item.paidAmount.toFixed(2)}`,
@@ -126,7 +126,7 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
                 reportData.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-mono text-xs">{format(new Date(item.date), 'PP')}</TableCell>
-                    <TableCell className="font-mono text-xs">{item.id.slice(-6)}</TableCell>
+                    <TableCell className="font-mono text-xs">{String(item.id).slice(-6)}</TableCell>
                     <TableCell className="font-medium">{item.customerName}</TableCell>
                     <TableCell className="text-right font-mono">৳{item.subtotal.toFixed(2)}</TableCell>
                     <TableCell className="text-right font-mono text-green-600">৳{item.paidAmount.toFixed(2)}</TableCell>
