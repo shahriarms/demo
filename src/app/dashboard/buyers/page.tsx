@@ -203,7 +203,7 @@ export default function BuyersPage() {
             <CardContent className="flex-1 overflow-auto">
                 {selectedInvoice ? (
                    <ScrollArea className="h-full">
-                     <div className="p-4 bg-muted/50 rounded-lg">
+                     <div className="p-4 bg-muted/50 rounded-lg print-source">
                         <div className="transform scale-[0.9] origin-top">
                            <InvoicePrintLayout 
                                 invoiceId={selectedInvoice.id}
@@ -232,25 +232,6 @@ export default function BuyersPage() {
         </Card>
       </div>
     </div>
-    
-    {/* This div is only for printing and is hidden from view */}
-    {selectedInvoice && (
-        <div className="print-source">
-             <InvoicePrintLayout 
-                invoiceId={selectedInvoice.id}
-                currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                customerName={selectedInvoice.customerName}
-                customerAddress={selectedInvoice.customerAddress}
-                customerPhone={selectedInvoice.customerPhone}
-                invoiceItems={selectedInvoice.items}
-                subtotal={selectedInvoice.subtotal}
-                paidAmount={selectedInvoice.paidAmount}
-                dueAmount={selectedInvoice.dueAmount}
-                printFormat={settings.printFormat}
-                locale={settings.locale}
-            />
-        </div>
-    )}
     </>
   );
 }
