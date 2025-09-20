@@ -34,7 +34,17 @@ export default function BuyersPage() {
 
   const handlePrint = () => {
     if (!selectedInvoice) return;
+    
+    // Temporarily set the document title for the print-to-PDF filename
+    const originalTitle = document.title;
+    document.title = `invoice-${selectedInvoice.id}`;
+    
     window.print();
+    
+    // Restore the original title after the print dialog is closed
+    setTimeout(() => {
+        document.title = originalTitle;
+    }, 500);
   };
   
   const handleSelectBuyer = (buyer: Buyer) => {

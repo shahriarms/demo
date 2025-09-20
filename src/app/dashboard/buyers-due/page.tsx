@@ -120,9 +120,14 @@ export default function BuyersDuePage() {
   // Effect to trigger printing after a successful payment
   useEffect(() => {
     if (lastSuccessfulPayment) {
-      // Use a short timeout to allow the state to update and the receipt component to re-render with the correct data.
+      // Temporarily set the document title for the print-to-PDF filename
+      const originalTitle = document.title;
+      document.title = `payment-receipt-for-invoice-${lastSuccessfulPayment.invoice.id}`;
+      
       const timer = setTimeout(() => {
         window.print();
+        // Restore the original title after the print dialog is closed
+        document.title = originalTitle;
         // Clear the successful payment state to prevent re-printing on re-renders.
         setLastSuccessfulPayment(null);
       }, 50);

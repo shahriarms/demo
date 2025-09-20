@@ -114,8 +114,14 @@ export default function InvoicePage() {
   // Effect to handle the printing after state is updated
   useEffect(() => {
     if (invoiceToPrint) {
+      // Temporarily set the document title for the print-to-PDF filename
+      const originalTitle = document.title;
+      document.title = `invoice-${invoiceToPrint.id}`;
+      
       const timer = setTimeout(() => {
         window.print();
+        // Restore the original title after the print dialog is closed
+        document.title = originalTitle;
         setInvoiceToPrint(null); // Reset after printing
         resetActiveDraft();
         toast({
