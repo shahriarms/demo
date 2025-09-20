@@ -38,7 +38,7 @@ interface AppDataContextType {
 
 
     // Payment Functions
-    addPayment: (payment: Omit<Payment, 'id' | 'date'>) => Promise<Payment | null>;
+    addPayment: (payment: Omit<Payment, 'id' | 'date'>) => Promise<{ payment: Payment; updatedInvoice: Invoice } | null>;
     getPaymentsForInvoice: (invoiceId: number) => Payment[];
 
     // Expense Functions
@@ -353,12 +353,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, [products]);
 
 
-    const addPayment = useCallback(async (paymentData: Omit<Payment, 'id' | 'date'>): Promise<Payment | null> => {
+    const addPayment = useCallback(async (paymentData: Omit<Payment, 'id' | 'date'>): Promise<{ payment: Payment; updatedInvoice: Invoice } | null> => {
         if (isDbConnected) {
             try {
-                const newPayment = await dataActions.addPayment(paymentData);
-                await loadAllData(); // Reload all data to ensure consistency
-                return newPayment;
+                const { payment: newPayment, updatedInvoice } = await dataActions.addPayment(paymentData);
+                // Instead of full reload, update state locally for immediate feedback
+                setPayments(prev => [newPayment, ...prev]);
+                setInvoices(prev => prev.map(inv => inv.id === updatedInvoice.id ? updatedInvoice : inv));
+                return { payment: newPayment, updatedInvoice };
             } catch (error: any) {
                 toast({ variant: 'destructive', title: 'Payment Error', description: error.message || "Failed to process payment."});
                 return null;
@@ -369,17 +371,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
              const newPayment = { ...paymentData, id: newId, date: new Date().toISOString() };
              offlineData.payments.unshift(newPayment);
 
+             let updatedInvoice: Invoice | undefined;
              const invoiceIndex = offlineData.invoices.findIndex((i: Invoice) => i.id === newPayment.invoiceId);
              if(invoiceIndex !== -1) {
                 offlineData.invoices[invoiceIndex].paidAmount += newPayment.amount;
                 offlineData.invoices[invoiceIndex].dueAmount -= newPayment.amount;
+                updatedInvoice = offlineData.invoices[invoiceIndex];
              }
              setOfflineData(offlineData);
              setPayments(offlineData.payments);
              setInvoices(offlineData.invoices);
-             return newPayment;
+             if (updatedInvoice) {
+                return { payment: newPayment, updatedInvoice };
+             }
+             return null;
         }
-    }, [isDbConnected, toast, loadAllData]);
+    }, [isDbConnected, toast]);
 
     const getPaymentsForInvoice = useCallback((invoiceId: number) => {
         return payments.filter(p => p.invoiceId === invoiceId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

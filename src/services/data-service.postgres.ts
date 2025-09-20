@@ -183,7 +183,7 @@ class PostgresDataService {
         return formatRow(newPayment) as SalaryPayment;
     }
 
-    static async addPayment(paymentData: Omit<Payment, 'id' | 'date'>): Promise<Payment> {
+    static async addPayment(paymentData: Omit<Payment, 'id' | 'date'>): Promise<{ payment: Payment, updatedInvoice: Invoice }> {
         if (!pool) throw new Error("Database not connected.");
         const client = await pool.connect();
         try {
@@ -196,13 +196,16 @@ class PostgresDataService {
                 [newId, newPayment.invoiceId, newPayment.buyerId, newPayment.amount, newPayment.date]
             );
 
-            await client.query(
-                'UPDATE invoices SET paid_amount = paid_amount + $1, due_amount = due_amount - $1 WHERE id = $2',
+            const updatedInvoiceResult = await client.query(
+                'UPDATE invoices SET paid_amount = paid_amount + $1, due_amount = due_amount - $1 WHERE id = $2 RETURNING *',
                 [newPayment.amount, newPayment.invoiceId]
             );
 
             await client.query('COMMIT');
-            return formatRow(newPayment) as Payment;
+            return {
+                payment: formatRow(newPayment) as Payment,
+                updatedInvoice: formatRow(updatedInvoiceResult.rows[0]) as Invoice,
+            };
 
         } catch (e) {
             await client.query('ROLLBACK');

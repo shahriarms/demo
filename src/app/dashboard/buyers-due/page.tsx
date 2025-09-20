@@ -96,21 +96,18 @@ export default function BuyersDuePage() {
       amount: numericPaymentAmount,
     };
 
-    const newPayment = await addPayment(paymentPayload);
+    const result = await addPayment(paymentPayload);
 
     setIsProcessing(false);
 
-    if (newPayment) {
+    if (result) {
+        const { payment, updatedInvoice } = result;
         toast({
             title: t('payment_received_toast_title'),
-            description: t('payment_received_toast_description', { amount: newPayment.amount.toFixed(2), invoiceId: newPayment.invoiceId }),
+            description: t('payment_received_toast_description', { amount: payment.amount.toFixed(2), invoiceId: payment.invoiceId }),
         });
         
-        // Find the latest state of the invoice after payment
-        const updatedInvoice = allInvoices.find(i => i.id === newPayment.invoiceId);
-        if (updatedInvoice) {
-           setLastSuccessfulPayment({ payment: newPayment, invoice: updatedInvoice, buyer: selectedBuyer });
-        }
+        setLastSuccessfulPayment({ payment, invoice: updatedInvoice, buyer: selectedBuyer });
         
         setPaymentAmount('');
     } else {
