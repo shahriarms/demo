@@ -1,4 +1,5 @@
 
+
 'use client';
 import { UserProvider } from '@/hooks/use-user.tsx';
 import { SiteHeader } from '@/components/site-header';
@@ -8,6 +9,7 @@ import { DataProvider } from '@/hooks/use-app-data';
 import { TopNavBar } from '@/components/top-nav-bar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { InvoiceFormProvider } from '@/hooks/use-invoice-form';
+import 'react-dom';
 
 export default function DashboardLayout({
   children,

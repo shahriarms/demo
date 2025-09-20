@@ -24,7 +24,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function BuyersPage() {
-  const { buyers, getInvoicesForBuyer, isAppDataLoading } = useAppData();
+  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice } = useAppData();
   const { settings } = useSettings();
   const { t } = useTranslation();
 
@@ -47,31 +47,14 @@ export default function BuyersPage() {
     setSelectedInvoice(invoice);
   }
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!selectedInvoice || isPrinting) return;
     
     setIsPrinting(true);
-    // The useEffect hook handles the title change
-    
-    setTimeout(() => {
-        window.print();
-        setIsPrinting(false);
-    }, 50); // A small delay ensures the title is updated before the print dialog opens
+    await printInvoice(selectedInvoice);
+    setIsPrinting(false);
   };
   
-  // This effect ensures that the document title is updated for printing
-  // whenever a new invoice is selected.
-  useEffect(() => {
-    const originalTitle = document.title;
-    if (isPrinting && selectedInvoice) {
-      document.title = `invoice-${selectedInvoice.id}`;
-    }
-    // Cleanup function to restore title when component unmounts or selection changes
-    return () => {
-      document.title = originalTitle;
-    };
-  }, [selectedInvoice, isPrinting]);
-
   const filteredInvoices = useMemo(() => {
     if (!invoiceSearchTerm) return invoices;
     return invoices.filter(invoice => 
@@ -94,7 +77,7 @@ export default function BuyersPage() {
 
   return (
     <>
-      <div className="flex flex-col h-full gap-4 no-print">
+      <div className="flex flex-col h-full gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold flex items-center gap-2">
               <Users className="w-6 h-6" />
@@ -232,24 +215,6 @@ export default function BuyersPage() {
           </Card>
         </div>
       </div>
-      {/* This is the dedicated print source, it's hidden by default and only shown when printing */}
-      {selectedInvoice && (
-          <div className="print-source">
-              <InvoicePrintLayout 
-                  invoiceId={selectedInvoice.id}
-                  currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                  customerName={selectedInvoice.customerName}
-                  customerAddress={selectedInvoice.customerAddress}
-                  customerPhone={selectedInvoice.customerPhone}
-                  invoiceItems={selectedInvoice.items}
-                  subtotal={selectedInvoice.subtotal}
-                  paidAmount={selectedInvoice.paidAmount}
-                  dueAmount={selectedInvoice.dueAmount}
-                  printFormat={settings.printFormat}
-                  locale={settings.locale}
-              />
-          </div>
-      )}
     </>
   );
 }

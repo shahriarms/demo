@@ -1,6 +1,9 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
+import ReactDOM from 'react-dom';
+import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import type { Product, Invoice, Buyer, Expense, Employee, Attendance, SalaryPayment, Payment, AttendanceStatus } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import type { DraftInvoice } from './use-invoice-form';
@@ -31,6 +34,7 @@ interface AppDataContextType {
 
     // Invoice & Buyer Functions
     addInvoice: (draftInvoice: DraftInvoice) => Promise<number | null>;
+    printInvoice: (invoice: Invoice) => Promise<void>;
     getBuyerById: (buyerId: string) => Buyer | undefined;
     getInvoicesForBuyer: (buyerId: string) => Invoice[];
     getInvoicesForDateRange: (startDate: Date, endDate: Date) => Invoice[];
@@ -160,6 +164,61 @@ export function DataProvider({ children }: { children: ReactNode }) {
         loadAllData();
     }, [loadAllData]);
     
+    const printInvoice = useCallback(async (invoice: Invoice) => {
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'absolute';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+    
+        const doc = iframe.contentDocument;
+        if (doc) {
+            doc.write('<html><head><title>Print Invoice</title>');
+            // Copy stylesheets
+            Array.from(document.styleSheets).forEach(sheet => {
+                try {
+                    if (sheet.cssRules) {
+                        const style = doc.createElement('style');
+                        style.textContent = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+                        doc.head.appendChild(style);
+                    }
+                } catch (e) {
+                    console.warn('Could not copy stylesheet:', e);
+                }
+            });
+            doc.write('</head><body><div id="print-root"></div></body></html>');
+            doc.close();
+    
+            const printRoot = doc.getElementById('print-root');
+            if (printRoot) {
+                const PrintComponent = (
+                    <InvoicePrintLayout
+                        invoiceId={invoice.id}
+                        currentDate={new Date(invoice.date).toLocaleDateString()}
+                        customerName={invoice.customerName}
+                        customerAddress={invoice.customerAddress}
+                        customerPhone={invoice.customerPhone}
+                        invoiceItems={invoice.items}
+                        subtotal={invoice.subtotal}
+                        paidAmount={invoice.paidAmount}
+                        dueAmount={invoice.dueAmount}
+                        printFormat={settings.printFormat}
+                        locale={settings.locale}
+                    />
+                );
+                
+                ReactDOM.render(PrintComponent, printRoot, () => {
+                    setTimeout(() => {
+                        iframe.contentWindow?.focus();
+                        iframe.contentWindow?.print();
+                        document.body.removeChild(iframe);
+                    }, 100); 
+                });
+            }
+        }
+    }, [settings.printFormat, settings.locale]);
+
     const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {
         if (isDbConnected) {
             try {
@@ -551,7 +610,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const value = useMemo(() => ({
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected, lastInvoiceId,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
-        addInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
+        addInvoice, printInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate,
@@ -559,7 +618,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }), [
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected, lastInvoiceId,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
-        addInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
+        addInvoice, printInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate,
