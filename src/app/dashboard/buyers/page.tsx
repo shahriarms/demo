@@ -34,18 +34,16 @@ export default function BuyersPage() {
 
   const handlePrint = () => {
     if (!selectedInvoice) return;
-    
-    // Temporarily set the document title for the print-to-PDF filename
-    const originalTitle = document.title;
-    document.title = `invoice-${selectedInvoice.id}`;
-    
     window.print();
-    
-    // Restore the original title after the print dialog is closed
-    setTimeout(() => {
-        document.title = originalTitle;
-    }, 500);
   };
+  
+  useEffect(() => {
+    if (selectedInvoice) {
+      document.title = `invoice-${selectedInvoice.id}`;
+    } else {
+      document.title = 'StockPilot';
+    }
+  }, [selectedInvoice]);
   
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
@@ -193,20 +191,22 @@ export default function BuyersPage() {
             </CardHeader>
             <CardContent className="flex-1 p-4 bg-muted/50 rounded-lg overflow-auto">
               {selectedInvoice ? (
-                  <div className="transform scale-[0.9] origin-top">
-                    <InvoicePrintLayout
-                        invoiceId={selectedInvoice.id}
-                        currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                        customerName={selectedInvoice.customerName}
-                        customerAddress={selectedInvoice.customerAddress}
-                        customerPhone={selectedInvoice.customerPhone}
-                        invoiceItems={selectedInvoice.items}
-                        subtotal={selectedInvoice.subtotal}
-                        paidAmount={selectedInvoice.paidAmount}
-                        dueAmount={selectedInvoice.dueAmount}
-                        printFormat={'normal'} 
-                        locale={settings.locale}
-                    />
+                  <div className="min-w-[820px]">
+                    <div className="transform scale-[0.9] origin-top">
+                        <InvoicePrintLayout
+                            invoiceId={selectedInvoice.id}
+                            currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                            customerName={selectedInvoice.customerName}
+                            customerAddress={selectedInvoice.customerAddress}
+                            customerPhone={selectedInvoice.customerPhone}
+                            invoiceItems={selectedInvoice.items}
+                            subtotal={selectedInvoice.subtotal}
+                            paidAmount={selectedInvoice.paidAmount}
+                            dueAmount={selectedInvoice.dueAmount}
+                            printFormat={'normal'} 
+                            locale={settings.locale}
+                        />
+                    </div>
                   </div>
               ) : (
                 <div className="text-center py-12 text-muted-foreground h-full flex flex-col justify-center items-center rounded-lg border">
