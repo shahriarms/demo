@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -32,6 +31,7 @@ export default function BuyersPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
+  const [isPrinting, setIsPrinting] = useState(false);
   
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
@@ -44,6 +44,33 @@ export default function BuyersPage() {
   const handleSelectInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
   }
+
+  const handlePrint = () => {
+    if (!selectedInvoice) return;
+    
+    setIsPrinting(true);
+    const originalTitle = document.title;
+    document.title = `invoice-${selectedInvoice.id}`;
+
+    setTimeout(() => {
+        window.print();
+        document.title = originalTitle;
+        setIsPrinting(false);
+    }, 50);
+  };
+  
+  // This effect ensures that the document title is updated for printing
+  // whenever a new invoice is selected.
+  useEffect(() => {
+    if (selectedInvoice) {
+      const originalTitle = document.title;
+      document.title = `invoice-${selectedInvoice.id}`;
+      // Cleanup function to restore title when component unmounts or selection changes
+      return () => {
+        document.title = originalTitle;
+      };
+    }
+  }, [selectedInvoice]);
 
   const filteredInvoices = useMemo(() => {
     if (!invoiceSearchTerm) return invoices;
@@ -67,16 +94,16 @@ export default function BuyersPage() {
 
   return (
     <>
-    <div className="flex flex-col h-full gap-4">
+    <div className="flex flex-col h-full gap-4 no-print">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Users className="w-6 h-6" />
             {t('buyers_page_title')}
         </h1>
       </div>
-      <div className="grid md:grid-cols-2 gap-6 flex-1">
+      <div className="grid md:grid-cols-5 gap-6 flex-1">
         {/* Buyers List */}
-        <Card className="md:col-span-1 flex flex-col">
+        <Card className="md:col-span-2 lg:col-span-1 flex flex-col">
           <CardHeader className="flex-shrink-0">
             <CardTitle>{t('all_buyers_title')}</CardTitle>
             <div className="relative pt-2">
@@ -116,7 +143,7 @@ export default function BuyersPage() {
         </Card>
 
         {/* Invoice List */}
-        <Card className="md:col-span-1 flex flex-col">
+        <Card className="md:col-span-3 lg:col-span-1 flex flex-col">
           <CardHeader className="flex-shrink-0">
             <CardTitle className="truncate">{selectedBuyer ? t('buyers_invoices_title', { name: selectedBuyer.name }) : t('invoice_log_title')}</CardTitle>
             <div className="relative pt-2">
@@ -165,8 +192,63 @@ export default function BuyersPage() {
               </ScrollArea>
           </CardContent>
         </Card>
+
+        {/* Invoice Preview */}
+        <Card className="md:col-span-5 lg:col-span-3 flex flex-col">
+            <CardHeader className="flex-row items-center justify-between">
+                <CardTitle>{t('invoice_details_title')}</CardTitle>
+                <Button onClick={handlePrint} disabled={!selectedInvoice || isPrinting}>
+                    {isPrinting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}
+                    {t('print_invoice_button')}
+                </Button>
+            </CardHeader>
+            <CardContent className="flex-1">
+                {selectedInvoice ? (
+                   <ScrollArea className="h-full">
+                     <div className="transform scale-[0.9] origin-top">
+                        <InvoicePrintLayout 
+                            invoiceId={selectedInvoice.id}
+                            currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                            customerName={selectedInvoice.customerName}
+                            customerAddress={selectedInvoice.customerAddress}
+                            customerPhone={selectedInvoice.customerPhone}
+                            invoiceItems={selectedInvoice.items}
+                            subtotal={selectedInvoice.subtotal}
+                            paidAmount={selectedInvoice.paidAmount}
+                            dueAmount={selectedInvoice.dueAmount}
+                            printFormat={settings.printFormat}
+                            locale={settings.locale}
+                        />
+                     </div>
+                   </ScrollArea>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
+                        <FileText className="w-12 h-12 mb-4"/>
+                        <h3 className="font-semibold">{t('no_invoice_selected_title')}</h3>
+                        <p className="text-sm">{t('no_invoice_selected_description')}</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
       </div>
     </div>
+    {selectedInvoice && isPrinting && (
+        <div className="print-source">
+             <InvoicePrintLayout 
+                invoiceId={selectedInvoice.id}
+                currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                customerName={selectedInvoice.customerName}
+                customerAddress={selectedInvoice.customerAddress}
+                customerPhone={selectedInvoice.customerPhone}
+                invoiceItems={selectedInvoice.items}
+                subtotal={selectedInvoice.subtotal}
+                paidAmount={selectedInvoice.paidAmount}
+                dueAmount={selectedInvoice.dueAmount}
+                printFormat={settings.printFormat}
+                locale={settings.locale}
+            />
+        </div>
+    )}
     </>
   );
 }
