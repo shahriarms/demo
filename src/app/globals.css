@@ -107,3 +107,9 @@
     display: none !important;
   }
 }
+
+@layer utilities {
+    .force-show-scrollbar [data-radix-scroll-area-thumb] {
+        display: block;
+    }
+}
