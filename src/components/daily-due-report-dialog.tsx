@@ -17,6 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter as UiTableFooter,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileDown } from 'lucide-react';
@@ -120,6 +121,14 @@ export function DailyDueReportDialog({ open, onOpenChange, invoices }: DailyDueR
                 </TableRow>
               )}
             </TableBody>
+            {reportData.length > 0 && (
+                <UiTableFooter>
+                    <TableRow>
+                        <TableCell colSpan={4} className="text-right font-bold">Grand Total</TableCell>
+                        <TableCell className="text-right font-bold font-mono">৳ {totalDue.toFixed(2)}</TableCell>
+                    </TableRow>
+                </UiTableFooter>
+            )}
           </Table>
         </ScrollArea>
 
@@ -132,5 +141,3 @@ export function DailyDueReportDialog({ open, onOpenChange, invoices }: DailyDueR
     </Dialog>
   );
 }
-
-    
