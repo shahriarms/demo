@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/popover';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2, CalendarIcon, Users, UserCheck, UserX, NotebookText, Loader2 } from 'lucide-react';
 import { EmployeeDialog } from '@/components/employee-dialog';
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import {
@@ -104,6 +104,11 @@ export default function EmployeesPage() {
     };
 
     const handleAttendanceChange = (employeeId: string, status: AttendanceStatus) => {
+        // Rule: Only admins can edit past/future attendance. Employees can only edit for today.
+        if (user?.role !== 'admin' && !isToday(selectedDate)) {
+            alert("You can only change attendance for the current day.");
+            return;
+        }
         markAttendance(employeeId, selectedDate, status);
     };
 
@@ -313,3 +318,5 @@ export default function EmployeesPage() {
     
 
     
+
+  
