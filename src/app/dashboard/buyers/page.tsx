@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useTranslation } from '@/hooks/use-translation';
+import { cn } from '@/lib/utils';
 
 
 export default function BuyersPage() {
@@ -103,6 +104,16 @@ export default function BuyersPage() {
   if (isAppDataLoading) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
+  
+  const getInvoiceStatus = (invoice: Invoice) => {
+    if (invoice.dueAmount <= 0) {
+      return { status: 'paid', color: 'text-green-600' };
+    }
+    if (invoice.paidAmount > 0 && invoice.dueAmount > 0) {
+      return { status: 'partial', color: 'text-yellow-600' };
+    }
+    return { status: 'due', color: 'text-red-600' };
+  };
 
   return (
     <>
@@ -175,25 +186,33 @@ export default function BuyersPage() {
                     <div className="divide-y">
                     {selectedBuyer ? (
                       filteredInvoices.length > 0 ? (
-                        filteredInvoices.map((invoice) => (
-                          <button
-                            key={invoice.id}
-                            onClick={() => handleSelectInvoice(invoice)}
-                            className={`w-full text-left p-4 hover:bg-muted transition-colors ${
-                              selectedInvoice?.id === invoice.id ? 'bg-muted' : ''
-                            }`}
-                          >
-                              <div className="font-medium">{t('inv_short')}: {invoice.id}</div>
-                              <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                                  <Calendar className="w-3.5 h-3.5"/>
-                                  <span>{new Date(invoice.date).toLocaleDateString()}</span>
-                              </div>
-                              <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                                  <DollarSign className="w-3.5 h-3.5"/>
-                                  <span>৳ {invoice.subtotal.toFixed(2)}</span>
-                              </div>
-                          </button>
-                        ))
+                        filteredInvoices.map((invoice) => {
+                          const { color } = getInvoiceStatus(invoice);
+                          return (
+                            <button
+                              key={invoice.id}
+                              onClick={() => handleSelectInvoice(invoice)}
+                              className={`w-full text-left p-4 hover:bg-muted transition-colors ${
+                                selectedInvoice?.id === invoice.id ? 'bg-muted' : ''
+                              }`}
+                            >
+                                <div className={cn("font-medium", color)}>{t('inv_short')}: {invoice.id}</div>
+                                <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                                    <Calendar className="w-3.5 h-3.5"/>
+                                    <span>{new Date(invoice.date).toLocaleDateString()}</span>
+                                </div>
+                                <div className="flex justify-between items-baseline text-sm mt-1">
+                                  <div className="flex items-center gap-2 text-muted-foreground">
+                                    <DollarSign className="w-3.5 h-3.5"/>
+                                    <span>৳ {invoice.subtotal.toFixed(2)}</span>
+                                  </div>
+                                  <span className={cn('font-semibold', color)}>
+                                    {invoice.dueAmount > 0 ? `Due: ৳ ${invoice.dueAmount.toFixed(2)}` : 'Paid'}
+                                  </span>
+                                </div>
+                            </button>
+                          );
+                        })
                       ) : (
                         <div className="text-center p-4 text-sm text-muted-foreground">{t('no_invoices_found')}</div>
                       )
@@ -264,3 +283,5 @@ export default function BuyersPage() {
     </>
   );
 }
+
+    

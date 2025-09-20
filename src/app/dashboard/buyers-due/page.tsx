@@ -30,6 +30,8 @@ import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer,
 import { useToast } from '@/hooks/use-toast';
 import { PaymentReceipt } from '@/components/payment-receipt';
 import { useTranslation } from '@/hooks/use-translation';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 
 
 export default function BuyersDuePage() {
@@ -140,7 +142,8 @@ export default function BuyersDuePage() {
   
   const dueInvoicesForSelectedBuyer = useMemo(() => {
     if (!selectedBuyer) return [];
-    return getInvoicesForBuyer(selectedBuyer.id).filter(inv => inv.dueAmount > 0.001);
+    // Show all invoices, not just due ones, to see the "Paid" status.
+    return getInvoicesForBuyer(selectedBuyer.id);
   }, [selectedBuyer, getInvoicesForBuyer]);
 
   const filteredDueInvoices = useMemo(() => {
@@ -244,15 +247,28 @@ export default function BuyersDuePage() {
                 <div className="divide-y">
                   {selectedBuyer ? (
                     filteredDueInvoices.length > 0 ? (
-                      filteredDueInvoices.map((invoice) => (
+                      filteredDueInvoices.map((invoice) => {
+                        const isPaid = invoice.dueAmount <= 0.001;
+                        const paymentsForInvoice = getPaymentsForInvoice(invoice.id);
+                        const lastPaymentDate = paymentsForInvoice.length > 0 ? format(new Date(paymentsForInvoice[0].date), 'PP') : null;
+                        
+                        return (
                         <button key={invoice.id} onClick={() => handleSelectInvoice(invoice)} className={`w-full text-left p-4 hover:bg-muted transition-colors ${selectedInvoice?.id === invoice.id ? 'bg-muted' : '' }`}>
                           <div className="flex justify-between font-medium">
                               <span>{t('inv_short')}: {invoice.id}</span>
-                              <span className="text-destructive">৳ {invoice.dueAmount.toFixed(2)}</span>
+                              {isPaid ? (
+                                <Badge variant="secondary" className="bg-green-100 text-green-700">Paid</Badge>
+                              ) : (
+                                <span className="text-destructive">৳ {invoice.dueAmount.toFixed(2)}</span>
+                              )}
                           </div>
                           <div className="text-sm text-muted-foreground">{new Date(invoice.date).toLocaleDateString()}</div>
+                          {isPaid && lastPaymentDate && (
+                            <div className="text-xs text-green-600 mt-1">Paid on {lastPaymentDate}</div>
+                          )}
                         </button>
-                      ))
+                        );
+                      })
                     ) : (
                       <div className="p-4 text-center text-muted-foreground">{t('buyer_has_no_due_invoices')}</div>
                     )
@@ -292,10 +308,10 @@ export default function BuyersDuePage() {
                                     className="pl-8" 
                                     value={paymentAmount} 
                                     onChange={(e) => setPaymentAmount(e.target.value)}
-                                    disabled={isProcessing} 
+                                    disabled={isProcessing || selectedInvoice.dueAmount <= 0} 
                                   />
                               </div>
-                              <Button onClick={handleOpenConfirmation} className="w-full sm:w-auto" disabled={isProcessing || numericPaymentAmount <= 0}>
+                              <Button onClick={handleOpenConfirmation} className="w-full sm:w-auto" disabled={isProcessing || numericPaymentAmount <= 0 || selectedInvoice.dueAmount <= 0}>
                                   {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}
                                   {t('receive_and_print_button')}
                               </Button>
@@ -371,6 +387,8 @@ export default function BuyersDuePage() {
     </>
   );
 }
+
+    
 
     
 
