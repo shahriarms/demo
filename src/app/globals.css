@@ -82,18 +82,18 @@
     print-color-adjust: exact !important;
   }
   
-  /* Hide everything on the page by default */
   .no-print {
     display: none !important;
   }
 
-  /* Only show the element that is meant for printing */
   .print-source {
     display: block !important;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: auto;
+    background: white;
+    z-index: 9999;
   }
 }

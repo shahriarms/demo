@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -93,162 +94,162 @@ export default function BuyersPage() {
 
   return (
     <>
-    <div className="flex flex-col h-full gap-4 no-print">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <Users className="w-6 h-6" />
-            {t('buyers_page_title')}
-        </h1>
-      </div>
-      <div className="grid md:grid-cols-5 gap-6 flex-1">
-        {/* Buyers List */}
-        <Card className="md:col-span-2 lg:col-span-1 flex flex-col">
-          <CardHeader className="flex-shrink-0">
-            <CardTitle>{t('all_buyers_title')}</CardTitle>
-            <div className="relative pt-2">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                    type="search" 
-                    placeholder={t('search_by_name_or_phone_placeholder')}
-                    className="pl-8" 
-                    value={buyerSearchTerm}
-                    onChange={e => setBuyerSearchTerm(e.target.value)}
-                />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 flex-1 min-h-0">
-            <ScrollArea className="h-full">
-              <div className="divide-y">
-                {filteredBuyers.map((buyer) => (
-                  <button
-                    key={buyer.id}
-                    onClick={() => handleSelectBuyer(buyer)}
-                    className={`w-full text-left p-4 hover:bg-muted transition-colors ${
-                      selectedBuyer?.id === buyer.id ? 'bg-muted' : ''
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold">{buyer.name}</p>
-                        <p className="text-sm text-muted-foreground">{buyer.address}</p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
-        {/* Invoice List */}
-        <Card className="md:col-span-3 lg:col-span-1 flex flex-col">
-          <CardHeader className="flex-shrink-0">
-            <CardTitle className="truncate">{selectedBuyer ? t('buyers_invoices_title', { name: selectedBuyer.name }) : t('invoice_log_title')}</CardTitle>
-            <div className="relative pt-2">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                    type="search" 
-                    placeholder={t('search_by_invoice_no_or_date_placeholder')}
-                    className="pl-8" 
-                    value={invoiceSearchTerm}
-                    onChange={e => setInvoiceSearchTerm(e.target.value)}
-                    disabled={!selectedBuyer}
-                />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 flex-1 min-h-0">
-              <ScrollArea className="h-full">
-                  <div className="divide-y">
-                  {selectedBuyer ? (
-                    filteredInvoices.length > 0 ? (
-                      filteredInvoices.map((invoice) => (
-                        <button
-                          key={invoice.id}
-                          onClick={() => handleSelectInvoice(invoice)}
-                          className={`w-full text-left p-4 hover:bg-muted transition-colors ${
-                            selectedInvoice?.id === invoice.id ? 'bg-muted' : ''
-                          }`}
-                        >
-                            <div className="font-medium">{t('inv_short')}: {invoice.id}</div>
-                            <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                                <Calendar className="w-3.5 h-3.5"/>
-                                <span>{new Date(invoice.date).toLocaleDateString()}</span>
-                            </div>
-                            <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                                <DollarSign className="w-3.5 h-3.5"/>
-                                <span>৳ {invoice.subtotal.toFixed(2)}</span>
-                            </div>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="text-center p-4 text-sm text-muted-foreground">{t('no_invoices_found')}</div>
-                    )
-                  ) : (
-                    <div className="text-center p-4 text-sm text-muted-foreground">{t('select_a_buyer')}</div>
-                  )}
-                  </div>
-              </ScrollArea>
-          </CardContent>
-        </Card>
-
-        {/* Invoice Preview */}
-        <Card className="md:col-span-5 lg:col-span-3 flex flex-col">
-            <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>{t('invoice_details_title')}</CardTitle>
-                <Button onClick={handlePrint} disabled={!selectedInvoice || isPrinting}>
-                    {isPrinting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}
-                    {t('print_invoice_button')}
-                </Button>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-auto">
-                {selectedInvoice ? (
-                   <ScrollArea className="h-full">
-                     <div className="p-4 bg-muted/50 rounded-lg min-w-[820px]">
-                       <InvoicePrintLayout 
-                            invoiceId={selectedInvoice.id}
-                            currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                            customerName={selectedInvoice.customerName}
-                            customerAddress={selectedInvoice.customerAddress}
-                            customerPhone={selectedInvoice.customerPhone}
-                            invoiceItems={selectedInvoice.items}
-                            subtotal={selectedInvoice.subtotal}
-                            paidAmount={selectedInvoice.paidAmount}
-                            dueAmount={selectedInvoice.dueAmount}
-                            printFormat={settings.printFormat}
-                            locale={settings.locale}
-                        />
-                     </div>
-                   </ScrollArea>
-                ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
-                        <FileText className="w-12 h-12 mb-4"/>
-                        <h3 className="font-semibold">{t('no_invoice_selected_title')}</h3>
-                        <p className="text-sm">{t('no_invoice_selected_description')}</p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-      </div>
-    </div>
-    {/* This is the dedicated print source, it's hidden by default and only shown when printing */}
-    {selectedInvoice && (
-        <div className="print-source" style={{ display: 'none' }}>
-             <InvoicePrintLayout 
-                invoiceId={selectedInvoice.id}
-                currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                customerName={selectedInvoice.customerName}
-                customerAddress={selectedInvoice.customerAddress}
-                customerPhone={selectedInvoice.customerPhone}
-                invoiceItems={selectedInvoice.items}
-                subtotal={selectedInvoice.subtotal}
-                paidAmount={selectedInvoice.paidAmount}
-                dueAmount={selectedInvoice.dueAmount}
-                printFormat={settings.printFormat}
-                locale={settings.locale}
-            />
+      <div className="flex flex-col h-full gap-4 no-print">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold flex items-center gap-2">
+              <Users className="w-6 h-6" />
+              {t('buyers_page_title')}
+          </h1>
         </div>
-    )}
+        <div className="grid md:grid-cols-5 gap-6 flex-1">
+          {/* Buyers List */}
+          <Card className="md:col-span-2 lg:col-span-1 flex flex-col">
+            <CardHeader className="flex-shrink-0">
+              <CardTitle>{t('all_buyers_title')}</CardTitle>
+              <div className="relative pt-2">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                      type="search" 
+                      placeholder={t('search_by_name_or_phone_placeholder')}
+                      className="pl-8" 
+                      value={buyerSearchTerm}
+                      onChange={e => setBuyerSearchTerm(e.target.value)}
+                  />
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 min-h-0">
+              <ScrollArea className="h-full">
+                <div className="divide-y">
+                  {filteredBuyers.map((buyer) => (
+                    <button
+                      key={buyer.id}
+                      onClick={() => handleSelectBuyer(buyer)}
+                      className={`w-full text-left p-4 hover:bg-muted transition-colors ${
+                        selectedBuyer?.id === buyer.id ? 'bg-muted' : ''
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-semibold">{buyer.name}</p>
+                          <p className="text-sm text-muted-foreground">{buyer.address}</p>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+
+          {/* Invoice List */}
+          <Card className="md:col-span-3 lg:col-span-1 flex flex-col">
+            <CardHeader className="flex-shrink-0">
+              <CardTitle className="truncate">{selectedBuyer ? t('buyers_invoices_title', { name: selectedBuyer.name }) : t('invoice_log_title')}</CardTitle>
+              <div className="relative pt-2">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                      type="search" 
+                      placeholder={t('search_by_invoice_no_or_date_placeholder')}
+                      className="pl-8" 
+                      value={invoiceSearchTerm}
+                      onChange={e => setInvoiceSearchTerm(e.target.value)}
+                      disabled={!selectedBuyer}
+                  />
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 min-h-0">
+                <ScrollArea className="h-full">
+                    <div className="divide-y">
+                    {selectedBuyer ? (
+                      filteredInvoices.length > 0 ? (
+                        filteredInvoices.map((invoice) => (
+                          <button
+                            key={invoice.id}
+                            onClick={() => handleSelectInvoice(invoice)}
+                            className={`w-full text-left p-4 hover:bg-muted transition-colors ${
+                              selectedInvoice?.id === invoice.id ? 'bg-muted' : ''
+                            }`}
+                          >
+                              <div className="font-medium">{t('inv_short')}: {invoice.id}</div>
+                              <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                                  <Calendar className="w-3.5 h-3.5"/>
+                                  <span>{new Date(invoice.date).toLocaleDateString()}</span>
+                              </div>
+                              <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                                  <DollarSign className="w-3.5 h-3.5"/>
+                                  <span>৳ {invoice.subtotal.toFixed(2)}</span>
+                              </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="text-center p-4 text-sm text-muted-foreground">{t('no_invoices_found')}</div>
+                      )
+                    ) : (
+                      <div className="text-center p-4 text-sm text-muted-foreground">{t('select_a_buyer')}</div>
+                    )}
+                    </div>
+                </ScrollArea>
+            </CardContent>
+          </Card>
+
+          {/* Invoice Preview */}
+          <Card className="md:col-span-5 lg:col-span-3 flex flex-col">
+              <CardHeader className="flex-row items-center justify-between">
+                  <CardTitle>{t('invoice_details_title')}</CardTitle>
+                  <Button onClick={handlePrint} disabled={!selectedInvoice || isPrinting}>
+                      {isPrinting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}
+                      {t('print_invoice_button')}
+                  </Button>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-auto">
+                  {selectedInvoice ? (
+                    <ScrollArea className="h-full">
+                      <div className="p-4 bg-muted/50 rounded-lg min-w-[820px]">
+                        <InvoicePrintLayout 
+                              invoiceId={selectedInvoice.id}
+                              currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                              customerName={selectedInvoice.customerName}
+                              customerAddress={selectedInvoice.customerAddress}
+                              customerPhone={selectedInvoice.customerPhone}
+                              invoiceItems={selectedInvoice.items}
+                              subtotal={selectedInvoice.subtotal}
+                              paidAmount={selectedInvoice.paidAmount}
+                              dueAmount={selectedInvoice.dueAmount}
+                              printFormat={settings.printFormat}
+                              locale={settings.locale}
+                          />
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
+                          <FileText className="w-12 h-12 mb-4"/>
+                          <h3 className="font-semibold">{t('no_invoice_selected_title')}</h3>
+                          <p className="text-sm">{t('no_invoice_selected_description')}</p>
+                      </div>
+                  )}
+              </CardContent>
+          </Card>
+        </div>
+      </div>
+      {/* This is the dedicated print source, it's hidden by default and only shown when printing */}
+      {selectedInvoice && (
+          <div className="print-source">
+              <InvoicePrintLayout 
+                  invoiceId={selectedInvoice.id}
+                  currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                  customerName={selectedInvoice.customerName}
+                  customerAddress={selectedInvoice.customerAddress}
+                  customerPhone={selectedInvoice.customerPhone}
+                  invoiceItems={selectedInvoice.items}
+                  subtotal={selectedInvoice.subtotal}
+                  paidAmount={selectedInvoice.paidAmount}
+                  dueAmount={selectedInvoice.dueAmount}
+                  printFormat={settings.printFormat}
+                  locale={settings.locale}
+              />
+          </div>
+      )}
     </>
   );
 }
