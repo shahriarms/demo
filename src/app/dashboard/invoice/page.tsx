@@ -433,30 +433,32 @@ export default function InvoicePage() {
                 <CardHeader className="flex-row items-center justify-between">
                     <CardTitle>{t('live_print_preview_title')}</CardTitle>
                      <div className="flex gap-2">
-                        <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isProcessing} className="flex-1">
-                            {isProcessing ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
+                        <Button onClick={handlePrintConfirm} disabled={!items || items.length === 0 || isProcessing}>
+                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>} 
                             {isProcessing ? 'Processing...' : t('save_and_print_button')}
                         </Button>
                         <Button onClick={handleReset} variant="outline">
-                            <RotateCcw className="mr-2" />
+                            <RotateCcw className="mr-2 h-4 w-4" />
                             Reset
                         </Button>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <InvoicePrintLayout
-                        invoiceId={activeDraft.id}
-                        currentDate={new Date().toLocaleDateString()}
-                        customerName={activeDraft.customerName}
-                        customerAddress={activeDraft.customerAddress}
-                        customerPhone={activeDraft.customerPhone}
-                        invoiceItems={activeDraft.items}
-                        subtotal={activeDraft.subtotal}
-                        paidAmount={activeDraft.paidAmount || 0}
-                        dueAmount={activeDraft.dueAmount}
-                        printFormat={settings.printFormat}
-                        locale={settings.locale}
-                    />
+                    <div className="print-live-preview">
+                        <InvoicePrintLayout
+                            invoiceId={activeDraft.id}
+                            currentDate={new Date().toLocaleDateString()}
+                            customerName={activeDraft.customerName}
+                            customerAddress={activeDraft.customerAddress}
+                            customerPhone={activeDraft.customerPhone}
+                            invoiceItems={activeDraft.items}
+                            subtotal={activeDraft.subtotal}
+                            paidAmount={activeDraft.paidAmount || 0}
+                            dueAmount={activeDraft.dueAmount}
+                            printFormat={settings.printFormat}
+                            locale={settings.locale}
+                        />
+                    </div>
                 </CardContent>
               </Card>
           </div>
