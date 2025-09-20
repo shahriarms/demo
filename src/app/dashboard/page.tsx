@@ -31,10 +31,10 @@ import type { Invoice, Expense, SalaryPayment, Attendance, Product } from '@/lib
 
 
 export default function Dashboard() {
-  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading, getAttendanceForDate, invoices: allInvoices } from useAppData();
+  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading, getAttendanceForDate, invoices: allInvoices } = useAppData();
   const { t } = useTranslation();
 
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   
   const [rangeInvoices, setRangeInvoices] = useState<Invoice[]>([]);
   const [rangeExpenses, setRangeExpenses] = useState<Expense[]>([]);
