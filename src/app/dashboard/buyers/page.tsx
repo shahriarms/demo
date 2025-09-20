@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppData } from '@/hooks/use-app-data';
 import { useSettings } from '@/hooks/use-settings';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -46,30 +46,28 @@ export default function BuyersPage() {
   }
 
   const handlePrint = () => {
-    if (!selectedInvoice) return;
+    if (!selectedInvoice || isPrinting) return;
     
     setIsPrinting(true);
-    const originalTitle = document.title;
-    document.title = `invoice-${selectedInvoice.id}`;
-
+    // The useEffect hook handles the title change
+    
     setTimeout(() => {
         window.print();
-        document.title = originalTitle;
         setIsPrinting(false);
-    }, 50);
+    }, 50); // A small delay ensures the title is updated before the print dialog opens
   };
   
   // This effect ensures that the document title is updated for printing
   // whenever a new invoice is selected.
   useEffect(() => {
+    const originalTitle = document.title;
     if (selectedInvoice) {
-      const originalTitle = document.title;
       document.title = `invoice-${selectedInvoice.id}`;
-      // Cleanup function to restore title when component unmounts or selection changes
-      return () => {
-        document.title = originalTitle;
-      };
     }
+    // Cleanup function to restore title when component unmounts or selection changes
+    return () => {
+      document.title = originalTitle;
+    };
   }, [selectedInvoice]);
 
   const filteredInvoices = useMemo(() => {
@@ -205,20 +203,10 @@ export default function BuyersPage() {
             <CardContent className="flex-1">
                 {selectedInvoice ? (
                    <ScrollArea className="h-full">
-                     <div className="transform scale-[0.9] origin-top">
-                        <InvoicePrintLayout 
-                            invoiceId={selectedInvoice.id}
-                            currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                            customerName={selectedInvoice.customerName}
-                            customerAddress={selectedInvoice.customerAddress}
-                            customerPhone={selectedInvoice.customerPhone}
-                            invoiceItems={selectedInvoice.items}
-                            subtotal={selectedInvoice.subtotal}
-                            paidAmount={selectedInvoice.paidAmount}
-                            dueAmount={selectedInvoice.dueAmount}
-                            printFormat={settings.printFormat}
-                            locale={settings.locale}
-                        />
+                     <div className="p-4 bg-muted/50 rounded-lg overflow-auto">
+                        <div className="min-w-[820px] transform scale-[0.8] sm:scale-[0.9] origin-top">
+                           {/* This layout is used for on-screen preview only. The `print-source` div handles actual printing */}
+                        </div>
                      </div>
                    </ScrollArea>
                 ) : (
@@ -232,6 +220,8 @@ export default function BuyersPage() {
         </Card>
       </div>
     </div>
+    
+    {/* This div is only for printing and is hidden from view */}
     {selectedInvoice && (
         <div className="print-source">
              <InvoicePrintLayout 
