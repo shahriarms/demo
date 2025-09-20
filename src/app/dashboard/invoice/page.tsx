@@ -443,8 +443,22 @@ export default function InvoicePage() {
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent>
-                    {/* Live preview is removed from here to avoid duplication. The printable version is handled by the print-source div below. */}
+                <CardContent className="p-4 bg-muted/50 rounded-lg overflow-hidden">
+                    <div className="transform scale-[0.9] origin-top">
+                        {activeDraft && <InvoicePrintLayout 
+                            invoiceId={activeDraft.id}
+                            currentDate={new Date().toLocaleDateString()}
+                            customerName={activeDraft.customerName}
+                            customerAddress={activeDraft.customerAddress}
+                            customerPhone={activeDraft.customerPhone}
+                            invoiceItems={activeDraft.items}
+                            subtotal={activeDraft.subtotal}
+                            paidAmount={activeDraft.paidAmount || 0}
+                            dueAmount={activeDraft.dueAmount}
+                            printFormat={settings.printFormat}
+                            locale={settings.locale}
+                        />}
+                    </div>
                 </CardContent>
               </Card>
           </div>
@@ -501,3 +515,6 @@ export default function InvoicePage() {
     </>
   );
 }
+
+
+    
