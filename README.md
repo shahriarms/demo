@@ -155,7 +155,7 @@ You will now have a `psql` prompt (e.g., `stockpilot_db=>`) where you can run SQ
 
 This is the easiest method for most users.
 
-**How to Connect to Your Database in pgAdmin:**
+**How to Connect to Your Database in pgAdmin (One-Time Setup Only)**:
 1.  Open pgAdmin at [http://localhost:8080](http://localhost:8080) and log in.
 2.  Right-click on **Servers** -> **Create** -> **Server...**.
 3.  In the **General** tab, give it a name (e.g., `StockPilot Docker DB`).
@@ -166,6 +166,8 @@ This is the easiest method for most users.
     - **Username**: `user`
     - **Password**: `password`
 5.  Click **Save**. You should now see your `stockpilot_db` database in the sidebar.
+
+**Note:** You only need to do this once. Because we use a Docker volume (`pgadmin_data`) in `docker-compose.yml`, pgAdmin remembers this server connection even after you stop and restart the containers.
 
 **Backing Up with pgAdmin:**
 1.  In the pgAdmin browser, expand **Servers** -> **StockPilot Docker DB** -> **Databases**.
