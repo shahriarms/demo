@@ -357,13 +357,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (isDbConnected) {
             try {
                 const newPayment = await dataActions.addPayment(paymentData);
-                // Manually update state for faster UI response
-                setPayments(prev => [newPayment, ...prev]);
-                setInvoices(prev => prev.map(inv => 
-                    inv.id === newPayment.invoiceId 
-                    ? { ...inv, paidAmount: inv.paidAmount + newPayment.amount, dueAmount: inv.dueAmount - newPayment.amount }
-                    : inv
-                ));
+                await loadAllData(); // Reload all data to ensure consistency
                 return newPayment;
             } catch (error: any) {
                 toast({ variant: 'destructive', title: 'Payment Error', description: error.message || "Failed to process payment."});
@@ -385,7 +379,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
              setInvoices(offlineData.invoices);
              return newPayment;
         }
-    }, [isDbConnected, toast]);
+    }, [isDbConnected, toast, loadAllData]);
 
     const getPaymentsForInvoice = useCallback((invoiceId: number) => {
         return payments.filter(p => p.invoiceId === invoiceId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -395,7 +389,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (isDbConnected) {
             await dataActions.addExpense(expenseData);
             await loadAllData();
-            toast({ title: "Expense Added", description: `New expense of ৳${expenseData.amount} has been recorded.` });
+            toast({ title: "Expense Added", description: `New expense of ৳ ${expenseData.amount} has been recorded.` });
         } else {
             const newExpense = {...expenseData, id: `exp-${Date.now()}`};
             const offlineData = getOfflineData();

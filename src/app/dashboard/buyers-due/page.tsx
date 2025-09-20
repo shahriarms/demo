@@ -39,7 +39,7 @@ export default function BuyersDuePage() {
 
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
+  const [paymentAmount, setPaymentAmount] = useState('');
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
   
@@ -48,6 +48,7 @@ export default function BuyersDuePage() {
   const [lastSuccessfulPayment, setLastSuccessfulPayment] = useState<{payment: Payment, invoice: Invoice, buyer: Buyer} | null>(null);
   
   const componentToPrintRef = useRef(null);
+  const numericPaymentAmount = useMemo(() => parseFloat(paymentAmount) || 0, [paymentAmount]);
   
   // This effect ensures that if the underlying data changes (e.g. after a payment),
   // the selected items are refreshed with the latest data.
@@ -72,11 +73,11 @@ export default function BuyersDuePage() {
   }, [allInvoices, buyers, selectedBuyer, selectedInvoice]);
 
   const handleOpenConfirmation = () => {
-    if (!selectedInvoice || !selectedBuyer || typeof paymentAmount !== 'number' || paymentAmount <= 0) {
+    if (!selectedInvoice || !selectedBuyer || numericPaymentAmount <= 0) {
       toast({ variant: 'destructive', title: t('invalid_amount_toast_title'), description: t('invalid_amount_toast_description') });
       return;
     }
-    if (paymentAmount > selectedInvoice.dueAmount) {
+    if (numericPaymentAmount > selectedInvoice.dueAmount) {
         toast({ variant: 'destructive', title: t('overpayment_error_toast_title'), description: t('overpayment_error_toast_description', { amount: selectedInvoice.dueAmount.toFixed(2) }) });
         return;
     }
@@ -84,7 +85,7 @@ export default function BuyersDuePage() {
   };
 
   const handleConfirmAndProcessPayment = async () => {
-    if (!selectedInvoice || !selectedBuyer || typeof paymentAmount !== 'number' || paymentAmount <= 0) return;
+    if (!selectedInvoice || !selectedBuyer || numericPaymentAmount <= 0) return;
 
     setIsProcessing(true);
     setConfirmingPayment(false);
@@ -92,7 +93,7 @@ export default function BuyersDuePage() {
     const paymentPayload = {
       invoiceId: selectedInvoice.id,
       buyerId: selectedBuyer.id,
-      amount: paymentAmount,
+      amount: numericPaymentAmount,
     };
 
     const newPayment = await addPayment(paymentPayload);
@@ -153,16 +154,16 @@ export default function BuyersDuePage() {
     
     // Create a temporary view of invoices with pending payment for real-time UI updates
     return invoices.map(inv => {
-        if (inv.id === selectedInvoice?.id && typeof paymentAmount === 'number' && paymentAmount > 0) {
+        if (inv.id === selectedInvoice?.id && numericPaymentAmount > 0) {
             return {
                 ...inv,
-                dueAmount: Math.max(0, inv.dueAmount - paymentAmount)
+                dueAmount: Math.max(0, inv.dueAmount - numericPaymentAmount)
             };
         }
         return inv;
     });
 
-  }, [dueInvoicesForSelectedBuyer, invoiceSearchTerm, selectedInvoice, paymentAmount]);
+  }, [dueInvoicesForSelectedBuyer, invoiceSearchTerm, selectedInvoice, numericPaymentAmount]);
 
   const paymentHistoryForReceipt = useMemo(() => {
     if (!lastSuccessfulPayment) return [];
@@ -183,11 +184,11 @@ export default function BuyersDuePage() {
   
   const currentDueForSelectedInvoice = useMemo(() => {
     if (!selectedInvoice) return 0;
-    if (typeof paymentAmount === 'number' && paymentAmount > 0) {
-      return Math.max(0, selectedInvoice.dueAmount - paymentAmount);
+    if (numericPaymentAmount > 0) {
+      return Math.max(0, selectedInvoice.dueAmount - numericPaymentAmount);
     }
     return selectedInvoice.dueAmount;
-  }, [selectedInvoice, paymentAmount]);
+  }, [selectedInvoice, numericPaymentAmount]);
 
 
   if (isAppDataLoading) {
@@ -292,14 +293,11 @@ export default function BuyersDuePage() {
                                     placeholder={t('enter_amount_placeholder')} 
                                     className="pl-8" 
                                     value={paymentAmount} 
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        setPaymentAmount(val === '' ? '' : parseFloat(val) || 0);
-                                    }}
+                                    onChange={(e) => setPaymentAmount(e.target.value)}
                                     disabled={isProcessing} 
                                   />
                               </div>
-                              <Button onClick={handleOpenConfirmation} className="w-full sm:w-auto" disabled={isProcessing || !paymentAmount || paymentAmount <= 0}>
+                              <Button onClick={handleOpenConfirmation} className="w-full sm:w-auto" disabled={isProcessing || numericPaymentAmount <= 0}>
                                   {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}
                                   {t('receive_and_print_button')}
                               </Button>
@@ -323,7 +321,7 @@ export default function BuyersDuePage() {
                                     buyer={selectedBuyer}
                                     invoice={selectedInvoice}
                                     paymentHistory={getPaymentsForInvoice(selectedInvoice.id)}
-                                    newPaymentAmount={(typeof paymentAmount === 'number') ? paymentAmount : 0}
+                                    newPaymentAmount={numericPaymentAmount}
                                 />
                             ) : (
                                 <div className="text-center text-muted-foreground p-8 flex flex-col justify-center items-center h-full border rounded-lg">
@@ -354,7 +352,7 @@ export default function BuyersDuePage() {
               <AlertDialogHeader>
                   <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
                   <AlertDialogDescription>
-                      You are about to receive a payment of <strong>৳ {typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00'}</strong> for invoice <strong>#{selectedInvoice?.id}</strong>.
+                      You are about to receive a payment of <strong>৳ {numericPaymentAmount.toFixed(2)}</strong> for invoice <strong>#{selectedInvoice?.id}</strong>.
                       <br />
                       Original Due: ৳ {selectedInvoice?.dueAmount.toFixed(2)}
                       <br />
