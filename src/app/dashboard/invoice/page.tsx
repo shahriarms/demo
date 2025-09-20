@@ -117,10 +117,15 @@ export default function InvoicePage() {
       const timer = setTimeout(() => {
         window.print();
         setInvoiceToPrint(null); // Reset after printing
+        resetActiveDraft();
+        toast({
+            title: "Memo Ready",
+            description: "A new, empty memo is ready for you.",
+        });
       }, 50); // Small delay to ensure the DOM is updated
       return () => clearTimeout(timer);
     }
-  }, [invoiceToPrint]);
+  }, [invoiceToPrint, resetActiveDraft, toast]);
 
   const handleReset = () => {
     resetActiveDraft();
