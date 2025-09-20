@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -12,7 +13,7 @@ interface InvoicePrintLayoutProps {
     customerName: string;
     customerAddress: string;
     customerPhone: string;
-    invoiceItems: DraftInvoiceItem[];
+    invoiceItems: DraftInvoiceItem[] | InvoiceItem[];
     subtotal: number;
     paidAmount: number;
     dueAmount: number;
@@ -56,6 +57,7 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
         color: '#000',
         fontFamily: isBn ? "'SolaimanLipi', 'Times New Roman', sans-serif" : "'Times New Roman', sans-serif",
         fontSize: '14px',
+        width: '100%',
         maxWidth: isPos ? '80mm' : '800px',
         margin: 'auto',
         padding: isPos ? '0.25rem' : '2rem',
@@ -138,7 +140,17 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
     };
 
     return (
-        <div ref={ref} className="print-source">
+        <div ref={ref}>
+            <style>
+                {`
+                    @media print {
+                        @page {
+                            size: ${isPos ? '80mm auto' : 'A4'};
+                            margin: 0;
+                        }
+                    }
+                `}
+            </style>
             <div style={memoStyles}>
                 <header style={headerStyles}>
                     <h1 style={h1Styles}>{t('memo_title')}</h1>

@@ -10,7 +10,6 @@ import { isSameDay, isWithinInterval, startOfDay, endOfDay, startOfMonth, endOfM
 import { useSettings } from './use-settings';
 import * as productActions from '@/lib/actions/product-actions';
 import * as dataActions from '@/lib/actions/data-actions';
-import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 
 interface AppDataContextType {
     products: Product[];
@@ -267,7 +266,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 const newInvoice = await dataActions.addInvoice(invoiceToSave, invoiceToSave.items);
                 await loadAllData();
                 
-                await printInvoice(newInvoice);
+                // Don't auto-print here; let the UI decide
+                if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
+                   await printInvoice(newInvoice);
+                }
+
                 return newInvoice.id;
             } else {
                 // Offline logic
@@ -311,7 +314,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 setOfflineData(offlineData);
                 toast({ title: "Invoice Saved (Offline)", description: `Invoice #${newId} saved locally.` });
     
-                 if (settings.printFormat === 'pos') {
+                 if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
                     await printInvoice(newInvoice); 
                 }
                 return newId;

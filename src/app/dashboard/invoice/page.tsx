@@ -96,39 +96,35 @@ export default function InvoicePage() {
             const finalInvoiceState = {...activeDraft, id: newInvoiceId };
             updateActiveDraft({id: newInvoiceId});
             
-            // Set the invoice to be printed, which will trigger the useEffect for printing
             setInvoiceToPrint(finalInvoiceState);
         }
     } catch (error: any) {
-        console.error("Failed to save or print invoice:", error);
+        console.error("Failed to save invoice:", error);
         toast({
             variant: 'destructive',
             title: 'Error',
-            description: error.message || 'Failed to save or print the invoice.',
+            description: error.message || 'Failed to save the invoice.',
         });
     } finally {
         setIsProcessing(false);
     }
   };
   
-  // Effect to handle the printing after state is updated
   useEffect(() => {
     if (invoiceToPrint) {
-      // Temporarily set the document title for the print-to-PDF filename
       const originalTitle = document.title;
       document.title = `invoice-${invoiceToPrint.id}`;
       
       const timer = setTimeout(() => {
         window.print();
-        // Restore the original title after the print dialog is closed
         document.title = originalTitle;
-        setInvoiceToPrint(null); // Reset after printing
+        setInvoiceToPrint(null);
         resetActiveDraft();
         toast({
             title: "Memo Ready",
             description: "A new, empty memo is ready for you.",
         });
-      }, 50); // Small delay to ensure the DOM is updated
+      }, 50);
       return () => clearTimeout(timer);
     }
   }, [invoiceToPrint, resetActiveDraft, toast]);
@@ -214,9 +210,10 @@ export default function InvoicePage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <>
+    <div className="flex flex-col gap-4 h-full no-print">
         {/* Memo Tabs */}
-        <div className="flex items-center gap-2 border-b pb-2 flex-wrap no-print">
+        <div className="flex items-center gap-2 border-b pb-2 flex-wrap">
             {drafts.map((draft, index) => (
                 <div key={draft.id} className="relative group">
                     <Button 
@@ -245,7 +242,7 @@ export default function InvoicePage() {
         </div>
 
         {/* Change Calculator */}
-        <Card className="no-print">
+        <Card>
             <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <div className="text-center sm:text-left">
                     <p className="text-sm text-muted-foreground">Total Bill</p>
@@ -278,7 +275,7 @@ export default function InvoicePage() {
         </Card>
 
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 no-print">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
           {/* Column 1: Customer Info & Product Adder */}
           <div className="flex flex-col gap-4">
             <Card>
@@ -469,7 +466,7 @@ export default function InvoicePage() {
               </Card>
           </div>
         </div>
-
+      </div>
       {invoiceToPrint && (
         <div className="print-source">
             <InvoicePrintLayout
@@ -519,6 +516,6 @@ export default function InvoicePage() {
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

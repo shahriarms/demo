@@ -24,7 +24,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function BuyersPage() {
-  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice } = useAppData();
+  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice: appPrintInvoice } = useAppData();
   const { settings } = useSettings();
   const { t } = useTranslation();
 
@@ -50,29 +50,26 @@ export default function BuyersPage() {
 
   const handlePrint = async () => {
     if (!selectedInvoice || isPrinting) return;
-    setIsPrinting(true);
-    setInvoiceToPrint(selectedInvoice);
-
-    // If POS printer is configured, the API will handle it.
-    // If not, the useEffect below will trigger window.print().
-    try {
-        await printInvoice(selectedInvoice);
-    } catch (error: any) {
+    
+    // For POS printing, use the API route.
+    if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
+      setIsPrinting(true);
+      try {
+        await appPrintInvoice(selectedInvoice);
+      } catch (error: any) {
         console.error(error.message);
-    } finally {
-        if (settings.posPrinterType === 'disabled' || settings.printFormat === 'normal') {
-            // Let useEffect handle printing for non-POS
-        } else {
-             // For POS, printing is done via API, so we can reset here.
-            setIsPrinting(false);
-            setInvoiceToPrint(null);
-        }
+      } finally {
+        setIsPrinting(false);
+      }
+    } else {
+      // For normal A4 printing, use the client-side print with a dedicated layout.
+      setInvoiceToPrint(selectedInvoice);
     }
   };
   
-  // This useEffect handles the browser's print dialog for non-POS printing
   useEffect(() => {
-    if (invoiceToPrint && (settings.posPrinterType === 'disabled' || settings.printFormat === 'normal')) {
+    if (invoiceToPrint && settings.printFormat === 'normal') {
+      setIsPrinting(true);
       const originalTitle = document.title;
       document.title = `invoice-${invoiceToPrint.id}`;
       
@@ -81,11 +78,11 @@ export default function BuyersPage() {
         document.title = originalTitle;
         setInvoiceToPrint(null);
         setIsPrinting(false);
-      }, 50); // Delay to ensure DOM update
+      }, 50);
       
       return () => clearTimeout(timer);
     }
-  }, [invoiceToPrint, settings.printFormat, settings.posPrinterType]);
+  }, [invoiceToPrint, settings.printFormat]);
   
   const filteredInvoices = useMemo(() => {
     if (!invoiceSearchTerm) return invoices;
@@ -247,7 +244,7 @@ export default function BuyersPage() {
           </Card>
         </div>
       </div>
-      {invoiceToPrint && (settings.posPrinterType === 'disabled' || settings.printFormat === 'normal') && (
+      {invoiceToPrint && (
         <div className="print-source">
             <InvoicePrintLayout
                 invoiceId={invoiceToPrint.id}
