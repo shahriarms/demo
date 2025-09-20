@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
@@ -261,8 +260,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 if (settings.printFormat === 'pos') {
                     const orderData = { orderId: newInvoice.id, customerName: draftInvoice.customerName, items: draftInvoice.items, subtotal: draftInvoice.subtotal, tax: 0, total: draftInvoice.subtotal };
                     try {
-                        // This will now use the browser's print dialog for POS format
-                        // Or attempt to print to a configured POS printer via the API route
                         await printPosReceipt(settings, orderData);
                     } catch(e: any) {
                         console.error("POS printing failed but invoice was saved:", e);
@@ -275,7 +272,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 const offlineData = getOfflineData();
                 const newId = (offlineData.invoices[0]?.id || 0) + 1;
                 const newInvoice = { ...invoiceToSave, id: newId };
-
+    
                 // Update product stock
                 newInvoice.items.forEach(item => {
                     const productIndex = offlineData.products.findIndex((p: Product) => p.id === item.id);
@@ -284,13 +281,34 @@ export function DataProvider({ children }: { children: ReactNode }) {
                     }
                 });
                 setProducts(offlineData.products);
-
+    
+                // Upsert buyer
+                if (newInvoice.customerName) {
+                    const buyerIndex = offlineData.buyers.findIndex((b: Buyer) => b.name === newInvoice.customerName && b.phone === newInvoice.customerPhone);
+                    if (buyerIndex !== -1) {
+                        offlineData.buyers[buyerIndex].invoiceIds.push(String(newId));
+                        newInvoice.buyerId = offlineData.buyers[buyerIndex].id;
+                    } else {
+                        const newBuyerId = `buyer-${Date.now()}`;
+                        const newBuyer: Buyer = {
+                            id: newBuyerId,
+                            name: newInvoice.customerName,
+                            address: newInvoice.customerAddress,
+                            phone: newInvoice.customerPhone,
+                            invoiceIds: [String(newId)],
+                        };
+                        offlineData.buyers.push(newBuyer);
+                        newInvoice.buyerId = newBuyerId;
+                    }
+                    setBuyers(offlineData.buyers);
+                }
+    
                 offlineData.invoices.unshift(newInvoice);
                 setInvoices(offlineData.invoices);
                 
                 setOfflineData(offlineData);
                 toast({ title: "Invoice Saved (Offline)", description: `Invoice #${newId} saved locally.` });
-
+    
                  if (settings.printFormat === 'pos') {
                     // This will trigger window.print() in offline mode for POS format
                     await printPosReceipt(settings, {}); 
