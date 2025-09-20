@@ -107,7 +107,7 @@ export default function BuyersPage() {
   }
   
   const getInvoiceStatus = (invoice: Invoice) => {
-    if (invoice.dueAmount <= 0) {
+    if (invoice.dueAmount <= 0.001) { // Add tolerance for float precision
       return { status: 'paid', color: 'text-green-600' };
     }
     if (invoice.paidAmount > 0 && invoice.dueAmount > 0) {
