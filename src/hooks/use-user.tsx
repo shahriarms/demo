@@ -55,13 +55,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
             userRole = sessionRole;
         }
 
-        const storedPhoto = localStorage.getItem(PROFILE_PIC_STORAGE_KEY);
-
+        // Defer reading from localStorage to a client-side effect
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           role: userRole,
-          photoURL: storedPhoto,
+          photoURL: null, // Start with null to avoid hydration mismatch
         });
         
         if (isUserAdmin) {
@@ -87,6 +86,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     return () => unsubscribe();
   }, [auth, router, pathname]);
+
+  // A separate effect to read from localStorage only on the client
+  useEffect(() => {
+    if (user) {
+      const storedPhoto = localStorage.getItem(PROFILE_PIC_STORAGE_KEY);
+      if (storedPhoto) {
+        setUser(currentUser => currentUser ? { ...currentUser, photoURL: storedPhoto } : null);
+      }
+    }
+  }, [user?.uid]); // Run when user logs in
 
   const logout = useCallback(async () => {
     setIsLoading(true);

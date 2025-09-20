@@ -34,7 +34,7 @@ export default function Dashboard() {
   const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading, getAttendanceForDate, invoices: allInvoices } = useAppData();
   const { t } = useTranslation();
 
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
   const [rangeInvoices, setRangeInvoices] = useState<Invoice[]>([]);
   const [rangeExpenses, setRangeExpenses] = useState<Expense[]>([]);
@@ -149,9 +149,6 @@ export default function Dashboard() {
         to: endOfMonth(new Date()),
     });
   }, []);
-
-  const allDueInvoices = useMemo(() => allInvoices.filter(inv => inv.dueAmount > 0.001), [allInvoices]);
-  const grandTotalDue = useMemo(() => allDueInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0), [allDueInvoices]);
 
 
   const chartConfig: ChartConfig = {
