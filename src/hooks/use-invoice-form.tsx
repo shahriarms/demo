@@ -89,10 +89,8 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
     const [drafts, setDrafts] = useState<DraftInvoice[]>([]);
     const [activeDraftIndex, setActiveDraftIndex] = useState(0);
 
-    // Initialize state on first load or when data is ready
+    // Initialize state from localStorage ONCE on mount
     useEffect(() => {
-        if (isAppDataLoading) return; // Wait until data is loaded
-        
         try {
             const savedDrafts = localStorage.getItem(STORAGE_KEYS.invoiceDrafts);
             const savedIndex = localStorage.getItem(STORAGE_KEYS.activeInvoiceDraftIndex);
@@ -100,21 +98,10 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
             if (savedDrafts) {
                 let parsedDrafts: DraftInvoice[] = JSON.parse(savedDrafts);
                 if (Array.isArray(parsedDrafts) && parsedDrafts.length > 0) {
-                    
-                    // ** FIX: Correct any malformed draft IDs from previous sessions **
-                    const correctedDrafts = parsedDrafts.map((draft, index) => {
-                        if (typeof draft.id === 'string' && draft.id.startsWith('draft-')) {
-                            const newId = lastInvoiceId + index + 1;
-                            return { ...draft, id: newId, label: `Memo #${newId}` };
-                        }
-                        return draft;
-                    });
-                    
-                    setDrafts(correctedDrafts);
-                    
+                    setDrafts(parsedDrafts);
                     if (savedIndex) {
                         const parsedIndex = JSON.parse(savedIndex);
-                        if (parsedIndex < correctedDrafts.length) {
+                        if (parsedIndex < parsedDrafts.length) {
                             setActiveDraftIndex(parsedIndex);
                         }
                     }
@@ -124,15 +111,35 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         } catch (error) {
             console.error("Failed to load invoice form state from localStorage", error);
         }
+    }, []);
 
-        // If no saved state, create a new draft
-        setDrafts([createNewDraft(0, lastInvoiceId, isAppDataLoading)]);
-
+    // Effect to react to data loading and initialize/update drafts if needed
+    useEffect(() => {
+        if (isAppDataLoading) return;
+        
+        if (drafts.length === 0) {
+            // This runs if localStorage was empty or invalid
+            setDrafts([createNewDraft(0, lastInvoiceId, false)]);
+        } else {
+            // This runs on subsequent loads (e.g., after an invoice is created)
+            // It ensures draft IDs are correct if lastInvoiceId has changed.
+            const correctedDrafts = drafts.map((draft, index) => {
+                const newId = lastInvoiceId + index + 1;
+                // Only update if it's a new session or the ID is clearly a placeholder
+                 if (draft.label === `Memo #${draft.id}` || draft.label.startsWith('New Memo')) {
+                     return { ...draft, id: newId, label: `Memo #${newId}` };
+                 }
+                return { ...draft, id: newId };
+            });
+            setDrafts(correctedDrafts);
+        }
+        // We only want this to run when the core data is loaded/reloaded, not on every draft change.
     }, [isAppDataLoading, lastInvoiceId]);
 
 
     // Save state to localStorage whenever it changes
     useEffect(() => {
+        // Only save to localStorage when app data is fully loaded to avoid saving incomplete state
         if (drafts.length > 0 && !isAppDataLoading) {
             try {
                 localStorage.setItem(STORAGE_KEYS.invoiceDrafts, JSON.stringify(drafts));
