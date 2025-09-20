@@ -31,7 +31,7 @@ import type { Invoice, Expense, SalaryPayment, Attendance, Product } from '@/lib
 
 
 export default function Dashboard() {
-  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading, getAttendanceForDate } = useAppData();
+  const { products, employees, getInvoicesForDateRange, getExpensesForDateRange, getSalaryPaymentsForDateRange, getGrossProfitForDateRange, isAppDataLoading: isLoading, getAttendanceForDate, invoices: allInvoices } = useAppData();
   const { t } = useTranslation();
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
@@ -151,6 +151,9 @@ export default function Dashboard() {
     });
   }, []);
 
+  const allDueInvoices = useMemo(() => allInvoices.filter(inv => inv.dueAmount > 0.001), [allInvoices]);
+  const grandTotalDue = useMemo(() => allDueInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0), [allDueInvoices]);
+
 
   const chartConfig: ChartConfig = {
     Sales: { label: t('sales_label'), color: "hsl(var(--primary))" },
@@ -237,7 +240,7 @@ export default function Dashboard() {
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold text-green-600">৳ {todayStats.totalSales.toFixed(2)}</div>
+                      <div className="text-2xl font-bold">৳ {todayStats.totalSales.toFixed(2)}</div>
                       <p className="text-xs text-muted-foreground">{t('invoices_count_footer', { count: todayInvoices.length })}</p>
                   </CardContent>
                 </Card>
@@ -247,17 +250,17 @@ export default function Dashboard() {
                       <Receipt className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold text-green-600">৳ {todayStats.totalExpenses.toFixed(2)}</div>
+                      <div className="text-2xl font-bold">৳ {todayStats.totalExpenses.toFixed(2)}</div>
                       <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
                   </CardContent>
                 </Card>
-                <Card as="button" onClick={() => setDailyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+                <Card as="button" onClick={() => todayStats.totalDue > 0.001 && setDailyDueReportOpen(true)} disabled={todayStats.totalDue <= 0.001} className="text-left hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('todays_due_card_title')}</CardTitle>
                       <HandCoins className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold text-green-600">৳ {todayStats.totalDue.toFixed(2)}</div>
+                      <div className="text-2xl font-bold text-red-600">৳ {todayStats.totalDue.toFixed(2)}</div>
                       <p className="text-xs text-muted-foreground">{t('from_todays_sales_footer')}</p>
                   </CardContent>
                 </Card>
@@ -268,11 +271,11 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                       <div className="flex items-baseline gap-2">
-                        <div className="text-xl font-bold text-green-600">{todayStats.materialSoldKg.toFixed(2)}</div>
+                        <div className="text-xl font-bold">{todayStats.materialSoldKg.toFixed(2)}</div>
                         <span className="text-xs text-muted-foreground">kg</span>
                       </div>
                       <div className="flex items-baseline gap-2">
-                        <div className="text-xl font-bold text-green-600">{todayStats.hardwareSoldPcs}</div>
+                        <div className="text-xl font-bold">{todayStats.hardwareSoldPcs}</div>
                         <span className="text-xs text-muted-foreground">pcs</span>
                       </div>
                   </CardContent>
@@ -283,7 +286,7 @@ export default function Dashboard() {
                       <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold text-green-600">{todayStats.presentToday}</div>
+                      <div className="text-2xl font-bold">{todayStats.presentToday}</div>
                       <p className="text-xs text-muted-foreground">{t('out_of_total_employees_footer', { total: employees.length })}</p>
                   </CardContent>
                 </Card>
@@ -296,7 +299,7 @@ export default function Dashboard() {
                       <div className={`text-2xl font-bold ${todayStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           ৳ {todayStats.profit.toFixed(2)}
                       </div>
-                      <p className="text-xs text-muted-foreground">Sales - Expenses</p>
+                      <p className="text-xs text-muted-foreground">Sales - COGS - Expenses</p>
                   </CardContent>
                 </Card>
             </div>
@@ -312,7 +315,7 @@ export default function Dashboard() {
                   <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">৳ {rangeStats.totalSales.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">৳ {rangeStats.totalSales.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">{rangeInvoices.length} invoices in range</p>
                 </CardContent>
               </Card>
@@ -322,7 +325,7 @@ export default function Dashboard() {
                   <TrendingDown className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">৳ {rangeStats.totalExpenses.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">৳ {rangeStats.totalExpenses.toFixed(2)}</div>
                    <p className="text-xs text-muted-foreground">{rangeExpenses.length} entries in range</p>
                 </CardContent>
               </Card>
@@ -332,18 +335,18 @@ export default function Dashboard() {
                   <Wallet className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">৳ {rangeStats.totalSalaryPaid.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">৳ {rangeStats.totalSalaryPaid.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">{rangeSalaries.length} salary payments</p>
                 </CardContent>
               </Card>
-               <Card as="button" onClick={() => setMonthlyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+               <Card as="button" onClick={() => grandTotalDue > 0.001 && setMonthlyDueReportOpen(true)} disabled={grandTotalDue <= 0.001} className="text-left hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Due</CardTitle>
+                  <CardTitle className="text-sm font-medium">Grand Total Due</CardTitle>
                   <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">৳ {rangeStats.totalDue.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">Outstanding from this range</p>
+                  <div className="text-2xl font-bold text-red-600">৳ {grandTotalDue.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">Total outstanding from all invoices</p>
                 </CardContent>
               </Card>
                <Card as="button" onClick={() => setMonthlyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
@@ -353,11 +356,11 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                      <div className="flex items-baseline gap-2">
-                        <div className="text-xl font-bold text-green-600">{rangeStats.materialSoldKg.toFixed(2)}</div>
+                        <div className="text-xl font-bold">{rangeStats.materialSoldKg.toFixed(2)}</div>
                         <span className="text-xs text-muted-foreground">kg</span>
                       </div>
                       <div className="flex items-baseline gap-2">
-                        <div className="text-xl font-bold text-green-600">{rangeStats.hardwareSoldPcs}</div>
+                        <div className="text-xl font-bold">{rangeStats.hardwareSoldPcs}</div>
                         <span className="text-xs text-muted-foreground">pcs</span>
                       </div>
                 </CardContent>
@@ -466,7 +469,7 @@ export default function Dashboard() {
       <MonthlyDueDialog
         open={isMonthlyDueReportOpen}
         onOpenChange={setMonthlyDueReportOpen}
-        invoices={rangeInvoices}
+        invoices={allDueInvoices}
         dateRange={dateRange}
       />
       <MonthlyUnitsSoldDialog

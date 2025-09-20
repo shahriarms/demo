@@ -17,6 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter as UiTableFooter,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileDown } from 'lucide-react';
@@ -39,7 +40,7 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
     const { t } = useTranslation();
 
     const rangeTitle = useMemo(() => {
-        if (!dateRange?.from) return "Due Report";
+        if (!dateRange?.from) return "Grand Total Due Report";
         const from = dateRange.from;
         const to = dateRange.to || from;
 
@@ -49,15 +50,17 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
         if (isSameDay(from, to)) {
             return `Due Report (${format(from, 'PPP')})`;
         }
-        return `Due Report (${format(from, 'PP')} - ${format(to, 'PP')})`;
+        return `Grand Total Due Report`;
     }, [dateRange]);
 
     const reportData = useMemo(() => {
         if (!invoices) return [];
         return invoices
-          .filter(invoice => invoice.dueAmount > 0)
+          .filter(invoice => invoice.dueAmount > 0.001)
           .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [invoices]);
+
+    const totalDue = useMemo(() => reportData.reduce((sum, item) => sum + item.dueAmount, 0), [reportData]);
 
     const handleExportExcel = () => {
         const worksheet = XLSX.utils.json_to_sheet(reportData.map(item => ({
@@ -68,6 +71,10 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
             "Paid Amount": item.paidAmount,
             "Due Amount": item.dueAmount,
         })));
+        // Add total row
+        const totalRow = { "Customer Name": "Grand Total", "Due Amount": totalDue };
+        XLSX.utils.sheet_add_json(worksheet, [totalRow], { skipHeader: true, origin: -1 });
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Due Invoices Report");
         XLSX.writeFile(workbook, `due_report.xlsx`);
@@ -86,12 +93,12 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
                 '৳ '+item.paidAmount.toFixed(2),
                 '৳ '+item.dueAmount.toFixed(2),
             ]),
+            foot: [['', '', '', '', 'Grand Total', '৳ '+totalDue.toFixed(2)]],
+            footStyles: { fontStyle: 'bold' },
             startY: 22,
         });
         doc.save(`due_report.pdf`);
     };
-
-    const totalDue = useMemo(() => reportData.reduce((sum, item) => sum + item.dueAmount, 0), [reportData]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -99,7 +106,7 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
         <DialogHeader>
           <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A detailed list of all invoices from this range with an outstanding balance. Total Due: <strong>৳ {totalDue.toFixed(2)}</strong>
+            A detailed list of all invoices with an outstanding balance. Grand Total Due: <strong>৳ {totalDue.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -140,6 +147,14 @@ export function MonthlyDueDialog({ open, onOpenChange, invoices, dateRange }: Mo
                 </TableRow>
               )}
             </TableBody>
+            {reportData.length > 0 && (
+                <UiTableFooter>
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-right font-bold">Grand Total</TableCell>
+                        <TableCell className="text-right font-bold font-mono">৳ {totalDue.toFixed(2)}</TableCell>
+                    </TableRow>
+                </UiTableFooter>
+            )}
           </Table>
         </ScrollArea>
 
