@@ -81,7 +81,7 @@ export function DailyDueReportDialog({ open, onOpenChange, invoices }: DailyDueR
         <DialogHeader>
           <DialogTitle>Today's Due Report</DialogTitle>
           <DialogDescription>
-            A detailed list of all invoices from today with an outstanding balance. Total Due: <strong>&#2547; {totalDue.toFixed(2)}</strong>
+            A detailed list of all invoices from today with an outstanding balance. Total Due: <strong>৳ {totalDue.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -107,9 +107,9 @@ export function DailyDueReportDialog({ open, onOpenChange, invoices }: DailyDueR
                   <TableRow key={item.id}>
                     <TableCell className="font-mono text-xs">{String(item.id)}</TableCell>
                     <TableCell className="font-medium">{item.customerName}</TableCell>
-                    <TableCell className="text-right font-mono">&#2547; {item.subtotal.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-mono text-green-600">&#2547; {item.paidAmount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-destructive">&#2547; {item.dueAmount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono">৳ {item.subtotal.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono text-green-600">৳ {item.paidAmount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold text-destructive">৳ {item.dueAmount.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (

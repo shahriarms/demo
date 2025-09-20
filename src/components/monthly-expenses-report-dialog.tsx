@@ -78,7 +78,7 @@ export function MonthlyExpensesDialog({ open, onOpenChange, expenses, dateRange 
                 format(new Date(item.date), 'PP'),
                 item.mainCategory,
                 item.name,
-                '&#2547; '+item.amount.toFixed(2),
+                '৳ '+item.amount.toFixed(2),
             ]),
             startY: 22,
         });
@@ -93,7 +93,7 @@ export function MonthlyExpensesDialog({ open, onOpenChange, expenses, dateRange 
         <DialogHeader>
           <DialogTitle>{rangeTitle}</DialogTitle>
           <DialogDescription>
-            A detailed list of all expenses recorded in this range. Total Expenses: <strong>&#2547; {totalExpenses.toFixed(2)}</strong>
+            A detailed list of all expenses recorded in this range. Total Expenses: <strong>৳ {totalExpenses.toFixed(2)}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -119,7 +119,7 @@ export function MonthlyExpensesDialog({ open, onOpenChange, expenses, dateRange 
                     <TableCell className="font-mono text-xs">{format(new Date(item.date), 'PP')}</TableCell>
                     <TableCell>{item.mainCategory}</TableCell>
                     <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold">&#2547; {item.amount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold">৳ {item.amount.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (

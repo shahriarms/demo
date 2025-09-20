@@ -217,7 +217,7 @@ export default function BuyersPage() {
                             </div>
                             <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                                 <DollarSign className="w-3.5 h-3.5"/>
-                                <span>&#2547; {invoice.subtotal.toFixed(2)}</span>
+                                <span>৳ {invoice.subtotal.toFixed(2)}</span>
                             </div>
                         </button>
                       ))
