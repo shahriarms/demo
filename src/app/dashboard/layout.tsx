@@ -21,8 +21,8 @@ export default function DashboardLayout({
       <SettingsProvider>
         <TranslationProvider>
           <DataProvider>
-            <InvoiceFormProvider>
-              <TooltipProvider>
+            <TooltipProvider>
+              <InvoiceFormProvider>
                 <div className="flex flex-col h-svh">
                   <SiteHeader />
                   <TopNavBar />
@@ -30,8 +30,8 @@ export default function DashboardLayout({
                     {children}
                   </main>
                 </div>
-              </TooltipProvider>
-            </InvoiceFormProvider>
+              </InvoiceFormProvider>
+            </TooltipProvider>
           </DataProvider>
         </TranslationProvider>
       </SettingsProvider>
