@@ -10,6 +10,7 @@ import { isSameDay, isWithinInterval, startOfDay, endOfDay, startOfMonth, endOfM
 import { useSettings } from './use-settings';
 import * as productActions from '@/lib/actions/product-actions';
 import * as dataActions from '@/lib/actions/data-actions';
+import { Loader2 } from 'lucide-react';
 
 interface AppDataContextType {
     products: Product[];
@@ -68,12 +69,18 @@ const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
 const LOCAL_STORAGE_KEY = 'stockpilot-offline-data';
 
 const getOfflineData = () => {
+    // This check ensures localStorage is only accessed on the client-side
+    if (typeof window === 'undefined') {
+        return { products: [], invoices: [], buyers: [], expenses: [], employees: [], attendance: [], salaryPayments: [], payments: [] };
+    }
     const data = localStorage.getItem(LOCAL_STORAGE_KEY);
     return data ? JSON.parse(data) : { products: [], invoices: [], buyers: [], expenses: [], employees: [], attendance: [], salaryPayments: [], payments: [] };
 };
 
 const setOfflineData = (data: any) => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    }
 };
 
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -93,7 +100,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [lastInvoiceId, setLastInvoiceId] = useState(0);
 
     const loadAllData = useCallback(async () => {
-        setIsAppDataLoading(true);
+        // No need to set loading to true here, it's already true initially
         try {
             const isConnected = await productActions.checkDbConnection();
             setIsDbConnected(isConnected);
@@ -569,6 +576,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate,
         addSalaryPayment, getPaymentsForMonth, getSalaryPaymentsForDateRange, getDueSalaryForMonth
     ]);
+    
+    if (isAppDataLoading) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-background">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <AppDataContext.Provider value={value}>
