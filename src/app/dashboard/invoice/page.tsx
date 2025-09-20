@@ -518,9 +518,4 @@ export default function InvoicePage() {
       </AlertDialog>
     </>
   );
-
-    
-
-
-    
-
+}
