@@ -71,14 +71,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
             }
         }
          // If user is on login/signup page, redirect to dashboard
-        if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
+        if (pathname === '/login' || pathname === '/signup') {
             router.replace('/dashboard');
         }
 
       } else {
         setUser(null);
         sessionStorage.removeItem('user-role');
-        if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+        if (pathname !== '/login' && pathname !== '/signup') {
             router.replace('/login');
         }
       }
@@ -86,7 +86,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [auth, router]);
+  }, [auth, router, pathname]);
 
   const logout = useCallback(async () => {
     setIsLoading(true);
