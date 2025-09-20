@@ -129,8 +129,8 @@ export function DailySalesDialog({ open, onOpenChange, invoices }: DailySalesDia
                     <TableCell>{item.customerName}</TableCell>
                     <TableCell className="font-medium">{item.itemName}</TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right font-mono">৳{item.rate.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold">৳{item.total.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono"><span className="text-muted-foreground">৳</span>{item.rate.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold"><span className="text-muted-foreground">৳</span>{item.total.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (
