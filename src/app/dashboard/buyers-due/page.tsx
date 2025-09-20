@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
@@ -58,7 +59,14 @@ export default function BuyersDuePage() {
     if (selectedBuyer) {
       const refreshedBuyer = buyers.find(b => b.id === selectedBuyer.id);
       if (refreshedBuyer) {
-        setSelectedBuyer(refreshedBuyer);
+        // Also check if this buyer still has any due invoices
+        const hasDueInvoices = getInvoicesForBuyer(refreshedBuyer.id).some(inv => inv.dueAmount > 0.001);
+        if (hasDueInvoices) {
+            setSelectedBuyer(refreshedBuyer);
+        } else {
+            setSelectedBuyer(null);
+            setSelectedInvoice(null);
+        }
       } else { // Buyer might not exist anymore
         setSelectedBuyer(null);
         setSelectedInvoice(null);
@@ -66,13 +74,13 @@ export default function BuyersDuePage() {
     }
     if (selectedInvoice) {
         const refreshedInvoice = allInvoices.find(inv => inv.id === selectedInvoice.id);
-        if (refreshedInvoice) {
+        if (refreshedInvoice && refreshedInvoice.dueAmount > 0.001) {
             setSelectedInvoice(refreshedInvoice);
         } else { // Invoice might not exist anymore (e.g. fully paid and filtered out)
             setSelectedInvoice(null);
         }
     }
-  }, [allInvoices, buyers, selectedBuyer, selectedInvoice]);
+  }, [allInvoices, buyers, selectedBuyer, selectedInvoice, getInvoicesForBuyer]);
 
   const handleOpenConfirmation = () => {
     if (!selectedInvoice || !selectedBuyer || numericPaymentAmount <= 0) {
@@ -142,8 +150,8 @@ export default function BuyersDuePage() {
   
   const dueInvoicesForSelectedBuyer = useMemo(() => {
     if (!selectedBuyer) return [];
-    // Show all invoices, not just due ones, to see the "Paid" status.
-    return getInvoicesForBuyer(selectedBuyer.id);
+    // Only show invoices with an outstanding balance
+    return getInvoicesForBuyer(selectedBuyer.id).filter(inv => inv.dueAmount > 0.001);
   }, [selectedBuyer, getInvoicesForBuyer]);
 
   const filteredDueInvoices = useMemo(() => {
@@ -247,28 +255,15 @@ export default function BuyersDuePage() {
                 <div className="divide-y">
                   {selectedBuyer ? (
                     filteredDueInvoices.length > 0 ? (
-                      filteredDueInvoices.map((invoice) => {
-                        const isPaid = invoice.dueAmount <= 0.001;
-                        const paymentsForInvoice = getPaymentsForInvoice(invoice.id);
-                        const lastPaymentDate = paymentsForInvoice.length > 0 ? format(new Date(paymentsForInvoice[0].date), 'PP') : null;
-                        
-                        return (
+                      filteredDueInvoices.map((invoice) => (
                         <button key={invoice.id} onClick={() => handleSelectInvoice(invoice)} className={`w-full text-left p-4 hover:bg-muted transition-colors ${selectedInvoice?.id === invoice.id ? 'bg-muted' : '' }`}>
                           <div className="flex justify-between font-medium">
                               <span>{t('inv_short')}: {invoice.id}</span>
-                              {isPaid ? (
-                                <Badge variant="secondary" className="bg-green-100 text-green-700">Paid</Badge>
-                              ) : (
-                                <span className="text-destructive">৳ {invoice.dueAmount.toFixed(2)}</span>
-                              )}
+                              <span className="text-destructive">৳ {invoice.dueAmount.toFixed(2)}</span>
                           </div>
                           <div className="text-sm text-muted-foreground">{new Date(invoice.date).toLocaleDateString()}</div>
-                          {isPaid && lastPaymentDate && (
-                            <div className="text-xs text-green-600 mt-1">Paid on {lastPaymentDate}</div>
-                          )}
                         </button>
-                        );
-                      })
+                      ))
                     ) : (
                       <div className="p-4 text-center text-muted-foreground">{t('buyer_has_no_due_invoices')}</div>
                     )
@@ -387,9 +382,3 @@ export default function BuyersDuePage() {
     </>
   );
 }
-
-    
-
-    
-
-    

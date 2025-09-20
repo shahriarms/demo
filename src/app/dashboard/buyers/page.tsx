@@ -22,10 +22,11 @@ import { Button } from '@/components/ui/button';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 
 export default function BuyersPage() {
-  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice: appPrintInvoice } = useAppData();
+  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice: appPrintInvoice, getPaymentsForInvoice } = useAppData();
   const { settings } = useSettings();
   const { t } = useTranslation();
 
@@ -187,7 +188,11 @@ export default function BuyersPage() {
                     {selectedBuyer ? (
                       filteredInvoices.length > 0 ? (
                         filteredInvoices.map((invoice) => {
-                          const { color } = getInvoiceStatus(invoice);
+                          const { color, status } = getInvoiceStatus(invoice);
+                          const isPaid = status === 'paid';
+                          const paymentsForInvoice = isPaid ? getPaymentsForInvoice(invoice.id) : [];
+                          const lastPaymentDate = isPaid && paymentsForInvoice.length > 0 ? format(new Date(paymentsForInvoice[0].date), 'PP') : null;
+
                           return (
                             <button
                               key={invoice.id}
@@ -207,9 +212,12 @@ export default function BuyersPage() {
                                     <span>৳ {invoice.subtotal.toFixed(2)}</span>
                                   </div>
                                   <span className={cn('font-semibold', color)}>
-                                    {invoice.dueAmount > 0 ? `Due: ৳ ${invoice.dueAmount.toFixed(2)}` : 'Paid'}
+                                    {isPaid ? 'Paid' : `Due: ৳ ${invoice.dueAmount.toFixed(2)}`}
                                   </span>
                                 </div>
+                                {isPaid && lastPaymentDate && (
+                                   <div className="text-xs text-green-600 mt-1">Paid on {lastPaymentDate}</div>
+                                )}
                             </button>
                           );
                         })
@@ -283,5 +291,3 @@ export default function BuyersPage() {
     </>
   );
 }
-
-    
