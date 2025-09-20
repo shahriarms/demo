@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -79,14 +80,14 @@ export default function BuyersPage() {
 
   return (
     <>
-    <div className="flex flex-col h-full gap-4">
-      <div className="flex items-center justify-between no-print">
+    <div className="flex flex-col h-full gap-4 no-print">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Users className="w-6 h-6" />
             {t('buyers_page_title')}
         </h1>
       </div>
-      <div className="grid md:grid-cols-5 gap-6 flex-1 no-print">
+      <div className="grid md:grid-cols-5 gap-6 flex-1">
         {/* Buyers List */}
         <Card className="md:col-span-2 lg:col-span-1 flex flex-col">
           <CardHeader className="flex-shrink-0">
@@ -192,7 +193,7 @@ export default function BuyersPage() {
             <CardContent className="flex-1 p-4 bg-muted/50 rounded-lg overflow-auto">
               {selectedInvoice ? (
                   <div className="min-w-[820px] print:min-w-0 print:p-0">
-                    <div className="transform scale-[0.9] origin-top print:scale-100 print:transform-none">
+                    <div className="transform scale-[0.9] origin-top print:hidden">
                         <InvoicePrintLayout
                             invoiceId={selectedInvoice.id}
                             currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
