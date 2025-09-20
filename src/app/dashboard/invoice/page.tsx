@@ -91,11 +91,8 @@ export default function InvoicePage() {
               description: t('invoice_saved_toast_description', { invoiceId: newInvoiceId }),
             });
             
-            // This is a crucial step. We update the draft with the final ID
-            // so the printed version has the correct invoice number.
             updateActiveDraft({id: newInvoiceId});
 
-            // We need a short delay to allow React to re-render the print layout with the new ID.
             await new Promise(resolve => setTimeout(resolve, 50));
             
             window.print();
@@ -201,7 +198,7 @@ export default function InvoicePage() {
   }
 
   return (
-    <>
+    <main>
       <div className="flex flex-col gap-4 no-print">
           {/* Memo Tabs */}
           <div className="flex items-center gap-2 border-b pb-2 flex-wrap">
@@ -511,8 +508,6 @@ export default function InvoicePage() {
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
-    </>
+    </main>
   );
 }
-
-    
