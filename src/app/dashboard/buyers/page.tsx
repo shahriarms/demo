@@ -40,12 +40,7 @@ export default function BuyersPage() {
     if (!selectedInvoice) return;
 
     const doc = new jsPDF();
-    const t = (key: Parameters<typeof useTranslation>[0]['t']>[0], options?: any) => {
-        const { translations } = require('@/lib/i18n/all');
-        return translations[settings.locale || 'en'][key] || translations['en'][key];
-    };
-
-
+    
     // Header
     doc.setFontSize(22);
     doc.text(t('shop_name'), doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
@@ -222,7 +217,7 @@ export default function BuyersPage() {
                             </div>
                             <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                                 <DollarSign className="w-3.5 h-3.5"/>
-                                <span>৳{invoice.subtotal.toFixed(2)}</span>
+                                <span>&#2547;{invoice.subtotal.toFixed(2)}</span>
                             </div>
                         </button>
                       ))
