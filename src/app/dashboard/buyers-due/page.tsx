@@ -26,16 +26,18 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer, Search, Loader2 } from 'lucide-react';
+import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer, Search, Loader2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentReceipt } from '@/components/payment-receipt';
 import { useTranslation } from '@/hooks/use-translation';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { useUser } from '@/hooks/use-user';
 
 
 export default function BuyersDuePage() {
-  const { invoices: allInvoices, buyers, getInvoicesForBuyer, addPayment, getPaymentsForInvoice, isAppDataLoading } = useAppData();
+  const { invoices: allInvoices, buyers, getInvoicesForBuyer, addPayment, getPaymentsForInvoice, isAppDataLoading, deleteInvoice } = useAppData();
+  const { user } = useUser();
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -48,6 +50,9 @@ export default function BuyersDuePage() {
   const [isConfirmingPayment, setConfirmingPayment] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastSuccessfulPayment, setLastSuccessfulPayment] = useState<{payment: Payment, invoice: Invoice, buyer: Buyer} | null>(null);
+  
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
   
   const numericPaymentAmount = useMemo(() => parseFloat(paymentAmount) || 0, [paymentAmount]);
   
@@ -133,6 +138,21 @@ export default function BuyersDuePage() {
     }
   }, [lastSuccessfulPayment]);
 
+    const handleDeleteClick = () => {
+        if (selectedInvoice && user?.role === 'admin') {
+            setInvoiceToDelete(selectedInvoice);
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (invoiceToDelete) {
+            setIsDeleting(true);
+            await deleteInvoice(invoiceToDelete.id);
+            setInvoiceToDelete(null);
+            setSelectedInvoice(null);
+            setIsDeleting(false);
+        }
+    };
 
   const buyersWithDue = useMemo(() => buyers.filter(b => getInvoicesForBuyer(b.id).some(inv => inv.dueAmount > 0.001)), [buyers, getInvoicesForBuyer]);
   const filteredBuyersWithDue = useMemo(() => buyerSearchTerm ? buyersWithDue.filter(b => b.name.toLowerCase().includes(buyerSearchTerm.toLowerCase()) || (b.phone && b.phone.toLowerCase().includes(buyerSearchTerm.toLowerCase()))) : buyersWithDue, [buyersWithDue, buyerSearchTerm]);
@@ -262,9 +282,16 @@ export default function BuyersDuePage() {
           </Card>
           
           <Card className="md:col-span-5 lg:col-span-3 flex flex-col">
-              <CardHeader className='no-print'>
-                  <CardTitle>{t('receive_payment_title')}</CardTitle>
-                  <CardDescription>{t('receive_payment_description')}</CardDescription>
+              <CardHeader className="flex-row items-center justify-between no-print">
+                  <div>
+                      <CardTitle>{t('receive_payment_title')}</CardTitle>
+                      <CardDescription>{t('receive_payment_description')}</CardDescription>
+                  </div>
+                   {user?.role === 'admin' && (
+                        <Button variant="destructive" onClick={handleDeleteClick} disabled={!selectedInvoice || isDeleting}>
+                            <Trash2 className="mr-2 h-4 w-4"/> Delete Invoice
+                        </Button>
+                    )}
               </CardHeader>
               <CardContent className="space-y-4 no-print">
                   {selectedInvoice ? (
@@ -324,7 +351,6 @@ export default function BuyersDuePage() {
                                 </div>
                             )}
                            </div>
-
                       </div>
                   </div>
               </div>
@@ -364,8 +390,24 @@ export default function BuyersDuePage() {
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
+      <AlertDialog open={!!invoiceToDelete} onOpenChange={() => setInvoiceToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete invoice <strong>#{invoiceToDelete?.id}</strong>, 
+              remove all associated payments, and restore the product stock.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+              Yes, delete invoice
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
-
-    

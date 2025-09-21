@@ -372,5 +372,7 @@ export default function ExpensesPage() {
         </AlertDialog>
 
       </div>
-    )
+    );
 }
+
+    
