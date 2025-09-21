@@ -1,4 +1,5 @@
 
+
 # StockPilot - Inventory Management System
 
 StockPilot is a modern, responsive inventory management application designed to streamline stock, invoice, and expense tracking for small businesses. Built with Next.js, Firebase, and Tailwind CSS.
@@ -124,6 +125,24 @@ That's it! Now, whenever you log in to your PC, Docker will start automatically,
 
 এই আর্কিটেকচারের সুবিধা হলো, UI এবং ডাটাবেস লজিক সম্পূর্ণ আলাদা থাকে, যা কোডকে পরিষ্কার এবং সুরক্ষিত রাখে।
 
+### ৩. লগইন এবং ব্যবহারকারী ব্যবস্থাপনা (Login and User Management)
+
+অ্যাপ্লিকেশনটি ব্যবহারকারী সনাক্ত করার জন্য **Firebase Authentication** ব্যবহার করে।
+
+- **লগইন এবং সাইনআপ:** `src/app/login/page.tsx` এবং `src/app/signup/page.tsx` ফাইল দুটি ব্যবহারকারীকে লগইন বা নতুন অ্যাকাউন্ট তৈরি করতে দেয়। যখন একজন ব্যবহারকারী তার ইমেল এবং পাসওয়ার্ড দিয়ে লগইন করার চেষ্টা করে, তখন `signInWithEmailAndPassword` ফাংশনটি (যা Firebase থেকে আসে) কল করা হয়। Firebase তখন ইমেল এবং পাসওয়ার্ডটি যাচাই করে। সফল হলে, ব্যবহারকারীকে ড্যাশবোর্ডে পাঠানো হয়। ব্যর্থ হলে, একটি ত্রুটির বার্তা দেখানো হয়।
+
+- **ব্যবহারকারীর ভূমিকা (Admin/Employee):** `src/hooks/use-user.tsx` ফাইলে, `ADMIN_EMAIL` নামে একটি ভেরিয়েবল আছে। যদি কোনো ব্যবহারকারীর ইমেল এই ভেরিয়েবলের সাথে মিলে যায়, তবে তাকে 'admin' হিসেবে গণ্য করা হয়। অন্য সব ব্যবহারকারীকে 'employee' হিসেবে গণ্য করা হয়।
+
+- **অ্যাডমিন পরিবর্তন:** আপনি যদি অ্যাডমিন পরিবর্তন করতে চান, তবে আপনাকে শুধুমাত্র `src/hooks/use-user.tsx` ফাইলে `ADMIN_EMAIL` ভেরিয়েবলের মান পরিবর্তন করে আপনার নতুন অ্যাডমিনের ইমেল ঠিকানাটি সেখানে লিখতে হবে।
+
+### ৪. ফায়ারবেস কনফিগারেশন পরিবর্তন (Changing Firebase Configuration)
+
+আপনি যদি এই অ্যাপ্লিকেশনটি আপনার নিজের ফায়ারবেস প্রোজেক্টের সাথে সংযোগ করতে চান, তবে আপনাকে `src/lib/firebase/firebase.ts` ফাইলটি পরিবর্তন করতে হবে।
+
+- এই ফাইলে `firebaseConfig` নামে একটি অবজেক্ট রয়েছে।
+- আপনাকে আপনার Firebase প্রোজেক্টের সেটিংস থেকে `apiKey`, `authDomain`, `projectId` ইত্যাদি মানগুলো কপি করে এই `firebaseConfig` অবজেক্টে পেস্ট করতে হবে।
+- এটি করার পর, অ্যাপ্লিকেশনটি আপনার নতুন ফায়ারবেস প্রোজেক্ট ব্যবহার করা শুরু করবে।
+
 ---
 
 
@@ -223,3 +242,6 @@ Your database is now restored from the `backup.sql` file.
 
 ---
 *This README provides a comprehensive guide for the recommended Docker ecosystem, ensuring simplicity and reliability.*
+
+
+    
