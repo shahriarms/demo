@@ -22,7 +22,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileDown } from 'lucide-react';
 import type { Invoice } from '@/lib/types';
-import { format, isSameDay, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { format, isSameDay, startOfMonth, endOfMonth } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -63,13 +63,13 @@ export function MonthlySalesDialog({ open, onOpenChange, invoices, dateRange }: 
         const salesByDay = new Map<string, number>();
 
         invoices.forEach(invoice => {
-            const dateKey = format(parseISO(invoice.date), 'yyyy-MM-dd');
+            const dateKey = format(new Date(invoice.date), 'yyyy-MM-dd');
             salesByDay.set(dateKey, (salesByDay.get(dateKey) || 0) + invoice.subtotal);
         });
         
         return Array.from(salesByDay.entries())
             .map(([date, totalSales]) => ({
-                date: format(parseISO(date), 'PP'),
+                date: format(new Date(date), 'PP'),
                 totalSales,
             }))
             .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
