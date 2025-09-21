@@ -9,6 +9,7 @@ services:
       - "3000:3000"
     environment:
       POSTGRES_URL: postgresql://user:password@db:5432/stockpilot_db
+      POSTGRES_HOST: db
     depends_on:
       db:
         condition: service_healthy
@@ -38,6 +39,7 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: "admin@stockpilot.com"
       PGADMIN_DEFAULT_PASSWORD: "password"
+      PGADMIN_CONFIG_SERVER_MODE: "False"
     ports:
       - "8080:80"
     depends_on:
@@ -50,3 +52,4 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
+
