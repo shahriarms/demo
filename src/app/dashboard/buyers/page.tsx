@@ -83,18 +83,15 @@ export default function BuyersPage() {
     }
   }, [invoiceToPrint, settings.printFormat]);
   
-  const buyerInvoices = useMemo(() => {
-    if (!selectedBuyer) return [];
-    return getInvoicesForBuyer(selectedBuyer.id);
-  }, [selectedBuyer, getInvoicesForBuyer]);
-
   const filteredInvoices = useMemo(() => {
+    if (!selectedBuyer) return [];
+    const buyerInvoices = getInvoicesForBuyer(selectedBuyer.id);
     if (!invoiceSearchTerm) return buyerInvoices;
     return buyerInvoices.filter(invoice => 
         String(invoice.id).toLowerCase().includes(invoiceSearchTerm.toLowerCase()) ||
         new Date(invoice.date).toLocaleDateString().toLowerCase().includes(invoiceSearchTerm.toLowerCase())
     );
-  }, [buyerInvoices, invoiceSearchTerm]);
+  }, [getInvoicesForBuyer, selectedBuyer, invoiceSearchTerm]);
   
   const filteredBuyers = useMemo(() => {
     if (!buyerSearchTerm) return buyers;
