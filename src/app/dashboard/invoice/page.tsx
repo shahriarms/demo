@@ -125,7 +125,7 @@ function InvoicePage() {
             title: "Memo Ready",
             description: "A new, empty memo is ready for you.",
         });
-      }, 50);
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [invoiceToPrint, resetActiveDraft, toast]);
