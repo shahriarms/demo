@@ -32,7 +32,7 @@ interface InvoiceFormContextType {
     addNewDraft: () => void;
     removeDraft: (draftId: string | number) => void;
     setActiveDraftIndex: (index: number) => void;
-    updateActiveDraft: (update: Partial<Omit<DraftInvoice, 'subtotal' | 'dueAmount' | 'changeAmount' | 'label'>>) => void;
+    updateActiveDraft: (update: Partial<Omit<DraftInvoice, 'subtotal' | 'dueAmount' | 'changeAmount' | 'label'>>, cb?: (updatedDraft: DraftInvoice) => void) => void;
     addInvoiceItem: (product: Product) => void;
     updateInvoiceItem: (itemId: string, update: { [key: string]: string }) => void;
     removeInvoiceItem: (itemId: string) => void;
@@ -186,22 +186,32 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         });
     }, [activeDraftIndex, lastInvoiceId, isAppDataLoading]);
 
-    const updateActiveDraft = useCallback((update: Partial<Omit<DraftInvoice, 'subtotal' | 'dueAmount' | 'changeAmount' | 'label'>>) => {
-        setDrafts(prev => prev.map((draft, index) => {
-            if (index === activeDraftIndex) {
-                const updatedDraft = { ...draft, ...update };
-                const { subtotal, dueAmount, changeAmount } = calculateTotals(updatedDraft.items, updatedDraft.paidAmount, updatedDraft.cashReceived);
-                updatedDraft.subtotal = subtotal;
-                updatedDraft.dueAmount = dueAmount;
-                updatedDraft.changeAmount = changeAmount;
-                // Update label if customerName is changed and it's a draft
-                if(typeof updatedDraft.id === 'string' || (typeof updatedDraft.id === 'number' && update.customerName && updatedDraft.label.startsWith('Memo'))) {
-                    updatedDraft.label = update.customerName || `Memo #${updatedDraft.id}`;
+    const updateActiveDraft = useCallback((update: Partial<Omit<DraftInvoice, 'subtotal' | 'dueAmount' | 'changeAmount' | 'label'>>, cb?: (updatedDraft: DraftInvoice) => void) => {
+        setDrafts(prev => {
+            let updatedDraft: DraftInvoice | undefined;
+            const newDrafts = prev.map((draft, index) => {
+                if (index === activeDraftIndex) {
+                    const newVersion = { ...draft, ...update };
+                    const { subtotal, dueAmount, changeAmount } = calculateTotals(newVersion.items, newVersion.paidAmount, newVersion.cashReceived);
+                    newVersion.subtotal = subtotal;
+                    newVersion.dueAmount = dueAmount;
+                    newVersion.changeAmount = changeAmount;
+                    // Update label if customerName is changed and it's a draft
+                    if(typeof newVersion.id === 'string' || (typeof newVersion.id === 'number' && update.customerName && newVersion.label.startsWith('Memo'))) {
+                        newVersion.label = update.customerName || `Memo #${newVersion.id}`;
+                    }
+                    updatedDraft = newVersion;
+                    return newVersion;
                 }
-                return updatedDraft;
+                return draft;
+            });
+            
+            if (cb && updatedDraft) {
+                cb(updatedDraft);
             }
-            return draft;
-        }));
+
+            return newDrafts;
+        });
     }, [activeDraftIndex]);
 
     const addInvoiceItem = useCallback((product: Product) => {
@@ -303,3 +313,5 @@ export function useInvoiceForm() {
     }
     return context;
 }
+
+    

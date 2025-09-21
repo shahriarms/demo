@@ -93,10 +93,11 @@ function InvoicePage() {
               description: t('invoice_saved_toast_description', { invoiceId: newInvoiceId }),
             });
             
-            const finalInvoiceState = {...activeDraft, id: newInvoiceId };
-            updateActiveDraft({id: newInvoiceId});
-            
-            setInvoiceToPrint(finalInvoiceState);
+            // The state update needs a moment to propagate.
+            // We use a callback in `updateActiveDraft` to get the latest state.
+            updateActiveDraft({ id: newInvoiceId }, (updatedDraftWithId) => {
+              setInvoiceToPrint(updatedDraftWithId);
+            });
         }
     } catch (error: any) {
         console.error("Failed to save invoice:", error);
@@ -527,3 +528,5 @@ export default function InvoicePageWrapper() {
     </InvoiceFormProvider>
   );
 }
+
+    
