@@ -36,7 +36,7 @@ import { format } from 'date-fns';
 
 
 export default function BuyersDuePage() {
-  const { invoices: allInvoices, buyers, getInvoicesForBuyer, addPayment, getPaymentsForInvoice, isAppDataLoading, getBuyerById } = useAppData();
+  const { invoices: allInvoices, buyers, getInvoicesForBuyer, addPayment, getPaymentsForInvoice, isAppDataLoading } = useAppData();
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -50,24 +50,22 @@ export default function BuyersDuePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastSuccessfulPayment, setLastSuccessfulPayment] = useState<{payment: Payment, invoice: Invoice, buyer: Buyer} | null>(null);
   
-  const componentToPrintRef = useRef(null);
   const numericPaymentAmount = useMemo(() => parseFloat(paymentAmount) || 0, [paymentAmount]);
   
   // This effect ensures that if the underlying data changes (e.g. after a payment),
-  // the selected items are refreshed with the latest data.
+  // the selected items are refreshed with the latest data to prevent stale state.
   useEffect(() => {
     if (selectedBuyer) {
       const refreshedBuyer = buyers.find(b => b.id === selectedBuyer.id);
       if (refreshedBuyer) {
-        // Also check if this buyer still has any due invoices
         const hasDueInvoices = getInvoicesForBuyer(refreshedBuyer.id).some(inv => inv.dueAmount > 0.001);
-        if (hasDueInvoices) {
-            setSelectedBuyer(refreshedBuyer);
-        } else {
+        if (!hasDueInvoices) {
             setSelectedBuyer(null);
             setSelectedInvoice(null);
+        } else {
+            setSelectedBuyer(refreshedBuyer);
         }
-      } else { // Buyer might not exist anymore
+      } else {
         setSelectedBuyer(null);
         setSelectedInvoice(null);
       }
@@ -76,7 +74,7 @@ export default function BuyersDuePage() {
         const refreshedInvoice = allInvoices.find(inv => inv.id === selectedInvoice.id);
         if (refreshedInvoice && refreshedInvoice.dueAmount > 0.001) {
             setSelectedInvoice(refreshedInvoice);
-        } else { // Invoice might not exist anymore (e.g. fully paid and filtered out)
+        } else {
             setSelectedInvoice(null);
         }
     }
@@ -87,7 +85,6 @@ export default function BuyersDuePage() {
       toast({ variant: 'destructive', title: t('invalid_amount_toast_title'), description: t('invalid_amount_toast_description') });
       return;
     }
-    // Add a small tolerance for floating point comparisons
     if (numericPaymentAmount > selectedInvoice.dueAmount + 0.001) {
         toast({ variant: 'destructive', title: t('overpayment_error_toast_title'), description: t('overpayment_error_toast_description', { amount: selectedInvoice.dueAmount.toFixed(2) }) });
         return;
@@ -119,27 +116,20 @@ export default function BuyersDuePage() {
         });
         
         setLastSuccessfulPayment({ payment, invoice: updatedInvoice, buyer: selectedBuyer });
-        
         setPaymentAmount('');
-    } else {
-        // Error toast is handled inside addPayment hook
     }
   };
   
-  // Effect to trigger printing after a successful payment
   useEffect(() => {
     if (lastSuccessfulPayment) {
-      // Temporarily set the document title for the print-to-PDF filename
       const originalTitle = document.title;
       document.title = `payment-receipt-for-invoice-${lastSuccessfulPayment.invoice.id}`;
       
       const timer = setTimeout(() => {
         window.print();
-        // Restore the original title after the print dialog is closed
         document.title = originalTitle;
-        // Clear the successful payment state to prevent re-printing on re-renders.
         setLastSuccessfulPayment(null);
-      }, 50);
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [lastSuccessfulPayment]);
@@ -150,7 +140,6 @@ export default function BuyersDuePage() {
   
   const dueInvoicesForSelectedBuyer = useMemo(() => {
     if (!selectedBuyer) return [];
-    // Only show invoices with an outstanding balance
     return getInvoicesForBuyer(selectedBuyer.id).filter(inv => inv.dueAmount > 0.001);
   }, [selectedBuyer, getInvoicesForBuyer]);
 
@@ -161,7 +150,6 @@ export default function BuyersDuePage() {
       ? dueInvoicesForSelectedBuyer.filter(inv => String(inv.id).toLowerCase().includes(searchTermLower) || new Date(inv.date).toLocaleDateString().toLowerCase().includes(searchTermLower)) 
       : dueInvoicesForSelectedBuyer;
     
-    // Create a temporary view of invoices with pending payment for real-time UI updates
     return invoices.map(inv => {
         if (inv.id === selectedInvoice?.id && numericPaymentAmount > 0) {
             return {
@@ -323,7 +311,6 @@ export default function BuyersDuePage() {
                   </div>
                   <div className="p-6 pt-2 flex-1">
                       <div className="bg-background">
-                           {/* This is for on-screen preview only */}
                            <div className="no-print">
                             {(selectedBuyer && selectedInvoice) ? (
                                 <PaymentReceipt
@@ -382,3 +369,5 @@ export default function BuyersDuePage() {
     </>
   );
 }
+
+    

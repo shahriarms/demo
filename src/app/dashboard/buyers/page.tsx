@@ -50,7 +50,6 @@ export default function BuyersPage() {
   const handlePrint = async () => {
     if (!selectedInvoice || isPrinting) return;
     
-    // For POS printing, use the API route.
     if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
       setIsPrinting(true);
       try {
@@ -61,7 +60,6 @@ export default function BuyersPage() {
         setIsPrinting(false);
       }
     } else {
-      // For normal A4 printing, use the client-side print with a dedicated layout.
       setInvoiceToPrint(selectedInvoice);
     }
   };
@@ -77,7 +75,7 @@ export default function BuyersPage() {
         document.title = originalTitle;
         setInvoiceToPrint(null);
         setIsPrinting(false);
-      }, 50);
+      }, 100);
       
       return () => clearTimeout(timer);
     }
@@ -106,7 +104,7 @@ export default function BuyersPage() {
   }
   
   const getInvoiceStatus = (invoice: Invoice) => {
-    if (invoice.dueAmount <= 0.001) { // Add tolerance for float precision
+    if (invoice.dueAmount <= 0.001) { 
       return { status: 'paid', color: 'text-green-600' };
     }
     if (invoice.paidAmount > 0 && invoice.dueAmount > 0) {
@@ -290,3 +288,5 @@ export default function BuyersPage() {
     </>
   );
 }
+
+    
