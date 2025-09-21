@@ -10,11 +10,6 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: '#F0F4F5',
     theme_color: '#79A3B1',
     icons: [
-      {
-        src: '/favicon.ico',
-        sizes: 'any',
-        type: 'image/x-icon',
-      },
        {
         src: '/icon-192.png',
         sizes: '192x192',

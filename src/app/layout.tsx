@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   title: 'StockPilot',
   description: 'A modern PWA for inventory management.',
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/icon.tsx',
+  },
 };
 
 export const viewport: Viewport = {
