@@ -72,7 +72,8 @@ const createNewDraft = (index: number, lastInvoiceId: number, isLoading: boolean
 
 const calculateTotals = (items: DraftInvoiceItem[], paidAmount?: number, cashReceived?: number) => {
     const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const dueAmount = subtotal - (paidAmount || 0);
+    const validPaidAmount = (typeof paidAmount === 'number' && !isNaN(paidAmount)) ? paidAmount : 0;
+    const dueAmount = subtotal - validPaidAmount;
     const changeAmount = (cashReceived && cashReceived > subtotal) ? cashReceived - subtotal : 0;
     return { subtotal, dueAmount, changeAmount };
 };
@@ -237,7 +238,7 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
         }));
     }, [activeDraftIndex]);
     
-    const updateInvoiceItem = useCallback((itemId: string, itemUpdate: { [key: string]: string }) => {
+    const updateInvoiceItem = useCallback((itemId: string, itemUpdate: { [key: string]: any }) => {
         setDrafts(prev => prev.map((draft, index) => {
             if (index !== activeDraftIndex) return draft;
     
@@ -245,12 +246,12 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
                 if (item.id === itemId) {
                     const updatedItem = { ...item };
                     const key = Object.keys(itemUpdate)[0];
-                    const value = itemUpdate[key];
+                    let value = itemUpdate[key];
                     
                     if (key === 'quantity' || key === 'price') {
-                        // Use parseFloat to handle decimal values
+                        const parsedValue = parseFloat(value);
                         // @ts-ignore
-                        updatedItem[key] = parseFloat(value) || 0;
+                        updatedItem[key] = isNaN(parsedValue) ? 0 : parsedValue;
                     }
                     return updatedItem;
                 }
