@@ -31,7 +31,6 @@ export default function BuyersPage() {
   const { t } = useTranslation();
 
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
@@ -40,8 +39,6 @@ export default function BuyersPage() {
   
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
-    const buyerInvoices = getInvoicesForBuyer(buyer.id);
-    setInvoices(buyerInvoices);
     setSelectedInvoice(null); // Reset invoice selection when buyer changes
     setInvoiceSearchTerm('');
   };
@@ -86,13 +83,18 @@ export default function BuyersPage() {
     }
   }, [invoiceToPrint, settings.printFormat]);
   
+  const buyerInvoices = useMemo(() => {
+    if (!selectedBuyer) return [];
+    return getInvoicesForBuyer(selectedBuyer.id);
+  }, [selectedBuyer, getInvoicesForBuyer]);
+
   const filteredInvoices = useMemo(() => {
-    if (!invoiceSearchTerm) return invoices;
-    return invoices.filter(invoice => 
+    if (!invoiceSearchTerm) return buyerInvoices;
+    return buyerInvoices.filter(invoice => 
         String(invoice.id).toLowerCase().includes(invoiceSearchTerm.toLowerCase()) ||
         new Date(invoice.date).toLocaleDateString().toLowerCase().includes(invoiceSearchTerm.toLowerCase())
     );
-  }, [invoices, invoiceSearchTerm]);
+  }, [buyerInvoices, invoiceSearchTerm]);
   
   const filteredBuyers = useMemo(() => {
     if (!buyerSearchTerm) return buyers;
