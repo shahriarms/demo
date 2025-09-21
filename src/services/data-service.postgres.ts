@@ -225,7 +225,7 @@ class PostgresDataService {
             const dateString = new Date(date).toISOString().split('T')[0];
 
             const existingResult = await client.query(
-                "SELECT id FROM attendance WHERE employee_id = $1 AND date_trunc('day', date) = $2",
+                "SELECT id FROM attendance WHERE employee_id = $1 AND date_trunc('day', date) = date_trunc('day', $2::date)",
                 [employeeId, dateString]
             );
 
