@@ -26,7 +26,7 @@ import { format } from 'date-fns';
 
 
 export default function BuyersPage() {
-  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice: appPrintInvoice, getPaymentsForInvoice } from useAppData();
+  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice: appPrintInvoice, getPaymentsForInvoice } = useAppData();
   const { settings } = useSettings();
   const { t } = useTranslation();
 
@@ -288,5 +288,3 @@ export default function BuyersPage() {
     </>
   );
 }
-
-    
