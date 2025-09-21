@@ -33,14 +33,40 @@ export const bn = {
     'role_employee': 'কর্মচারী',
 
     // Dashboard Page
-    'monthly_sales_card_title': 'মাসিক বিক্রয়',
-    'monthly_expenses_card_title': 'মাসিক খরচ',
-    'profit_card_title': 'লাভ',
+    'welcome_back_header': 'স্বাগতম! এখানে আজকের সারসংক্ষেপ।',
+    'todays_summary_title': "আজকের সারসংক্ষেপ",
+    'todays_sales_card_title': 'আজকের বিক্রয়',
+    'todays_expenses_card_title': "আজকের খরচ",
+    'todays_due_card_title': 'আজকের বকেয়া',
+    'todays_profit_card_title': "আজকের লাভ",
+    'units_sold_today_card_title': 'আজকের বিক্রিত ইউনিট',
+    'todays_attendance_card_title': "আজকের হাজিরা",
+    'invoices_count_footer': '{{count}}টি চালান',
+    'expense_entries_footer': '{{count}}টি খরচের ভুক্তি',
+    'from_todays_sales_footer': 'আজকের বিক্রয় থেকে',
+    'out_of_total_employees_footer': 'মোট {{total}} জনের মধ্যে',
+    'profit_formula_footer_short': "বিক্রয় - ক্রয়মূল্য - খরচ",
+    
+    'date_range_summary_title': "তারিখ পরিসরের সারসংক্ষেপ ({{range}})",
+    'monthly_sales_card_title': 'মোট বিক্রয়',
+    'monthly_expenses_card_title': 'মোট খরচ',
+    'salary_paid_card_title': 'প্রদত্ত বেতন',
+    'total_due_card_title': 'মোট বকেয়া',
+    'total_units_sold_card_title': 'মোট বিক্রিত ইউনিট',
+    'profit_card_title': 'নীট লাভ',
+    'invoices_in_range_footer': "{{count}}টি চালান এই পরিসরে",
+    'salary_payments_footer': "{{count}}টি বেতন প্রদান",
+    'from_this_range_footer': "এই পরিসরের মোট বকেয়া",
+    'profit_formula_footer': "মোট লাভ - (খরচ + বেতন)",
+    
     'sales_label': 'বিক্রয়',
+    'expense_label': 'খরচ',
     'profit_label': 'লাভ',
     'quantity_label': 'পরিমাণ',
-    'daily_sales_chart_title': '{{month}} মাসের দৈনিক বিক্রয়',
-    'daily_sales_chart_description': 'মাসের প্রতিটি দিনের বিক্রয় ডেটা দেখানো হচ্ছে।',
+    'daily_sales_chart_title': '{{range}} এর দৈনিক বিক্রয়',
+    'daily_sales_chart_description': 'পরিসরের প্রতিটি দিনের বিক্রয় ডেটা দেখানো হচ্ছে।',
+    'daily_expenses_chart_title': '{{range}} এর দৈনিক খরচ',
+    'daily_expenses_chart_description': 'পরিসরের প্রতিটি দিনের খরচের ডেটা দেখানো হচ্ছে।',
     'top_selling_products_chart_title': 'সবচেয়ে বেশি বিক্রি হওয়া পণ্য',
     'no_sales_data_for_month': 'এই মাসের জন্য কোনো বিক্রয়ের ডেটা উপলব্ধ নেই।',
     'total_products_card_title': 'মোট পণ্য',
@@ -51,15 +77,6 @@ export const bn = {
     'out_of_stock_card_description': 'শূন্য পরিমাণ সহ আইটেম',
     'top_5_stocked_products_chart_title': 'শীর্ষ ৫টি স্টক করা পণ্য',
     'stock_label': 'স্টক',
-    'welcome_back_header': 'স্বাগতম! এখানে আজকের সারসংক্ষেপ।',
-    'todays_sales_card_title': 'আজকের বিক্রয়',
-    'todays_due_card_title': 'আজকের বকেয়া',
-    'units_sold_today_card_title': 'আজকের বিক্রিত ইউনিট',
-    'present_employees_card_title': 'উপস্থিত কর্মচারী',
-    'invoices_count_footer': '{{count}}টি চালান',
-    'from_todays_sales_footer': 'আজকের বিক্রয় থেকে',
-    'total_items_footer': 'সকল চালানের মোট আইটেম',
-    'out_of_total_employees_footer': 'মোট {{total}} জনের মধ্যে',
 
     // Products Page
     'products_page_title': 'পণ্য',
@@ -148,7 +165,7 @@ export const bn = {
     // Print Layout
     'memo_title': 'ক্যাশ মেমো',
     'shop_name': 'মাহমুদ ইঞ্জিনিয়ারিং শপ',
-    'shop_description': 'এখানে এঙ্গেল, পাতি, স্কয়ারবার, শিট সহ সর্বপ্রকার ওয়ার্কশপ এর মালামাল এবং গ্রাইভিং মেশিন, ওয়েলডিং মেশিন, ড্রিল মেশিন, হাই স্পিড কাটার ও যন্ত্রপাতি বিক্রয় করা হয়। মালিক: ০১৭৭৫-১৬৩৮৫৩, ম্যানেজার: ০১৮৭৪-৩৯৬১৫৮',
+    'shop_description': 'এখানে এঙ্গেল, পাতি, স্কয়ারবার, শিট সহ সর্বপ্রকার ওয়ার্কশপ এর মালামাল এবং গ্রাইভিং মেশিন, ওয়েলডিং মেশিন, ড্রিল মেশিন, হাই স্পীড কাটার ও যন্ত্রপাতি বিক্রয় করা হয়। মালিক: ০১৭৭৫-১৬৩৮৫৩, ম্যানেজার: ০১৮৭৪-৩৯৬১৫৮',
     'item_header': 'মালের বিবরণ',
     'quantity_header': 'পরিমাণ',
     'rate_header': 'দর',
@@ -204,12 +221,7 @@ export const bn = {
     'export_as_excel': 'এক্সেল হিসেবে এক্সপোর্ট',
     'export_as_pdf': 'পিডিএফ হিসেবে এক্সপোর্ট',
     'add_expense_button': 'খরচ যোগ করুন',
-    'todays_expenses_card_title': "আজকের খরচ",
-    'todays_expenses_description': 'আজকে ব্যয় করা মোট পরিমাণ',
-    'no_expenses_today': 'আজ কোনো খরচ রেকর্ড করা হয়নি।',
     'this_months_expenses_title': 'এই মাসের খরচ',
-    'total_label': 'মোট',
-    'expense_label': 'খরচ',
     'all_expenses_title': 'সকল খরচ',
     'all_expenses_description': 'সমস্ত রেকর্ড করা ব্যবসায়িক খরচের একটি লগ।',
     'search_by_description_placeholder': 'বিবরণ দিয়ে খুঁজুন...',
@@ -225,7 +237,7 @@ export const bn = {
     'expense_category_salary': 'বেতন',
     'expense_category_equipment': 'সরঞ্জাম',
     'expense_category_misc': 'বিবিধ',
-
+    
     // Expense Dialog
     'add_expense_dialog_title': 'নতুন খরচ যোগ করুন',
     'edit_expense_dialog_title': 'খরচ সম্পাদনা করুন',
@@ -316,3 +328,5 @@ export const bn = {
     'language_settings_title': 'ভাষা সেটিংস',
     'language_settings_description': 'অ্যাপ্লিকেশনের জন্য আপনার পছন্দের ভাষা বেছে নিন।',
 };
+
+    

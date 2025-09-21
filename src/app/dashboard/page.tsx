@@ -228,7 +228,7 @@ export default function Dashboard() {
         
         {/* Today's Summary Cards */}
         <div>
-            <h2 className="text-lg font-semibold mb-4">Today's Summary</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('todays_summary_title')}</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                 <Card as="button" onClick={() => setDailySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -242,15 +242,15 @@ export default function Dashboard() {
                 </Card>
                 <Card as="button" onClick={() => setDailyExpensesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">{"Today's Expenses"}</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('todays_expenses_card_title')}</CardTitle>
                       <Receipt className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                       <div className="text-2xl font-bold">৳ {todayStats.totalExpenses.toFixed(2)}</div>
-                      <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
+                      <p className="text-xs text-muted-foreground">{t('expense_entries_footer', { count: todayExpenses.length })}</p>
                   </CardContent>
                 </Card>
-                <Card as="button" onClick={() => setDailyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+                <Card as="button" onClick={() => setDailyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors" disabled={todayStats.totalDue <= 0}>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('todays_due_card_title')}</CardTitle>
                       <HandCoins className="h-4 w-4 text-muted-foreground" />
@@ -278,7 +278,7 @@ export default function Dashboard() {
                 </Card>
                  <Card as="button" onClick={() => setDailyAttendanceReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Today's Attendance</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('todays_attendance_card_title')}</CardTitle>
                       <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
@@ -288,14 +288,14 @@ export default function Dashboard() {
                 </Card>
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Today's Profit</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('todays_profit_card_title')}</CardTitle>
                       <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                       <div className={`text-2xl font-bold ${todayStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           ৳ {todayStats.profit.toFixed(2)}
                       </div>
-                      <p className="text-xs text-muted-foreground">Sales - COGS - Expenses</p>
+                      <p className="text-xs text-muted-foreground">{t('profit_formula_footer_short')}</p>
                   </CardContent>
                 </Card>
             </div>
@@ -303,7 +303,7 @@ export default function Dashboard() {
 
         {/* Date Range Summary Cards */}
         <div>
-            <h2 className="text-lg font-semibold mb-4">Date Range Summary ({rangeTitle})</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('date_range_summary_title', { range: rangeTitle })}</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
               <Card as="button" onClick={() => setMonthlySalesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -312,7 +312,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">৳ {rangeStats.totalSales.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">{rangeInvoices.length} invoices in range</p>
+                  <p className="text-xs text-muted-foreground">{t('invoices_in_range_footer', { count: rangeInvoices.length })}</p>
                 </CardContent>
               </Card>
               <Card as="button" onClick={() => setMonthlyExpensesReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
@@ -322,32 +322,32 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">৳ {rangeStats.totalExpenses.toFixed(2)}</div>
-                   <p className="text-xs text-muted-foreground">{rangeExpenses.length} entries in range</p>
+                   <p className="text-xs text-muted-foreground">{t('expense_entries_footer', { count: rangeExpenses.length })}</p>
                 </CardContent>
               </Card>
                <Card as="button" onClick={() => setMonthlySalaryReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Salary Paid</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('salary_paid_card_title')}</CardTitle>
                   <Wallet className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">৳ {rangeStats.totalSalaryPaid.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">{rangeSalaries.length} salary payments</p>
+                  <p className="text-xs text-muted-foreground">{t('salary_payments_footer', { count: rangeSalaries.length })}</p>
                 </CardContent>
               </Card>
-               <Card as="button" onClick={() => setMonthlyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
+               <Card as="button" onClick={() => setMonthlyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors" disabled={rangeStats.totalDue <= 0}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Due</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('total_due_card_title')}</CardTitle>
                   <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">৳ {rangeStats.totalDue.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">Total outstanding from this range</p>
+                  <p className="text-xs text-muted-foreground">{t('from_this_range_footer')}</p>
                 </CardContent>
               </Card>
                <Card as="button" onClick={() => setMonthlyUnitsSoldReportOpen(true)} className="text-left hover:bg-muted/so transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Units Sold</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('total_units_sold_card_title')}</CardTitle>
                   <Container className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -370,7 +370,7 @@ export default function Dashboard() {
                   <div className={`text-2xl font-bold ${rangeStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       ৳ {rangeStats.profit.toFixed(2)}
                   </div>
-                  <p className="text-xs text-muted-foreground">Gross Profit - (Expenses + Salaries)</p>
+                  <p className="text-xs text-muted-foreground">{t('profit_formula_footer')}</p>
                 </CardContent>
               </Card>
             </div>
@@ -379,7 +379,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
               <CardHeader>
-              <CardTitle>Daily Sales for {rangeTitle}</CardTitle>
+              <CardTitle>{t('daily_sales_chart_title', { range: rangeTitle })}</CardTitle>
               <CardDescription>{t('daily_sales_chart_description')}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -399,8 +399,8 @@ export default function Dashboard() {
           </Card>
           <Card>
               <CardHeader>
-                  <CardTitle>Daily Expenses for {rangeTitle}</CardTitle>
-                  <CardDescription>Showing expense data for each day of the range.</CardDescription>
+                  <CardTitle>{t('daily_expenses_chart_title', { range: rangeTitle })}</CardTitle>
+                  <CardDescription>{t('daily_expenses_chart_description')}</CardDescription>
               </CardHeader>
               <CardContent>
                   <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
@@ -485,3 +485,5 @@ export default function Dashboard() {
     </>
   );
 }
+
+    
