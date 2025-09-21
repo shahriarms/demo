@@ -26,7 +26,7 @@ import { format } from 'date-fns';
 
 
 export default function BuyersPage() {
-  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice: appPrintInvoice, getPaymentsForInvoice } = useAppData();
+  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice: appPrintInvoice, getPaymentsForInvoice } from useAppData();
   const { settings } = useSettings();
   const { t } = useTranslation();
 
@@ -67,7 +67,7 @@ export default function BuyersPage() {
   };
   
   useEffect(() => {
-    if (invoiceToPrint && settings.printFormat === 'normal') {
+    if (invoiceToPrint) {
       setIsPrinting(true);
       const originalTitle = document.title;
       document.title = `invoice-${invoiceToPrint.id}`;
@@ -81,7 +81,7 @@ export default function BuyersPage() {
       
       return () => clearTimeout(timer);
     }
-  }, [invoiceToPrint, settings.printFormat]);
+  }, [invoiceToPrint]);
   
   const filteredInvoices = useMemo(() => {
     if (!selectedBuyer) return [];
