@@ -53,6 +53,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useTranslation } from '@/hooks/use-translation';
+import { useUser } from '@/hooks/use-user';
 
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
@@ -66,6 +67,7 @@ interface SummaryStats {
 
 export default function ExpensesPage() {
     const { expenses, isAppDataLoading: isLoading, deleteExpense } = useAppData();
+    const { user } = useUser();
     const { t } = useTranslation();
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
@@ -212,7 +214,7 @@ export default function ExpensesPage() {
                 <DropdownMenuItem onClick={() => handleExport('pdf')}>{t('export_as_pdf')}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button onClick={handleAddNew} className="flex-1 sm:flex-none">
+            <Button onClick={handleAddNew} className="flex-1 sm:flex-none" disabled={user?.role !== 'admin'}>
               <PlusCircle className="mr-2 h-4 w-4" /> {t('add_expense_button')}
             </Button>
           </div>
@@ -321,7 +323,7 @@ export default function ExpensesPage() {
                                         <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <Button variant="ghost" className="h-8 w-8 p-0" disabled={user?.role !== 'admin'}>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -372,7 +374,3 @@ export default function ExpensesPage() {
       </div>
     )
 }
-
-    
-
-    

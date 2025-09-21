@@ -250,7 +250,7 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{todayExpenses.length} expense entries</p>
                   </CardContent>
                 </Card>
-                <Card as="button" onClick={() => todayStats.totalDue > 0.001 && setDailyDueReportOpen(true)} disabled={todayStats.totalDue <= 0.001} className="text-left hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <Card as="button" onClick={() => setDailyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('todays_due_card_title')}</CardTitle>
                       <HandCoins className="h-4 w-4 text-muted-foreground" />
@@ -335,7 +335,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{rangeSalaries.length} salary payments</p>
                 </CardContent>
               </Card>
-               <Card as="button" onClick={() => rangeStats.totalDue > 0.001 && setMonthlyDueReportOpen(true)} disabled={rangeStats.totalDue <= 0.001} className="text-left hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+               <Card as="button" onClick={() => setMonthlyDueReportOpen(true)} className="text-left hover:bg-muted/50 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Due</CardTitle>
                   <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />

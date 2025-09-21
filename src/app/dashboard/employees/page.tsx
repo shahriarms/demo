@@ -272,14 +272,14 @@ export default function EmployeesPage() {
                                         <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <Button variant="ghost" className="h-8 w-8 p-0" disabled={user?.role !== 'admin'}>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleEdit(employee)} disabled={user?.role !== 'admin'}><Pencil className="mr-2 h-4 w-4"/> {t('edit_button')}</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleEdit(employee)}><Pencil className="mr-2 h-4 w-4"/> {t('edit_button')}</DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem onClick={() => handleDelete(employee)} disabled={user?.role !== 'admin'} className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/> {t('delete_button')}</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleDelete(employee)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/> {t('delete_button')}</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -314,9 +314,3 @@ export default function EmployeesPage() {
         </div>
     );
 }
-
-    
-
-    
-
-  
