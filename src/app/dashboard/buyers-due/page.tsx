@@ -144,7 +144,6 @@ export default function BuyersDuePage() {
   }, [selectedBuyer, getInvoicesForBuyer]);
 
   const filteredDueInvoices = useMemo(() => {
-    if (!dueInvoicesForSelectedBuyer) return [];
     const searchTermLower = invoiceSearchTerm.toLowerCase();
     const invoices = invoiceSearchTerm 
       ? dueInvoicesForSelectedBuyer.filter(inv => String(inv.id).toLowerCase().includes(searchTermLower) || new Date(inv.date).toLocaleDateString().toLowerCase().includes(searchTermLower)) 
