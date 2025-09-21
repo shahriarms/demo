@@ -94,7 +94,7 @@ export function SiteHeader() {
       <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 sm:px-6">
         {/* Left Section: Logo and Title */}
         <Link href="/dashboard" className="flex items-center gap-2">
-            <StockPilotLogo className="w-8 h-8" />
+            <StockPilotLogo className="w-10 h-10" />
             <h1 className="text-base sm:text-xl font-semibold">
                 <span className="text-foreground">Mahmud Engineering Shop</span>
             </h1>
