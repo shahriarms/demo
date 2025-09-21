@@ -32,6 +32,14 @@ export async function addInvoice(invoiceData: Omit<Invoice, 'id'>, items: any[])
     return PostgresDataService.addInvoice(invoiceData, items);
 }
 
+export async function deleteInvoice(invoiceId: number): Promise<{ success: boolean }> {
+    if (!usePostgres) {
+        throw new Error("Database not connected.");
+    }
+    await PostgresDataService.deleteInvoice(invoiceId);
+    return { success: true };
+}
+
 export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expense> {
     if (!usePostgres) {
         throw new Error("Database not connected.");
@@ -124,3 +132,5 @@ export async function importAllData(data: BackupData): Promise<{ success: boolea
     
     return PostgresDataService.importAllData(data);
 }
+
+    

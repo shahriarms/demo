@@ -34,6 +34,7 @@ interface AppDataContextType {
 
     // Invoice & Buyer Functions
     addInvoice: (draftInvoice: DraftInvoice) => Promise<number | null>;
+    deleteInvoice: (invoiceId: number) => Promise<void>;
     printInvoice: (invoice: Invoice) => Promise<void>;
     getBuyerById: (buyerId: string) => Buyer | undefined;
     getInvoicesForBuyer: (buyerId: string) => Invoice[];
@@ -223,6 +224,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
     }, [loadAllData, settings, printInvoice]);
     
+    const deleteInvoice = useCallback(async (invoiceId: number) => {
+        try {
+            await dataActions.deleteInvoice(invoiceId);
+            await loadAllData();
+            toast({ title: "Invoice Deleted", description: `Invoice #${invoiceId} has been successfully deleted.` });
+        } catch (error) {
+            console.error("Failed to delete invoice:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete invoice. Check DB connection.' });
+        }
+    }, [toast, loadAllData]);
+
     const getBuyerById = useCallback((buyerId: string) => buyers.find(b => b.id === buyerId), [buyers]);
 
     const getInvoicesForBuyer = useCallback((buyerId: string) => {
@@ -385,7 +397,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const value = useMemo(() => ({
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected, lastInvoiceId,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
-        addInvoice, printInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
+        addInvoice, deleteInvoice, printInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate,
@@ -393,7 +405,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }), [
         products, invoices, buyers, expenses, employees, attendance, salaryPayments, payments, isAppDataLoading, isDbConnected, lastInvoiceId,
         addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById,
-        addInvoice, printInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
+        addInvoice, deleteInvoice, printInvoice, getBuyerById, getInvoicesForBuyer, getInvoicesForDateRange, getGrossProfitForDateRange,
         addPayment, getPaymentsForInvoice,
         addExpense, updateExpense, deleteExpense, getExpensesForDateRange,
         addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate,
@@ -422,3 +434,5 @@ export function useAppData() {
     }
     return context;
 }
+
+    

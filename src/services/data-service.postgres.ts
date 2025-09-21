@@ -2,7 +2,7 @@
 'use server';
 
 import { Pool } from 'pg';
-import type { Product, Invoice, Buyer, Expense, Employee, SalaryPayment, Payment, Attendance, AttendanceStatus } from '@/lib/types';
+import type { Product, Invoice, Buyer, Expense, Employee, SalaryPayment, Payment, Attendance, AttendanceStatus, InvoiceItem } from '@/lib/types';
 import PostgresProductService from './product-service.postgres';
 
 // This is a Server Action file. It will only run on the server.
@@ -112,6 +112,51 @@ class PostgresDataService {
             await client.query('COMMIT');
             return formatRow(newInvoice) as Invoice;
 
+        } catch (e) {
+            await client.query('ROLLBACK');
+            throw e;
+        } finally {
+            client.release();
+        }
+    }
+    
+    static async deleteInvoice(invoiceId: number): Promise<void> {
+        if (!pool) throw new Error("Database not connected.");
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // 1. Get the invoice to know which items to restock and which buyer to update
+            const invoiceResult = await client.query('SELECT * FROM invoices WHERE id = $1', [invoiceId]);
+            if (invoiceResult.rows.length === 0) {
+                throw new Error('Invoice not found.');
+            }
+            const invoice: Invoice = formatRow(invoiceResult.rows[0]);
+
+            // 2. Restore stock for each item in the invoice
+            if (invoice.items && invoice.items.length > 0) {
+                const stockUpdates = invoice.items.map(item => ({
+                    id: item.id,
+                    stockChange: +item.quantity, // Add stock back
+                }));
+                await PostgresProductService.updateMultipleStocks(stockUpdates, client);
+            }
+
+            // 3. Delete associated payments
+            await client.query('DELETE FROM payments WHERE invoice_id = $1', [invoiceId]);
+
+            // 4. Update the buyer's invoice_ids array
+            if (invoice.buyerId) {
+                await client.query(
+                    'UPDATE buyers SET invoice_ids = invoice_ids - $1::text WHERE id = $2',
+                    [String(invoiceId), invoice.buyerId]
+                );
+            }
+            
+            // 5. Delete the invoice itself
+            await client.query('DELETE FROM invoices WHERE id = $1', [invoiceId]);
+
+            await client.query('COMMIT');
         } catch (e) {
             await client.query('ROLLBACK');
             throw e;
@@ -289,3 +334,5 @@ class PostgresDataService {
 }
 
 export default PostgresDataService;
+
+    

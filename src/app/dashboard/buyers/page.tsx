@@ -13,8 +13,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, FileText, ChevronRight, Calendar, DollarSign, Search, Printer, Loader2 } from 'lucide-react';
 import type { Buyer, Invoice } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,10 +31,13 @@ import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { Users, FileText, ChevronRight, Calendar, DollarSign, Search, Printer, Loader2, Trash2 } from 'lucide-react';
+import { useUser } from '@/hooks/use-user';
 
 
 export default function BuyersPage() {
-  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice: appPrintInvoice, getPaymentsForInvoice } = useAppData();
+  const { user } = useUser();
+  const { buyers, getInvoicesForBuyer, isAppDataLoading, printInvoice: appPrintInvoice, getPaymentsForInvoice, deleteInvoice } = useAppData();
   const { settings } = useSettings();
   const { t } = useTranslation();
 
@@ -35,6 +47,8 @@ export default function BuyersPage() {
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
   const [isPrinting, setIsPrinting] = useState(false);
   const [invoiceToPrint, setInvoiceToPrint] = useState<Invoice | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
   
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
@@ -60,6 +74,22 @@ export default function BuyersPage() {
       }
     } else {
       setInvoiceToPrint(selectedInvoice);
+    }
+  };
+  
+  const handleDeleteClick = () => {
+    if (selectedInvoice && user?.role === 'admin') {
+      setInvoiceToDelete(selectedInvoice);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (invoiceToDelete) {
+      setIsDeleting(true);
+      await deleteInvoice(invoiceToDelete.id);
+      setInvoiceToDelete(null);
+      setSelectedInvoice(null);
+      setIsDeleting(false);
     }
   };
   
@@ -232,10 +262,17 @@ export default function BuyersPage() {
           <Card className="md:col-span-5 lg:col-span-3 flex flex-col">
               <CardHeader className="flex-row items-center justify-between">
                   <CardTitle>{t('invoice_details_title')}</CardTitle>
-                  <Button onClick={handlePrint} disabled={!selectedInvoice || isPrinting}>
-                      {isPrinting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}
-                      {t('print_invoice_button')}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                      {user?.role === 'admin' && (
+                        <Button variant="destructive" onClick={handleDeleteClick} disabled={!selectedInvoice || isDeleting}>
+                          <Trash2 className="mr-2 h-4 w-4"/> Delete
+                        </Button>
+                      )}
+                      <Button onClick={handlePrint} disabled={!selectedInvoice || isPrinting}>
+                          {isPrinting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Printer className="mr-2 h-4 w-4"/>}
+                          {t('print_invoice_button')}
+                      </Button>
+                  </div>
               </CardHeader>
               <CardContent className="flex-1 overflow-auto">
                   {selectedInvoice ? (
@@ -284,6 +321,26 @@ export default function BuyersPage() {
             />
         </div>
       )}
+      <AlertDialog open={!!invoiceToDelete} onOpenChange={() => setInvoiceToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete invoice <strong>#{invoiceToDelete?.id}</strong>, 
+              remove all associated payments, and restore the product stock.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+              Yes, delete invoice
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
+
+    
