@@ -76,7 +76,7 @@ export default function SalariesPage() {
       return true;
   }, [paymentAmount, isOverpayment, user]);
 
-  const handleAddPayment = useCallback(() => {
+  const handleAddPayment = useCallback(async () => {
     if (!selectedEmployee || typeof paymentAmount !== 'number' || paymentAmount <= 0) {
       toast({
         variant: 'destructive',
@@ -95,7 +95,7 @@ export default function SalariesPage() {
       return;
     }
 
-    addSalaryPayment({
+    await addSalaryPayment({
       employeeId: selectedEmployee.id,
       amount: paymentAmount,
       date: new Date().toISOString(),
@@ -107,10 +107,12 @@ export default function SalariesPage() {
       description: t('payment_successful_toast_description', { amount: paymentAmount.toFixed(2), name: selectedEmployee.name }),
     });
     
-    // Optimistically update the selected employee to re-trigger memos
-    const freshEmployeeData = JSON.parse(JSON.stringify(employees.find(e => e.id === selectedEmployee.id)));
-    setSelectedEmployee(freshEmployeeData);
-
+    // Find the latest version of the employee from the `employees` array to prevent stale state.
+    const freshEmployeeData = employees.find(e => e.id === selectedEmployee.id);
+    if (freshEmployeeData) {
+        setSelectedEmployee(freshEmployeeData);
+    }
+    
     setPaymentAmount('');
 
   }, [selectedEmployee, paymentAmount, isOverpayment, user, addSalaryPayment, toast, employees, t]);
@@ -278,5 +280,3 @@ export default function SalariesPage() {
     </>
   );
 }
-
-    
