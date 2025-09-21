@@ -248,6 +248,7 @@ const useInvoiceFormData = (): InvoiceFormContextType => {
                     const value = itemUpdate[key];
                     
                     if (key === 'quantity' || key === 'price') {
+                        // Use parseFloat to handle decimal values
                         // @ts-ignore
                         updatedItem[key] = parseFloat(value) || 0;
                     }
@@ -313,5 +314,3 @@ export function useInvoiceForm() {
     }
     return context;
 }
-
-    
